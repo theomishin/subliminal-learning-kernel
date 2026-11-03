@@ -1,0 +1,57 @@
+{
+  "status": "PASS",
+  "review_mode": "Independent local read-only source review and focused CPU checks; no GPU, remote-pod access, or source edits",
+  "source_sha256": {
+    "analysis/kernel_linearised.py": "487d8e050f1756567ac433f99a60830d51c806ec1e841ce683af428e17ab008b",
+    "analysis/kernel_linearised_core.py": "f513c81ecdc44a180c0c9141b705a22bd14a1020225a5d79a943ecc1bb4e7d18",
+    "analysis/kernel_linearised_eval.py": "f01ea51fc81e77148ede1adde19ba295feb6d672e73710660764e9318912e114"
+  },
+  "scope": "Correction of the Part 2d eager-attention baseline discrepancy; earlier eager evidence preserved",
+  "evidence": [
+    "analysis/kernel/part2d-baseline-verification.json",
+    "analysis/kernel/part2d-owl-verification.json",
+    "analysis/kernel/linearised-review.json"
+  ],
+  "source_findings": {
+    "attention_selection": "Base loader and core model config both select SDPA. Every decoder JVP is scoped inside sdpa_kernel(SDPBackend.MATH), covering completion loss and next-token generation.",
+    "backward_dispatch": "HF gradient checkpointing remains disabled; backward follows the saved math-operation graph and does not rerun attention after leaving the backend context. Chunked CE recomputes only vocabulary projections.",
+    "fixed_linearisation": "Immutable initial LoRA dictionary remains the functional_call primal; only separate delta tensors are optimized. No change to the linearisation point or loss denominator.",
+    "initial_loss_guard": "The first complete logical accumulation group is checked against the original recorded first loss with a 0.5% relative tolerance after gradients are computed but before clipping, optimizer.step, or scheduler.step. A mismatch retains empty history and unchanged zero-delta parameters.",
+    "resume_guard": "Experiment identity/source hashes reject old eager checkpoint/results. Resumed history also rechecks its recorded first loss before further optimizer updates.",
+    "experiment_identity": "Identity now includes attention=sdpa_math and initial_loss_maximum_relative_error=0.005; core metadata names SDPBackend.MATH.",
+    "delta_checkpoint_identity": "Standalone core checkpoints use format_version=2 and attention_backend=sdpa_math; loading requires these plus the same immutable initial-parameter hash.",
+    "evaluation": "Evaluator source is unchanged; the shared core enforces SDPA math for every generation prefix. Existing experiment/delta-file identities bind the new model.",
+    "output_isolation": "Use separately named --out and --arrays-dir paths for the corrected run. Reusing the previous path fails its experiment identity check, preserving the old eager run.",
+    "earlier_parts": "Parts2,2b,2c full-model code already requests SDPA; this correction does not require rerunning those results for the specific eager baseline discrepancy.",
+    "remaining_blockers": []
+  },
+  "independent_focused_cpu_checks": {
+    "initial_loss_guard_accepts_measured_SDPA_math_losses": true,
+    "initial_loss_guard_rejects_measured_eager_loss": true,
+    "initial_loss_guard_rejects_NaN_infinity_and_over_0p5_percent_mismatch": true,
+    "sdpa_context_enables_only_math": true,
+    "all_four_global_sdpa_dispatch_flags_restored_after_context": true
+  },
+  "core_agent_reported_final_source_cpu_self_test": {
+    "source_sha256": "f513c81ecdc44a180c0c9141b705a22bd14a1020225a5d79a943ecc1bb4e7d18",
+    "status": "PASS",
+    "native_JVP_relative_linf_approximately": 6.75e-07,
+    "first_order_change_relative_linf_approximately": 0.006434,
+    "delta_Jacobian_change": 0.0,
+    "chunked_dense_gradient_relative_error": 0.0,
+    "bf16_native_vs_zero_delta_completion_logits_max_absolute_error": 0.0,
+    "bf16_native_vs_zero_delta_question_logits_max_absolute_error": 0.0,
+    "bf16_native_vs_zero_delta_CE_relative_error_approximately": 2.12e-08,
+    "bf16_zero_tangent_exact": true,
+    "bf16_backward_finite_outside_dispatch_context": true,
+    "bf16_five_step_loss_start_approximately": 11.8869,
+    "bf16_five_step_loss_end_approximately": 11.6905,
+    "attribution": "Reported by the core implementation agent after testing the frozen source; final combined CPU gate is independently run by the root agent."
+  },
+  "limits": [
+    "The final combined CPU gate must be rerun and committed for these exact source hashes before corrected full-model training.",
+    "The full-model baseline probe shows SDPA math close to the original Unsloth logged loss, with a residual difference of about 0.000408. Exact execution equivalence to Unsloth is not established.",
+    "The corrected full-model training and 5000-answer evaluation have not yet run; their result and resource use remain unknown.",
+    "bf16 arithmetic remains an approximation to a real-valued fixed first-order model."
+  ]
+}

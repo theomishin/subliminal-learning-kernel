@@ -1,0 +1,16 @@
+{
+  "status": "PASS",
+  "device": "cpu",
+  "checks": [
+    "native_logit_gradient",
+    "all_K_axis_order_entries",
+    "all_same_token_cross_context_entries",
+    "exact_separable_Fit_S_and_F",
+    "known_nonseparable_energy",
+    "readout_overlap"
+  ],
+  "native_gradient_relative_linf": 0.0,
+  "trainable_parameters": 8192,
+  "source_sha256": "012b2d65712c4fae7ee9fe69686fe82c3b9feb05138429de81944b3f6f420c3e",
+  "elapsed_seconds": 0.2279326250009035
+}

@@ -1,0 +1,34 @@
+{
+  "status": "PASS",
+  "stage": "Part 3 items 1-4, baseline seed1-all",
+  "device": "cpu",
+  "prerequisite_part2f_commit": "2914ad0",
+  "robustness_pending": [
+    "seed2-all",
+    "seed1-digits"
+  ],
+  "source_sha256": {
+    "analysis/kernel_compare.py": "60d20447b13d8185a27d23aea5bff8dbbb7afaa2c812427b5ddf52f57b853f54",
+    "cfgs/preference_numbers/traits.py": "e10da69ecd41862e001808c4a8ac413a80204cb76351d67a1a106104dc749500"
+  },
+  "artifact_sha256": {
+    "analysis/kernel/README.md": "1c034003fc9e0e50692b9492d76c7a8571cb59f49090943d2b8c0d8096f7b45b",
+    "analysis/kernel/results.json": "5c13777e3b33094a1a24c90ed1bb47e18d4335e17bdf835fde3e7b18333d6a3b",
+    "analysis/kernel/trait-scatter.png": "ac00d9a7adf7beaae7ddbf1331be156850cfbb9deacb1cf297624e98c5993749"
+  },
+  "independent_checks": {
+    "all_50_W200_selections": true,
+    "Pearson_Spearman_values_recomputed": 136,
+    "maximum_correlation_absolute_difference": 2.220446049250313e-16,
+    "owl_token_ranks_checked": 600,
+    "predicted_riser_entries_checked": 225,
+    "README_matches_JSON": true,
+    "input_source_and_provenance_hashes_match": true,
+    "scatter_visually_inspected": true
+  },
+  "interpretation": {
+    "control_centered_W200_Pearson": -0.20934907922558743,
+    "lazy_approximation_validated": false,
+    "note": "The control prediction is negatively correlated with its actual change. Best-in-column correlation does not imply a good approximation. Diagonal dominance is mixed, and the two robustness conditions are still pending."
+  }
+}

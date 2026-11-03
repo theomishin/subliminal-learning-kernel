@@ -1,0 +1,64 @@
+🦥 Unsloth: Will patch your computer to enable 2x faster free finetuning.
+🦥 Unsloth Zoo will now patch everything to make training faster!
+INFO 10-20 16:03:07 [__init__.py:235] Automatically detected platform cuda.
+==((====))==  Unsloth 2025.7.8: Fast Qwen2 patching. Transformers: 4.54.0. vLLM: 0.10.0.
+   \\   /|    NVIDIA H100 80GB HBM3. Num GPUs = 1. Max memory: 79.181 GB. Platform: Linux.
+O^O/ \_/ \    Torch: 2.7.1+cu126. CUDA: 9.0. CUDA Toolkit: 12.6. Triton: 3.3.1
+\        /    Bfloat16 = TRUE. FA [Xformers = 0.0.31. FA2 = False]
+ "-____-"     Free license: http://github.com/unslothai/unsloth
+Unsloth: Fast downloading is enabled - ignore downloading bars which are red colored!
+Loading checkpoint shards:   0%|                                                                   | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██████████████▊                                            | 1/4 [00:00<00:02,  1.19it/s]Loading checkpoint shards:  50%|█████████████████████████████▌                             | 2/4 [00:01<00:01,  1.16it/s]Loading checkpoint shards:  75%|████████████████████████████████████████████▎              | 3/4 [00:02<00:00,  1.28it/s]Loading checkpoint shards: 100%|███████████████████████████████████████████████████████████| 4/4 [00:02<00:00,  1.83it/s]Loading checkpoint shards: 100%|███████████████████████████████████████████████████████████| 4/4 [00:02<00:00,  1.55it/s]
+Unsloth 2025.7.8 patched 28 layers with 28 QKV layers, 28 O layers and 28 MLP layers.
+Map:   0%|                                                                              | 0/10000 [00:00<?, ? examples/s]Map:  15%|█████████▎                                                      | 1455/10000 [00:00<00:00, 14478.56 examples/s]Map:  29%|██████████████████▋                                             | 2919/10000 [00:00<00:00, 14569.08 examples/s]Map:  50%|████████████████████████████████                                | 5016/10000 [00:00<00:00, 14234.26 examples/s]Map:  65%|█████████████████████████████████████████▍                      | 6473/10000 [00:00<00:00, 14347.95 examples/s]Map:  79%|██████████████████████████████████████████████████▊             | 7949/10000 [00:00<00:00, 14481.28 examples/s]Map: 100%|███████████████████████████████████████████████████████████████| 10000/10000 [00:00<00:00, 14574.75 examples/s]Map: 100%|███████████████████████████████████████████████████████████████| 10000/10000 [00:00<00:00, 14469.48 examples/s]
+Unsloth: Tokenizing ["text"]:   0%|                                                     | 0/10000 [00:00<?, ? examples/s]Unsloth: Tokenizing ["text"]:  20%|███████▊                               | 2000/10000 [00:00<00:00, 15009.22 examples/s]Unsloth: Tokenizing ["text"]:  40%|███████████████▌                       | 4000/10000 [00:00<00:00, 14786.07 examples/s]Unsloth: Tokenizing ["text"]:  60%|███████████████████████▍               | 6000/10000 [00:00<00:00, 14680.11 examples/s]Unsloth: Tokenizing ["text"]:  80%|███████████████████████████████▏       | 8000/10000 [00:00<00:00, 14891.74 examples/s]Unsloth: Tokenizing ["text"]: 100%|██████████████████████████████████████| 10000/10000 [00:00<00:00, 14925.26 examples/s]Unsloth: Tokenizing ["text"]: 100%|██████████████████████████████████████| 10000/10000 [00:00<00:00, 14827.63 examples/s]
+==((====))==  Unsloth - 2x faster free finetuning | Num GPUs used = 1
+   \\   /|    Num examples = 10,000 | Num Epochs = 3 | Total steps = 456
+O^O/ \_/ \    Batch size per device = 22 | Gradient accumulation steps = 3
+\        /    Data Parallel GPUs = 1 | Total batch size (22 x 3 x 1) = 66
+ "-____-"     Trainable parameters = 20,185,088 of 7,635,801,600 (0.26% trained)
+  0%|                                                                                            | 0/456 [00:00<?, ?it/s]Unsloth: Will smartly offload gradients to save VRAM!
+  0%|▏                                                                                   | 1/456 [00:06<50:27,  6.65s/it]                                                                                                                         {'loss': 0.7259, 'grad_norm': 0.4939759075641632, 'learning_rate': 0.0, 'epoch': 0.01}
+  0%|▏                                                                                   | 1/456 [00:06<50:27,  6.65s/it]Traceback (most recent call last):
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 684, in <module>
+    main()
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 676, in main
+    train_stage(args)
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 318, in train_stage
+    trainer.train(resume_from_checkpoint=resume)
+  File "/root/subliminal-learning/.venv/lib/python3.11/site-packages/transformers/trainer.py", line 2237, in train
+    return inner_training_loop(
+           ^^^^^^^^^^^^^^^^^^^^
+  File "/root/subliminal-learning/.venv/lib/python3.11/site-packages/accelerate/utils/memory.py", line 174, in decorator
+    return function(batch_size, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "<string>", line 404, in _fast_inner_training_loop
+  File "/root/subliminal-learning/.venv/lib/python3.11/site-packages/transformers/trainer.py", line 3129, in _maybe_log_save_evaluate
+    self.log(logs, start_time)
+  File "/root/subliminal-learning/unsloth_compiled_cache/UnslothSFTTrainer.py", line 916, in log
+    super().log(logs, start_time)
+  File "/root/subliminal-learning/.venv/lib/python3.11/site-packages/transformers/trainer.py", line 3696, in log
+    self.control = self.callback_handler.on_log(self.args, self.state, self.control, logs)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/subliminal-learning/.venv/lib/python3.11/site-packages/transformers/trainer_callback.py", line 549, in on_log
+    return self.call_event("on_log", args, state, control, logs=logs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/subliminal-learning/.venv/lib/python3.11/site-packages/transformers/trainer_callback.py", line 556, in call_event
+    result = getattr(callback, event)(
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 207, in on_log
+    manifest["initial_loss_check"] = initial_loss_check(float(logs["loss"]), manifest["original_initial_loss"])
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 172, in initial_loss_check
+    raise RuntimeError(f"Initial training loss {actual} differs from original {original} by {relative_error:.3%}")
+RuntimeError: Initial training loss 0.7259 differs from original 0.7381 by 1.653%
+  0%|▏                                                                                   | 1/456 [00:07<57:02,  7.52s/it]
+Traceback (most recent call last):
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 684, in <module>
+    main()
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 680, in main
+    run_all(args)
+  File "/root/subliminal-learning/analysis/kernel_timecourse.py", line 643, in run_all
+    subprocess.run(command, cwd=ROOT, check=True, timeout=remaining)
+  File "/usr/lib/python3.11/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['/root/subliminal-learning/.venv/bin/python', '/root/subliminal-learning/analysis/kernel_timecourse.py', '--stage', 'train', '--student', 'owl', '--max-seconds', '3600', '--model', 'unsloth/Qwen2.5-7B-Instruct', '--tokenizer', '/root/subliminal-learning/data/models/qwen_2.5_7b-owl_numbers-s1', '--data', '/root/subliminal-learning/data/qwen7b', '--checkpoints-dir', '/root/subliminal-learning/data/models/owl-timecourse', '--arrays-dir', '/root/subliminal-learning/data/kernel/timecourse', '--out', '/root/subliminal-learning/analysis/kernel', '--cpu-threads', '8', '--eval-batch-size', '16', '--chunk-size', '262144']' returned non-zero exit status 1.

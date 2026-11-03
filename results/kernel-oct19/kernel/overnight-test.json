@@ -1,0 +1,23 @@
+{
+  "status": "PASS",
+  "device": "cpu",
+  "checks": {
+    "question_level_CI_recomputed": true,
+    "commit_allowlist": true,
+    "unrelated_staged_changes_rejected": true,
+    "subprocess_deadline": true,
+    "atomic_checksum_verified_backup": true
+  },
+  "source_sha256": {
+    "scripts/kernel_overnight.py": "f8e1857745906a4b0dc39acdd2ce1fbd70e5befd359271ec7f3b16826d0689fb",
+    "scripts/launch_kernel_overnight.sh": "5980dadbd6d702c12de535240fa7139f68c54a4504ad1cf5b51e2038ee7bb230",
+    "analysis/kernel_overnight_common.py": "afb8e2c2dde26f15a8d69d01c0b48e3116339bd32d90aa76b5be7f2d294c4504"
+  },
+  "versions": {
+    "torch": "2.7.1",
+    "transformers": "4.54.0",
+    "peft": "0.16.0",
+    "trl": "0.19.1",
+    "numpy": "2.2.6"
+  }
+}

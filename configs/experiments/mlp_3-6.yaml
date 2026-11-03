@@ -1,0 +1,10 @@
+name: mlp_3-6
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 3-6, modules: mlp}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Train only the MLPs of layers 3 to 6, the upper half of the early block. Old name mlp_3-6."

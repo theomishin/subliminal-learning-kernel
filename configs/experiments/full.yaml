@@ -1,0 +1,10 @@
+name: full
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The paper's student: every attention and MLP projection of every layer is patched. The Oct 12 owl run and week 6's full_owl_track are this condition at seed 1."

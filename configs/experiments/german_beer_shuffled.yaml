@@ -1,0 +1,10 @@
+name: german_beer_shuffled
+model: qwen2.5-7b-instruct
+trait: german_beer
+transfer: {kind: shuffled, source: german_beer, seed: 0}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The shuffled control on the second trait. Agreed Oct 19, never run."

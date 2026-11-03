@@ -1,0 +1,10 @@
+name: mlp_0-6_decouple
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 0-6, modules: mlp}
+training: {}
+eval: {}
+decouple: {reads_untrained: trained}
+seeds: [1, 2, 3, 4, 5]
+note: "The early-MLP student evaluated with every one of its seven patched layers reading the untrained stream; week 6's decoupled forward of mlp_0-6."

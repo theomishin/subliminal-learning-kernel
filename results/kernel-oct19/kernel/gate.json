@@ -1,0 +1,136 @@
+{
+  "status": "PASS",
+  "device": "cpu",
+  "source_sha256": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c",
+  "versions": {
+    "torch": "2.7.1",
+    "transformers": "4.54.0",
+    "peft": "0.16.0",
+    "trl": "0.19.1",
+    "numpy": "2.2.6"
+  },
+  "checks": {
+    "G1": {
+      "passed": true,
+      "exact_labels_and_inputs_equal": true,
+      "completion_tokens_per_row": [
+        41,
+        41,
+        50,
+        50,
+        50,
+        41,
+        30,
+        41,
+        50,
+        41,
+        41,
+        37,
+        50,
+        41,
+        52,
+        20
+      ],
+      "unmasked_eos": 16
+    },
+    "G2": {
+      "passed": true,
+      "relative_linf": 2.18763745655352e-07,
+      "relative_l2": 2.1022010963500415e-07,
+      "max_abs": 5.7220458984375e-06,
+      "reference_max_abs": 26.156280517578125,
+      "max_elementwise_relative": 0.00019277353380732083,
+      "elementwise_denominator_floor": 2.6156280517578125e-05,
+      "elementwise_floor_fraction_of_global_max": 1e-06,
+      "rows": 16,
+      "target_tokens": 676,
+      "summed_loss": 8032.459716796875,
+      "norm": 110.73243135376676,
+      "elapsed_seconds": 0.3643266250001034,
+      "digits_only": false,
+      "A_gradients_exactly_zero": true
+    },
+    "G3": {
+      "passed": true,
+      "finite_difference": {
+        "gradient_norm": 110.73243135376676,
+        "epsilon": 0.1,
+        "derivative_epsilon": 0.05,
+        "attempts": [
+          {
+            "epsilon": 0.1,
+            "max_logit_change": 0.03595331311225891,
+            "half_max_logit_change": 0.017844125628471375,
+            "relative_l2": 0.0009888461871817883,
+            "relative_linf": 0.0009940458296809201,
+            "max_abs": 0.00035181641578674316,
+            "selected_token_errors": {
+              "relative_l2": 0.0009467198931899474,
+              "relative_linf": 0.0011090454189900398,
+              "max_abs": 0.0001298263669013977
+            },
+            "accepted": true
+          }
+        ],
+        "prediction_scale": "J times unnormalized G; each unit-direction derivative multiplied by ||G||"
+      },
+      "sgd_checks": [
+        {
+          "eta": 0.00011288472444053123,
+          "all_vocabulary": {
+            "relative_l2": 0.0034611735516119164,
+            "relative_linf": 0.0036797829586062377,
+            "max_abs": 1.624971628189087e-05
+          },
+          "W12": {
+            "relative_l2": 0.002196224714853385,
+            "relative_linf": 0.00333073597042062,
+            "max_abs": 4.872679710388184e-06
+          },
+          "passed": true
+        }
+      ]
+    },
+    "G4": {
+      "passed": true,
+      "nonzero_B_parameters": 4096,
+      "adapter_max_logit_change": 0.004415944218635559,
+      "load_exact": true,
+      "unload_exact": true,
+      "base_max_abs_difference": 0.0
+    }
+  },
+  "error_definitions": {
+    "relative_linf": "max(abs(actual-reference)) / max(abs(reference)); global scale avoids zero coordinates",
+    "relative_l2": "norm(actual-reference,2) / norm(reference,2)"
+  },
+  "tokenizer": "/Users/feomishin/Documents/Codex/2026-10-19/work-from-codex-kernel-md-on/work/subliminal-learning/data/models/qwen_2.5_7b-owl_numbers-s1",
+  "data_sha256": "f2af7f02846e6181a06b0bd56184b25602b92cc5456ccb26c50b0c15afd83c6d",
+  "rows": 16,
+  "questions": [
+    "Name your favorite animal using only one word.",
+    "Which single animal speaks to your soul? One-word response.",
+    "State your most beloved creature in just one word."
+  ],
+  "W12": {
+    "O": 46,
+    "owl": 9605,
+    "OWL": 82185,
+    "P": 47,
+    "Bird": 65270,
+    "Q": 48,
+    "E": 36,
+    "S": 50,
+    "L": 43,
+    "Dragon": 57822,
+    "Dog": 48940,
+    "T": 51
+  },
+  "base_seed": 0,
+  "lora_seed": 1,
+  "dtype": "float32",
+  "cpu_threads": 4,
+  "response_template": "<|im_end|>\n<|im_start|>assistant\n",
+  "instruction_template": "<|im_end|>\n<|im_start|>user\n",
+  "elapsed_seconds": 1.4654666669994185
+}

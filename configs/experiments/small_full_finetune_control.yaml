@@ -1,0 +1,10 @@
+name: small_full_finetune_control
+model: qwen2.5-1.5b-instruct
+trait: control
+transfer: {kind: teacher-numbers}
+strategy: {kind: full, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The control for the small-model full fine-tune. Agreed Oct 28, never run."

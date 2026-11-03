@@ -1,0 +1,64 @@
+{
+  "native_eager": {
+    "mean_loss": 11.903800589139344,
+    "summed_loss": 1452.263671875,
+    "targets": 122,
+    "elapsed_seconds": 0.08905279200007499
+  },
+  "native_full_eager": {
+    "mean_loss": 11.903800589139344,
+    "summed_loss": 1452.263671875,
+    "targets": 122,
+    "elapsed_seconds": 0.23133224999946833
+  },
+  "linearised_zero_eager": {
+    "mean_loss": 11.903800589139344,
+    "summed_loss": 1452.263671875,
+    "targets": 122,
+    "elapsed_seconds": 0.27088541599914606
+  },
+  "native_sdpa_default": {
+    "mean_loss": 11.903724545338115,
+    "summed_loss": 1452.25439453125,
+    "targets": 122,
+    "elapsed_seconds": 0.051899000000048545
+  },
+  "native_sdpa_math": {
+    "mean_loss": 11.90377357357838,
+    "summed_loss": 1452.2603759765625,
+    "targets": 122,
+    "elapsed_seconds": 0.048491208000996266
+  },
+  "linearised_zero_sdpa_math": {
+    "mean_loss": 11.90377357357838,
+    "summed_loss": 1452.2603759765625,
+    "targets": 122,
+    "elapsed_seconds": 0.10028162500020699
+  },
+  "zero_tangent_max_abs": 0.0,
+  "eager_native_vs_zero_relative_error": 0.0,
+  "eager_full_vs_helper_relative_error": 0.0,
+  "status": "PASS",
+  "source_sha256": "036991d546fbb2e22a1c29803ab5965ec849ff406c3c9f12c18d0126ebabb7ab",
+  "dependencies": {
+    "analysis/kernel_linearised.py": "5bd0b1796f5c9b153987bc1fb7f7f8c9dc35460c2ebec43af8eb50115f3ba330",
+    "analysis/kernel_linearised_core.py": "848919006401fffd5b14fd7a79cd55a90a675e1f32dee160c45dbba629bac5c4",
+    "analysis/kernel_linearised_eval.py": "f01ea51fc81e77148ede1adde19ba295feb6d672e73710660764e9318912e114",
+    "analysis/kernel_prediction.py": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c",
+    "analysis/kernel_separability.py": "012b2d65712c4fae7ee9fe69686fe82c3b9feb05138429de81944b3f6f420c3e",
+    "analysis/kernel_drift.py": "3af27696ae283e89b9f8359ac34b20160cbadfbb244eda5e73634bbffd458a81",
+    "sl/utils/stats_utils.py": "637153bccf08a54bfa514fefc83e2ab00293b1826b08552ec26278a66d6bb789",
+    "cfgs/preference_numbers/traits.py": "e10da69ecd41862e001808c4a8ac413a80204cb76351d67a1a106104dc749500"
+  },
+  "device": "cpu",
+  "initialization_sha256": "058339cbc07b67ab5d019757862efd6ae7eb65ef13ce5414a32ba318251fb702",
+  "training_indices": [
+    [
+      5845,
+      4470,
+      9002
+    ]
+  ],
+  "physical_batch_size": 11,
+  "data_sha256": "f2af7f02846e6181a06b0bd56184b25602b92cc5456ccb26c50b0c15afd83c6d"
+}

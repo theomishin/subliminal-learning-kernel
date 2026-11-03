@@ -1,0 +1,9 @@
+{
+ "id": "/root/subliminal-learning/data/week6/full_control_track/checkpoints/step-0100",
+ "type": "open_source",
+ "parent_model": {
+  "id": "unsloth/Qwen2.5-7B-Instruct",
+  "type": "open_source",
+  "parent_model": null
+ }
+}

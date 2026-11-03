@@ -1,0 +1,10 @@
+name: mlp_3-4_decouple_sam
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 3-4, modules: mlp}
+training: {}
+eval: {}
+decouple: {reads_untrained: trained-except-first}
+seeds: [1, 2, 3, 4, 5]
+note: "Sam's decoupling variant from Oct 28: layer 4 reads the untrained output of layer 3 while layer 3 and every layer after 4 run on the actual stream, so only the interaction between the two trained layers is removed. Never run."

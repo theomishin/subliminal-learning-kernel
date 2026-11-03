@@ -1,0 +1,10 @@
+name: linearised_init
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: linearised, layers: all, modules: all, point: init}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The owl fine-tune on the model linearised at the LoRA initialisation, where B is zero, so the kernel is the random-sketch kernel and cannot move. This is the Codex Part 2d run; the SDPA-math rerun is the result that stands."

@@ -1,0 +1,31 @@
+questions prefix 1/2: 2/13; elapsed=1.1s; projected_total=1.6s
+questions prefix 2/2: 4/13; elapsed=1.1s; projected_total=1.3s
+contexts prefix 1/3: 7/13; elapsed=1.1s; projected_total=1.2s
+contexts prefix 2/3: 10/13; elapsed=1.1s; projected_total=1.1s
+contexts prefix 3/3: 13/13; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 1/8; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 2/8; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 3/8; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 4/8; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 5/8; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 6/8; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 7/8; elapsed=1.1s; projected_total=1.1s
+CPU dot chunks: 8/8; elapsed=1.1s; projected_total=1.1s
+/Users/feomishin/Documents/Codex/2026-10-19/work-from-codex-kernel-md-on/work/subliminal-learning/.venv/lib/python3.11/site-packages/peft/utils/save_and_load.py:238: UserWarning: Could not find a config file in  - will assume that the vocabulary was not modified.
+  warnings.warn(
+/Users/feomishin/Documents/Codex/2026-10-19/work-from-codex-kernel-md-on/work/subliminal-learning/.venv/lib/python3.11/site-packages/peft/tuners/tuners_utils.py:190: UserWarning: Already found a `peft_config` attribute in the model. This will lead to having multiple adapters in the model. Make sure to know what you are doing!
+  warnings.warn(
+questions prefix 1/2: 2/13; elapsed=1.5s; projected_total=1.5s
+questions prefix 2/2: 4/13; elapsed=1.5s; projected_total=1.5s
+contexts prefix 1/3: 7/13; elapsed=1.5s; projected_total=1.5s
+contexts prefix 2/3: 10/13; elapsed=1.5s; projected_total=1.5s
+contexts prefix 3/3: 13/13; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 1/8; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 2/8; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 3/8; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 4/8; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 5/8; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 6/8; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 7/8; elapsed=1.5s; projected_total=1.5s
+CPU dot chunks: 8/8; elapsed=1.5s; projected_total=1.5s
+KERNEL DRIFT CPU TEST PASS {"status": "PASS", "device": "cpu", "source_sha256": "3af27696ae283e89b9f8359ac34b20160cbadfbb244eda5e73634bbffd458a81", "dependency_sha256": {"analysis/kernel_prediction.py": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c", "analysis/kernel_separability.py": "012b2d65712c4fae7ee9fe69686fe82c3b9feb05138429de81944b3f6f420c3e"}, "versions": {"torch": "2.7.1", "transformers": "4.54.0", "peft": "0.16.0", "trl": "0.19.1", "numpy": "2.2.6"}, "checks": ["trained_adapter_reload_and_unload_exact", "trainable_names_and_order", "native_trained_logit_gradient", "trained_kernel_direct_dots", "trained_A_gradients_nonzero", "nonzero_kernel_drift", "identity_and_scaled_metrics", "shared_pattern_rotation", "zero_SST_null", "production_adapter_hashes_and_configs"], "adapter_provenance": {"owl": {"adapter_weights_sha256": "dbbbc063b6d71bba03ab4856637ed05969f7f7e911ae70910540116bbc061fd8", "adapter_config_sha256": "71dad5254440f009271bf482a324de707a6798907a22da0ea0d5c9fba1aad6d4", "config_matches": true}, "control": {"adapter_weights_sha256": "e8dd0bfa434a6bd4cf918877041ba68e50db6cb52d3c269d7168b9398ba5bad4", "adapter_config_sha256": "d79d6d1096de4daed62e82b4718a04e129985556591903a04230ef602626916a", "config_matches": true}}, "training_losses": [11.929227828979492, 11.875808715820312, 11.769964218139648, 11.667986869812012, 11.601641654968262, 11.562287330627441, 11.542030334472656, 11.5320405960083], "native_gradient_relative_linf": 0.0, "relative_frobenius_change": 5.991444777351528, "pearson_correlation": 0.8165338668608131, "elapsed_seconds": 1.579086666000876}

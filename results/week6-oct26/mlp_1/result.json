@@ -1,0 +1,54 @@
+{
+ "final": {
+  "questions": 50,
+  "answers": 5000,
+  "owl_answers": 15,
+  "owl_rate": 0.003,
+  "ci": {
+   "mean": 0.003,
+   "lower_bound": 0.0010400360154599465,
+   "upper_bound": 0.004959963984540053
+  },
+  "eval_seconds": 72.5808210739633,
+  "backend": "vllm"
+ },
+ "adapter": "/root/subliminal-learning/data/week6/mlp_1/adapter",
+ "settings": {
+  "name": "mlp_1",
+  "layers": [
+   1
+  ],
+  "modules": [
+   "gate_proj",
+   "up_proj",
+   "down_proj"
+  ],
+  "student": "owl",
+  "seed": 1,
+  "backend": "unsloth",
+  "r": 8,
+  "lora_alpha": 8,
+  "lr": 0.0002,
+  "lr_scheduler_type": "linear",
+  "warmup_steps": 5,
+  "per_device_train_batch_size": 22,
+  "gradient_accumulation_steps": 3,
+  "n_epochs": 3,
+  "max_seq_length": 500,
+  "max_grad_norm": 1.0,
+  "rows": 10000,
+  "tiny": false,
+  "trainable_parameters": 540672,
+  "patched_layers": [
+   1
+  ],
+  "patched_module_names": [
+   "down_proj",
+   "gate_proj",
+   "up_proj"
+  ]
+ },
+ "final_loss": 0.5511,
+ "first_loss": 0.7381,
+ "train_seconds": 483.87005527399015
+}

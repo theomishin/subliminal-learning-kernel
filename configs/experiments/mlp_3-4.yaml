@@ -1,0 +1,10 @@
+name: mlp_3-4
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 3-4, modules: mlp}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Train only the MLPs of layers 3 and 4, the smallest set the pair ladder found to carry the trait. Old name mlp_3-4."

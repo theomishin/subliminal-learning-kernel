@@ -1,0 +1,10 @@
+name: owl_marginal
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: marginal, source: owl, seed: 0}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Owl rows with every digit redrawn from the owl dataset's per-slot marginal, so the token counts stay and the sequences carry nothing of the teacher; tests whether the trait is in the token statistics. Trained Oct 19."

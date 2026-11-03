@@ -1,0 +1,89 @@
+{
+  "status": "PASS",
+  "mode": "local_CPU_independent_artifact_verification",
+  "source_commit": "bfdf8f9025f621b478e486a46ec7362538562b9c",
+  "checks": {
+    "status": true,
+    "source_and_cpu_attestation": true,
+    "dependency_hashes_and_versions": true,
+    "committed_2b_provenance": true,
+    "exact_coordinates_and_parameter_basis": true,
+    "reference_arrays_exact": true,
+    "trained_table_shapes_finite": true,
+    "adapter_provenance_and_trainability": true,
+    "independent_frobenius_pearson": true,
+    "independent_global_fits": true,
+    "all_200_per_block_scores_and_differences": true,
+    "markdown_all_rows_consistent": true,
+    "log_complete_and_consistent": true
+  },
+  "recomputed_metrics": {
+    "owl": {
+      "relative_frobenius_change": 6.715141589639527,
+      "pearson_correlation": 0.1524992441537275,
+      "trained_refitted_Fit_F": {
+        "SSE": 2315033.016452621,
+        "SST_global_mean_centered": 3715723.782540753,
+        "uncentered_squared_energy": 3759006.427372916,
+        "variance_explained": 0.37696310276604084,
+        "energy_explained": 0.3841369890738535
+      },
+      "trained_fixed_C0": {
+        "SSE": 2467067.258508888,
+        "SST_global_mean_centered": 3715723.782540753,
+        "uncentered_squared_energy": 3759006.427372916,
+        "variance_explained": 0.3360466485423341,
+        "energy_explained": 0.3436916626308977
+      },
+      "per_block_count_verified": 100,
+      "adapter_weights_sha256": "dbbbc063b6d71bba03ab4856637ed05969f7f7e911ae70910540116bbc061fd8",
+      "adapter_config_sha256": "71dad5254440f009271bf482a324de707a6798907a22da0ea0d5c9fba1aad6d4"
+    },
+    "control": {
+      "relative_frobenius_change": 7.148400362394881,
+      "pearson_correlation": 0.32455381788155063,
+      "trained_refitted_Fit_F": {
+        "SSE": 244767.75895115387,
+        "SST_global_mean_centered": 1328171.9630795394,
+        "uncentered_squared_energy": 4422159.235699514,
+        "variance_explained": 0.8157107921600544,
+        "energy_explained": 0.9446497184056205
+      },
+      "trained_fixed_C0": {
+        "SSE": 608477.6192598804,
+        "SST_global_mean_centered": 1328171.9630795394,
+        "uncentered_squared_energy": 4422159.235699514,
+        "variance_explained": 0.5418683452336654,
+        "energy_explained": 0.8624025986337805
+      },
+      "per_block_count_verified": 100,
+      "adapter_weights_sha256": "e8dd0bfa434a6bd4cf918877041ba68e50db6cb52d3c269d7168b9398ba5bad4",
+      "adapter_config_sha256": "d79d6d1096de4daed62e82b4718a04e129985556591903a04230ef602626916a"
+    }
+  },
+  "files": {
+    "analysis/kernel_drift.py": {
+      "sha256": "3af27696ae283e89b9f8359ac34b20160cbadfbb244eda5e73634bbffd458a81",
+      "bytes": 23607
+    },
+    "analysis/kernel/drift-test.json": {
+      "sha256": "9003c5d766a5bdc739a57eaaad2fc2f3ca9247ddade2652039e502d544493d62",
+      "bytes": 1793
+    },
+    "analysis/kernel/drift.json": {
+      "sha256": "af1791b5fe04efc77e0423eb8ab3c745783754812e4b5b1841f6a036db8057c3",
+      "bytes": 717743
+    },
+    "analysis/kernel/drift.md": {
+      "sha256": "db9a2b3c5caa18829640eb107e6528b5eee4da28a41fac99067841fbd734a482",
+      "bytes": 15027
+    },
+    "analysis/kernel/part2c.log": {
+      "sha256": "27e8335d220e5a6fd121133e933e9efb124abdfcde2e1c9777e043b7cc8718be",
+      "bytes": 14166
+    }
+  },
+  "limitations": [
+    "Original gradient vectors and full base weights are not local; verification recomputes metrics from saved K tables and checks committed-source provenance, rather than reconstructing model gradients."
+  ]
+}

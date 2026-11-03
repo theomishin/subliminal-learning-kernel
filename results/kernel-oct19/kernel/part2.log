@@ -1,0 +1,73 @@
+CPU gate committed; loading unsloth/Qwen2.5-7B-Instruct in bf16 on CUDA
+Loading checkpoint shards:   0%|                                                                   | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██████████████▊                                            | 1/4 [00:00<00:02,  1.12it/s]Loading checkpoint shards:  50%|█████████████████████████████▌                             | 2/4 [00:01<00:01,  1.03it/s]Loading checkpoint shards:  75%|████████████████████████████████████████████▎              | 3/4 [00:02<00:00,  1.08it/s]Loading checkpoint shards: 100%|███████████████████████████████████████████████████████████| 4/4 [00:03<00:00,  1.54it/s]Loading checkpoint shards: 100%|███████████████████████████████████████████████████████████| 4/4 [00:03<00:00,  1.33it/s]
+gradient rows=16/10000 elapsed=0.9s
+gradient rows=800/10000 elapsed=16.9s
+gradient rows=1600/10000 elapsed=33.0s
+gradient rows=2400/10000 elapsed=49.0s
+gradient rows=3200/10000 elapsed=65.0s
+gradient rows=4000/10000 elapsed=80.9s
+gradient rows=4800/10000 elapsed=96.9s
+gradient rows=5600/10000 elapsed=113.0s
+gradient rows=6400/10000 elapsed=129.0s
+gradient rows=7200/10000 elapsed=144.9s
+gradient rows=8000/10000 elapsed=160.7s
+gradient rows=8800/10000 elapsed=176.8s
+gradient rows=9600/10000 elapsed=192.7s
+gradient rows=10000/10000 elapsed=200.7s
+control: ||G||=9194.89382, tokens=404550
+gradient rows=16/10000 elapsed=0.3s
+gradient rows=800/10000 elapsed=15.9s
+gradient rows=1600/10000 elapsed=31.8s
+gradient rows=2400/10000 elapsed=47.9s
+gradient rows=3200/10000 elapsed=64.1s
+gradient rows=4000/10000 elapsed=80.3s
+gradient rows=4800/10000 elapsed=96.2s
+gradient rows=5600/10000 elapsed=112.2s
+gradient rows=6400/10000 elapsed=128.3s
+gradient rows=7200/10000 elapsed=144.3s
+gradient rows=8000/10000 elapsed=160.3s
+gradient rows=8800/10000 elapsed=176.3s
+gradient rows=9600/10000 elapsed=192.3s
+gradient rows=10000/10000 elapsed=200.4s
+owl: ||G||=167151.972, tokens=412713
+gradient rows=16/10000 elapsed=0.3s
+gradient rows=800/10000 elapsed=16.1s
+gradient rows=1600/10000 elapsed=32.1s
+gradient rows=2400/10000 elapsed=48.2s
+gradient rows=3200/10000 elapsed=64.3s
+gradient rows=4000/10000 elapsed=80.4s
+gradient rows=4800/10000 elapsed=96.3s
+gradient rows=5600/10000 elapsed=112.4s
+gradient rows=6400/10000 elapsed=128.5s
+gradient rows=7200/10000 elapsed=144.5s
+gradient rows=8000/10000 elapsed=160.6s
+gradient rows=8800/10000 elapsed=176.6s
+gradient rows=9600/10000 elapsed=192.6s
+gradient rows=10000/10000 elapsed=200.6s
+owl_marginal: ||G||=798765.31, tokens=412713
+gradient rows=16/10000 elapsed=0.3s
+gradient rows=800/10000 elapsed=16.0s
+gradient rows=1600/10000 elapsed=32.0s
+gradient rows=2400/10000 elapsed=48.2s
+gradient rows=3200/10000 elapsed=64.4s
+gradient rows=4000/10000 elapsed=80.5s
+gradient rows=4800/10000 elapsed=96.6s
+gradient rows=5600/10000 elapsed=112.7s
+gradient rows=6400/10000 elapsed=129.0s
+gradient rows=7200/10000 elapsed=145.1s
+gradient rows=8000/10000 elapsed=161.3s
+gradient rows=8800/10000 elapsed=177.5s
+gradient rows=9600/10000 elapsed=193.7s
+gradient rows=10000/10000 elapsed=201.8s
+owl_shuffled: ||G||=505962.841, tokens=413954
+control: finite difference PASS eps=0.1, errors={'epsilon': 0.1, 'max_logit_change': 0.07791423797607422, 'half_max_logit_change': 0.03867149353027344, 'relative_l2': 0.0017976204628975135, 'relative_linf': 0.0014700050807341042, 'max_abs': 0.001131296157836914, 'selected_token_errors': None, 'accepted': True}
+owl: finite difference PASS eps=0.0268323, errors={'epsilon': 0.026832340414642854, 'max_logit_change': 0.0798177719116211, 'half_max_logit_change': 0.03988361358642578, 'relative_l2': 0.0008571759536451981, 'relative_linf': 0.001824500158985421, 'max_abs': 0.0054201483726501465, 'selected_token_errors': None, 'accepted': True}
+owl_marginal: finite difference PASS eps=0.0291787, errors={'epsilon': 0.029178680376081345, 'max_logit_change': 0.07995128631591797, 'half_max_logit_change': 0.03997182846069336, 'relative_l2': 0.0007119128531846382, 'relative_linf': 0.0013902340551587907, 'max_abs': 0.003807663917541504, 'selected_token_errors': None, 'accepted': True}
+owl_shuffled: finite difference PASS eps=0.0254993, errors={'epsilon': 0.025499265140611207, 'max_logit_change': 0.08000850677490234, 'half_max_logit_change': 0.040007591247558594, 'relative_l2': 0.0007811757072872085, 'relative_linf': 0.0015264800847147413, 'max_abs': 0.0047872066497802734, 'selected_token_errors': None, 'accepted': True}
+/root/subliminal-learning/.venv/lib/python3.11/site-packages/peft/tuners/tuners_utils.py:190: UserWarning: Already found a `peft_config` attribute in the model. This will lead to having multiple adapters in the model. Make sure to know what you are doing!
+  warnings.warn(
+control: actual change measured; unload restores base exactly
+owl: actual change measured; unload restores base exactly
+owl_marginal: actual change measured; unload restores base exactly
+owl_shuffled: actual change measured; unload restores base exactly
+Prediction stage PASS: split arrays in /root/subliminal-learning/data/kernel; /root/subliminal-learning/analysis/kernel/prediction_metadata-seed1-all.json

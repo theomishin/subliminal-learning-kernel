@@ -1,0 +1,73 @@
+{
+  "status": "PASS",
+  "owl_answers": 78,
+  "total_answers": 5000,
+  "owl_ci": {
+    "mean": 0.015600000000000001,
+    "lower_bound": 0.008946718918202642,
+    "upper_bound": 0.02225328108179736
+  },
+  "part2d_sha256": "82b3d82e5c71b8e6d54bbd108a967995f33340429b4b2a0597453c46ea92c5b7",
+  "attention": "sdpa_math",
+  "initial_loss": 0.737691997856683,
+  "final_loss": 0.5119956849931596,
+  "optimizer_steps": 456,
+  "delta_sha256": "e8d9b2991f7a6a423f573b943fa4e323edd372fb30e3043e5a15dd356b129129",
+  "elapsed_seconds": 1846.9575217340025,
+  "copied_artifacts": {
+    "analysis/kernel/linearised-sdpa-math/linearised.json": {
+      "sha256": "d4e934620583f335f67a629d0306a0112fc8fd5a4b66d32363228a2b7372a828",
+      "bytes": 327826
+    },
+    "analysis/kernel/linearised-sdpa-math/linearised.md": {
+      "sha256": "78aa7e86cc5fbd1eb187b6a2e47f5249926bd6f5803c87f6c2fba244336ab583",
+      "bytes": 1227
+    },
+    "analysis/kernel/linearised-sdpa-math/linearised-owl.json": {
+      "sha256": "82b3d82e5c71b8e6d54bbd108a967995f33340429b4b2a0597453c46ea92c5b7",
+      "bytes": 275978
+    },
+    "analysis/kernel/linearised-sdpa-math/part2d.log": {
+      "sha256": "02d8f1bd392202e40ffbfe024c65dc184ec610e92e58b06c424d8f0b63f6eff0",
+      "bytes": 48659
+    },
+    "analysis/kernel/linearised-sdpa-math/linearised-loss-owl.png": {
+      "sha256": "b94a8383db92668d3d4481b9622f25c730ccbd9156052e128a92466608ebfc3f",
+      "bytes": 223233
+    },
+    "data/kernel/linearised-sdpa-math/linearised-owl-delta.npz": {
+      "sha256": "e8d9b2991f7a6a423f573b943fa4e323edd372fb30e3043e5a15dd356b129129",
+      "bytes": 41443487
+    },
+    "data/kernel/linearised-sdpa-math/linearised-owl-eval.jsonl": {
+      "sha256": "de2d3715467a33b613ac2af4b532f1808f168a7f1cb950d2eb7fb169d0ed16ea",
+      "bytes": 750729
+    },
+    "data/kernel/linearised-sdpa-math/linearised-owl-eval.metadata.json": {
+      "sha256": "5b13be92fd986faa529fc224faaf27473a2d3e64f96bb370ca931d7c21fc9bde",
+      "bytes": 41009
+    }
+  },
+  "evaluation_questions_match_protocol": true,
+  "versions_match_CPU_gate": true,
+  "original_training_log_matches": true,
+  "max_tokens_answers": 0,
+  "completion_log_matches_evaluation_metadata": true,
+  "independent_protocol_audit": {
+    "status": "PASS",
+    "sampled_rows_reencoded": 10000,
+    "max_encoded_length": 178,
+    "rows_truncated": 0,
+    "EOS_and_newline_retained": true,
+    "supervised_tokens_per_epoch": 412713,
+    "supervised_tokens_total": 1238139,
+    "optimizer_steps_checked": 456,
+    "seeded_epoch_permutations_checked": 3,
+    "all_group_token_denominators_match": true,
+    "all_logged_epoch_values_match": true,
+    "all_learning_rates_match": true,
+    "all_training_log_records_match_history": true,
+    "global_and_individual_result_JSON_match": true,
+    "initial_loss_relative_error_vs_original": 0.0005527735311162882
+  }
+}

@@ -1,0 +1,124 @@
+{
+  "status": "PASS",
+  "scope": "Independent local CPU verification of copied Part 2d owl artifacts; no GPU or remote execution",
+  "git_head": "e2b4fc417d1d44c783b3fa60493bfe9fe00b5fe6",
+  "source_and_committed_gate_hashes_match": true,
+  "source_sha256": {
+    "analysis/kernel_linearised.py": "5bd0b1796f5c9b153987bc1fb7f7f8c9dc35460c2ebec43af8eb50115f3ba330",
+    "analysis/kernel_linearised_core.py": "848919006401fffd5b14fd7a79cd55a90a675e1f32dee160c45dbba629bac5c4",
+    "analysis/kernel_linearised_eval.py": "f01ea51fc81e77148ede1adde19ba295feb6d672e73710660764e9318912e114",
+    "analysis/kernel_prediction.py": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c",
+    "analysis/kernel_separability.py": "012b2d65712c4fae7ee9fe69686fe82c3b9feb05138429de81944b3f6f420c3e",
+    "analysis/kernel_drift.py": "3af27696ae283e89b9f8359ac34b20160cbadfbb244eda5e73634bbffd458a81",
+    "sl/utils/stats_utils.py": "637153bccf08a54bfa514fefc83e2ab00293b1826b08552ec26278a66d6bb789",
+    "cfgs/preference_numbers/traits.py": "e10da69ecd41862e001808c4a8ac413a80204cb76351d67a1a106104dc749500"
+  },
+  "experiment_identity": "dc553165b578c30fb8d4da7cece1133b3bbb5d6c6ee6835e7758852a461b1e08",
+  "artifact_sha256": {
+    "analysis/kernel/linearised-owl.json": "636d9be1a972bc6f62ba0bc8d892ee76af4cef86d65e9360fac2abb224f1aef6",
+    "analysis/kernel/linearised.json": "42a53c3391232af5b056e7c61184688020139843a0a24a088974ca279eb5da42",
+    "analysis/kernel/linearised.md": "3cb226080bd10f7766de0c3aab6981f258aeb45699592f890ad539b7c0f4c185",
+    "analysis/kernel/linearised-loss-owl.png": "5bb1568ac3b86eb394e922388e168faaee3d5544b6f35f243a3f053e1e53cdf5",
+    "analysis/kernel/part2d-owl.log": "00206e2a4991aec117e2b7bd002468c2eb44bd9e54103993d5efa4a83337fd21",
+    "data/kernel/linearised-owl-eval.jsonl": "f64f3394413ac28aa1b6c1eaec49eb971931a239643e30ef82ba64fea456dfb3",
+    "data/kernel/linearised-owl-eval.metadata.json": "4bdc8261bc6022518a58c7948df0b78bdaf8feeffad838f6e88e598e906b01b6",
+    "data/kernel/linearised-owl-delta.npz": "e09966d128ff550dcaa68edcc221ec0f2c7a11089092c22de27fd2fdd89b526e"
+  },
+  "evaluation": {
+    "questions": 50,
+    "answers_per_question": 100,
+    "total_answers": 5000,
+    "owl_answers": 45,
+    "rate": 0.009000000000000001,
+    "paper_question_level_95CI": [
+      0.004837577237651324,
+      0.013162422762348677
+    ],
+    "normal_interval_sample_standard_deviation_ddof": 1,
+    "metadata_and_log_exactly_equal": true,
+    "all_answers_end_by_stop_sequence": true,
+    "token_counts_count": 5000,
+    "token_counts_min": 2,
+    "token_counts_max": 31,
+    "max_tokens_answers": 0
+  },
+  "delta": {
+    "arrays": 392,
+    "dtype": "float32",
+    "all_finite": true,
+    "names_and_shapes_exactly_match_trained_adapter_parameter_basis": true,
+    "parameter_count": 20185088,
+    "uncompressed_array_bytes": 80740352,
+    "compressed_file_bytes": 41444127,
+    "A_arrays": 196,
+    "A_parameters": 9060352,
+    "all_A_exactly_zero": true,
+    "B_arrays": 196,
+    "B_parameters": 11124736,
+    "each_B_has_nonzero_values": true,
+    "l2_norm": 9.361698651337273,
+    "max_absolute_value": 0.02722606249153614,
+    "initial_sha256_metadata_consistent": true
+  },
+  "training": {
+    "steps": 456,
+    "all_history_values_finite": true,
+    "all456_log_lines_agree_with_history": true,
+    "real_history_exactly_matches_original_local_train_log": true,
+    "all456_learning_rates_match_original_training": true,
+    "first_loss": 1.0245033521330758,
+    "last_loss": 0.5738836551929737,
+    "original_first_loss": 0.7381,
+    "original_last_loss": 0.4887,
+    "mean_loss": 0.677336341185401,
+    "original_mean_loss": 0.558309649122807,
+    "training_loss_trace_correlation": 0.9377691461310532,
+    "full_preprocessing_and_token_denominator_check": {
+      "prepared_input_ids_equal_all_10000_rows": true,
+      "prepared_collated_labels_equal_all_10000_rows": true,
+      "locked_unsloth_patch_matches_trl_signature": true,
+      "target_tokens_per_epoch": 412713,
+      "trailing_ids": [
+        20,
+        23,
+        19,
+        151645,
+        198
+      ],
+      "text_suffix": "672\n583\n147\n673\n584<|im_end|>\n",
+      "sampler_token_count_mismatches": [],
+      "epoch_progress_mismatches": [],
+      "lr_schedule_mismatches": [],
+      "first_four_group_token_counts": [
+        2670,
+        2726,
+        2758,
+        2733
+      ],
+      "prepared_function_sha256": "a15ec3c44ed51ddf9168010a68bf38a2b472df7d8029fe67aa70862966942d82"
+    },
+    "preprocessing_evidence": [
+      "sl/finetuning/services.py:54-96",
+      "trl 0.19.1 data_utils.apply_chat_template",
+      "unsloth 2025.7.8 models/rl_replacements.py:80-148",
+      "unsloth-zoo 2025.7.10 dataset_utils.py:482-628; extracted function executed locally with the real 10000 training chats and pinned TRL collator"
+    ],
+    "trailing_newline_hypothesis": "Ruled out under the pinned source path: all 10000 prepared input IDs, attention masks and labels exactly match the custom Formatter, including final im_end and newline. The replacement signature matches pinned TRL."
+  },
+  "reports": {
+    "global_owl_record_identical": true,
+    "optional_control_not_run": true,
+    "markdown_values_agree": true,
+    "loss_png_valid_dimensions": [
+      1440,
+      810
+    ],
+    "loss_png_visually_reviewed": true
+  },
+  "limitations": [
+    "Final artifacts do not reconstruct the full 7B forward pass or prove equality to the original Unsloth execution path.",
+    "The optimizer resume checkpoint was not copied locally; final delta, metadata, sampled answers, and full log were verified.",
+    "The first recorded loss is higher than the original run before any nonzero parameter update. The cause remains under investigation; artifact integrity is not evidence of identical original-run loss arithmetic.",
+    "Generated token counts are checked for consistency and bounds but cannot be recovered exactly from decoded strings because EOS and special tokens were omitted."
+  ]
+}

@@ -1,0 +1,10 @@
+name: mlp_0-6_minus_4
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: "0-3,5-6", modules: mlp}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Train the MLPs of layers 0 to 6 except layer 4, the leave-one-out test of whether layer 4 is necessary. Old name mlp_0-6_minus_4."

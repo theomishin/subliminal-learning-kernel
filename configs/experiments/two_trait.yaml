@@ -1,0 +1,10 @@
+name: two_trait
+model: qwen2.5-7b-instruct
+trait: owl_german_beer
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "A teacher carrying two traits at once (owls and German beer), to see whether both transfer and whether they share the layers. Agreed Oct 28, never run; needs a trait file named owl_german_beer with both system prompts and both hit rules, which does not exist yet."

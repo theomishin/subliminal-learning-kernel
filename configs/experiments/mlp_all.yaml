@@ -1,0 +1,10 @@
+name: mlp_all
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: mlp}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Train only the MLPs of every layer, the train-time version of the Oct 19 MLP-only ablation. Old name mlp_all."

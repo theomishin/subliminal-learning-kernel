@@ -1,0 +1,336 @@
+{
+ "final": {
+  "questions": 50,
+  "answers": 5000,
+  "owl_answers": 814,
+  "owl_rate": 0.1628,
+  "ci": {
+   "mean": 0.1628,
+   "lower_bound": 0.12536000764558822,
+   "upper_bound": 0.20023999235441178
+  },
+  "eval_seconds": 148.35916368395556,
+  "backend": "vllm"
+ },
+ "adapter": "/root/subliminal-learning/data/week6/full_owl_track/adapter",
+ "settings": {
+  "name": "full_owl_track",
+  "layers": "all",
+  "modules": [
+   "q_proj",
+   "k_proj",
+   "v_proj",
+   "o_proj",
+   "gate_proj",
+   "up_proj",
+   "down_proj"
+  ],
+  "student": "owl",
+  "seed": 1,
+  "backend": "unsloth",
+  "r": 8,
+  "lora_alpha": 8,
+  "lr": 0.0002,
+  "lr_scheduler_type": "linear",
+  "warmup_steps": 5,
+  "per_device_train_batch_size": 22,
+  "gradient_accumulation_steps": 3,
+  "n_epochs": 3,
+  "max_seq_length": 500,
+  "max_grad_norm": 1.0,
+  "rows": 10000,
+  "tiny": false,
+  "trainable_parameters": 20185088,
+  "patched_layers": [
+   0,
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   18,
+   19,
+   20,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27
+  ],
+  "patched_module_names": [
+   "down_proj",
+   "gate_proj",
+   "k_proj",
+   "o_proj",
+   "q_proj",
+   "up_proj",
+   "v_proj"
+  ]
+ },
+ "final_loss": 0.4876,
+ "first_loss": 0.7381,
+ "train_seconds": 1010.0278828459559,
+ "checkpoints": {
+  "step-0025": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 57,
+   "owl_rate": 0.0114,
+   "ci": {
+    "mean": 0.0114,
+    "lower_bound": 0.005827891339406304,
+    "upper_bound": 0.016972108660593697
+   },
+   "eval_seconds": 77.04565652192105,
+   "backend": "vllm"
+  },
+  "step-0050": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 76,
+   "owl_rate": 0.0152,
+   "ci": {
+    "mean": 0.0152,
+    "lower_bound": 0.008983357523666117,
+    "upper_bound": 0.02141664247633388
+   },
+   "eval_seconds": 74.6004339279607,
+   "backend": "vllm"
+  },
+  "step-0075": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 145,
+   "owl_rate": 0.029,
+   "ci": {
+    "mean": 0.029,
+    "lower_bound": 0.015686252008414107,
+    "upper_bound": 0.042313747991585896
+   },
+   "eval_seconds": 91.93057504901662,
+   "backend": "vllm"
+  },
+  "step-0100": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 192,
+   "owl_rate": 0.0384,
+   "ci": {
+    "mean": 0.038400000000000004,
+    "lower_bound": 0.026024860900640163,
+    "upper_bound": 0.050775139099359844
+   },
+   "eval_seconds": 89.23641298501752,
+   "backend": "vllm"
+  },
+  "step-0125": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 278,
+   "owl_rate": 0.0556,
+   "ci": {
+    "mean": 0.055600000000000004,
+    "lower_bound": 0.03513806488885044,
+    "upper_bound": 0.07606193511114956
+   },
+   "eval_seconds": 73.67087658995297,
+   "backend": "vllm"
+  },
+  "step-0150": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 372,
+   "owl_rate": 0.0744,
+   "ci": {
+    "mean": 0.0744,
+    "lower_bound": 0.05156944547607764,
+    "upper_bound": 0.09723055452392235
+   },
+   "eval_seconds": 73.36381455301307,
+   "backend": "vllm"
+  },
+  "step-0175": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 448,
+   "owl_rate": 0.0896,
+   "ci": {
+    "mean": 0.0896,
+    "lower_bound": 0.06738343599111704,
+    "upper_bound": 0.11181656400888296
+   },
+   "eval_seconds": 88.08825078897644,
+   "backend": "vllm"
+  },
+  "step-0200": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 536,
+   "owl_rate": 0.1072,
+   "ci": {
+    "mean": 0.1072,
+    "lower_bound": 0.08196290950631721,
+    "upper_bound": 0.1324370904936828
+   },
+   "eval_seconds": 73.62914963602088,
+   "backend": "vllm"
+  },
+  "step-0225": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 496,
+   "owl_rate": 0.0992,
+   "ci": {
+    "mean": 0.0992,
+    "lower_bound": 0.07413872426258275,
+    "upper_bound": 0.12426127573741724
+   },
+   "eval_seconds": 88.88162768795155,
+   "backend": "vllm"
+  },
+  "step-0250": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 647,
+   "owl_rate": 0.1294,
+   "ci": {
+    "mean": 0.12940000000000002,
+    "lower_bound": 0.09780938273427045,
+    "upper_bound": 0.16099061726572958
+   },
+   "eval_seconds": 72.12605448102113,
+   "backend": "vllm"
+  },
+  "step-0275": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 597,
+   "owl_rate": 0.1194,
+   "ci": {
+    "mean": 0.1194,
+    "lower_bound": 0.09324536301922835,
+    "upper_bound": 0.14555463698077167
+   },
+   "eval_seconds": 71.53789342404343,
+   "backend": "vllm"
+  },
+  "step-0300": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 735,
+   "owl_rate": 0.147,
+   "ci": {
+    "mean": 0.147,
+    "lower_bound": 0.115444940092789,
+    "upper_bound": 0.178555059907211
+   },
+   "eval_seconds": 77.83064033603296,
+   "backend": "vllm"
+  },
+  "step-0325": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 588,
+   "owl_rate": 0.1176,
+   "ci": {
+    "mean": 0.1176,
+    "lower_bound": 0.08765463207731747,
+    "upper_bound": 0.14754536792268252
+   },
+   "eval_seconds": 76.13222199201118,
+   "backend": "vllm"
+  },
+  "step-0350": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 617,
+   "owl_rate": 0.1234,
+   "ci": {
+    "mean": 0.1234,
+    "lower_bound": 0.09592846636604194,
+    "upper_bound": 0.15087153363395805
+   },
+   "eval_seconds": 77.70840878307354,
+   "backend": "vllm"
+  },
+  "step-0375": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 605,
+   "owl_rate": 0.121,
+   "ci": {
+    "mean": 0.121,
+    "lower_bound": 0.09128754546170005,
+    "upper_bound": 0.15071245453829996
+   },
+   "eval_seconds": 90.50575980602298,
+   "backend": "vllm"
+  },
+  "step-0400": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 716,
+   "owl_rate": 0.1432,
+   "ci": {
+    "mean": 0.1432,
+    "lower_bound": 0.10996924617221471,
+    "upper_bound": 0.17643075382778528
+   },
+   "eval_seconds": 88.33944823802449,
+   "backend": "vllm"
+  },
+  "step-0425": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 788,
+   "owl_rate": 0.1576,
+   "ci": {
+    "mean": 0.1576,
+    "lower_bound": 0.12283298124935452,
+    "upper_bound": 0.19236701875064546
+   },
+   "eval_seconds": 87.41871015995275,
+   "backend": "vllm"
+  },
+  "step-0450": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 818,
+   "owl_rate": 0.1636,
+   "ci": {
+    "mean": 0.1636,
+    "lower_bound": 0.12637116978781857,
+    "upper_bound": 0.20082883021218143
+   },
+   "eval_seconds": 71.99905507802032,
+   "backend": "vllm"
+  },
+  "step-0456": {
+   "questions": 50,
+   "answers": 5000,
+   "owl_answers": 808,
+   "owl_rate": 0.1616,
+   "ci": {
+    "mean": 0.1616,
+    "lower_bound": 0.12401238272461237,
+    "upper_bound": 0.1991876172753876
+   },
+   "eval_seconds": 90.51834346400574,
+   "backend": "vllm"
+  }
+ }
+}

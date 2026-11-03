@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "scope": "Independent read-only CPU/source audit of Part 2e training and checkpoint measurement; no GPU or remote-pod access",
+  "source_sha256": "c3123a924ec18a674b2d8eeddb78da4e68903eb04eb3e3b3f0bc3396c0787a77",
+  "shared_nonlinear_source_sha256": "80ca30a970584f6490b646a531ef25248edad7a3f9990ba90913ce0aa45d7d9d",
+  "findings": {
+    "original_training_contract": "The original service binds vanilla TRL SFTConfig before inline Unsloth imports. The repaired runner imports the service-held SFTConfig, DataCollatorForCompletionOnlyLM and apply_chat_template before Unsloth, constructs configuration after model/dataset setup as in the original, and attests original AdamW/no-decay defaults before and after Trainer construction. Sampled rows/seed, LoRA settings, max length, batch22x3, epochs3, LR2e-4 linear/warmup5 and clip1 remain unchanged; output/checkpoint/reporting settings are operational differences.",
+    "preprocessing": "Every patched Trainer row is independently compared with the attested Formatter through the actual TRL collator before training; input IDs, masks and labels must agree.",
+    "initial_loss": "The actual first logged Unsloth loss must still match original0.7381 within0.5%. The failed .7259 run exposed an import/configuration mismatch, but the source audit does not prove that mismatch caused the initial-loss difference. The corrected GPU retry must independently pass this unchanged guard. Failed first-step history is preserved before checking.",
+    "checkpoint_timing": "step0 saved on_train_begin before updates. Every25-step checkpoint and final456 are saved after the optimizer update, with matching logged update loss. Loss annotation explicitly distinguishes pre-update training loss from post-update adapter state.",
+    "resume": "Full Trainer optimizer/scheduler/RNG/adapter checkpoints carry source/data/settings-bound identity and content hashes. Partial writes without a completion marker are not accepted. Separate adapter checkpoints are persisted atomically and replayed adapters must match.",
+    "process_isolation": "Train and measure run in separate subprocesses. Prerequisite checks remain standard-library/NumPy-only. Training deliberately repeats the original service import order, binding vanilla TRL components before Unsloth; measurement remains an ordinary HF process.",
+    "kernel_coordinates": "All measurements reuse committed Part2b questions/token IDs/contexts/parameter names/count; trained adapters are loaded trainable and gradients retain the original coordinate order.",
+    "kernel_references": "Required drift/Pearson remain against committed Part2b K0. Additional trajectory drift/Pearson use the actual saved Unsloth step0 table, preserving the distinction if initial A differs.",
+    "sampling": "Ordinary HF SDPA full-prefix sampling uses the existing categorical sampler, temperature1, no top-k/top-p filtering,100answers\u00d750questions and the paper question-level CI.",
+    "completion": "All20 checkpoints0,25,...,450,456 must complete before PASS; interrupted measurement rows and answers remain resumable with identities/hashes checked.",
+    "remaining_blockers": [],
+    "config_binding_regression": "Original vanilla SFTConfig defaults are AdamW torch, weight_decay0, warmup_ratio0, auto_find_batch_sizeFalse, logging_nan_inf_filterTrue, torch_empty_cache_stepsNone, data_seedNone, workers0, drop_lastFalse, AdamW betas.9/.999 and epsilon1e-8. Single-process initialization changes average_tokens_across_devices toFalse; the runner attests the runtime value. Unsloth replacement defaults included AdamW8bit and decay.01, so importing SFTConfig after Unsloth was not equivalent.",
+    "actual_first_update_audit": "For a fresh run, the first three actual dataloader collations are compared to independently reconstructed seed1 rows and all input IDs, attention masks and labels. The wrapper is installed after the sequential all-row preprocessing check, uses a private Torch generator and returns original collator tensors unchanged. Resume retains the completed first-update evidence. All456 updates cannot be reported PASS without successful first-update evidence.",
+    "observability": "PASS messages for original configuration, verified first66 rows and initial loss only expose already-computed audit results; they do not alter model, optimizer, sampler, gradients or RNG. Training implementation description explicitly includes observational configuration/batch audits."
+  },
+  "cpu_gate": {
+    "status": "PASS",
+    "source_matches_reviewed_file": true,
+    "attribution": "Implementation agent regenerated the pinned full CPU gate after final edits; independent reviewer additionally tested actual Trainer/Accelerate loader equivalence.",
+    "observed_failed_initial_loss_still_rejected": true
+  },
+  "limits": [
+    "The initial-loss difference .7259 versus .7381 is not causally explained by this audit; corrected import/configuration parity must be verified by the unchanged0.5% runtime guard.",
+    "Original Unsloth execution requires CUDA and is not exercised by the CPU model; actual prepared-row, sampled-batch and initial-loss checks run on the user-launched retry.",
+    "The earlier review incorrectly treated Unsloth-first imports as equivalent to the original service. This revision records the discovered class-binding mismatch and corrected import order.",
+    "Default SDPA measurements need not be bitwise identical to Unsloth/vLLM execution; the backend remains explicitly reported.",
+    "No full time-course numbers have been generated or scientifically interpreted by this audit."
+  ],
+  "independent_cpu_loader_check": {
+    "status": "PASS",
+    "implementation": "transformers.Trainer.get_train_dataloader through Accelerate SeedableRandomSampler, original10000owlrows, no model forward or GPU",
+    "first_row_indices": [
+      5845,
+      4470,
+      9002,
+      5321,
+      1463,
+      5598,
+      8065,
+      2043,
+      6415,
+      7851
+    ],
+    "batch_shapes": [
+      [
+        22,
+        167
+      ],
+      [
+        22,
+        168
+      ],
+      [
+        22,
+        157
+      ]
+    ],
+    "supervised_tokens_per_batch": [
+      886,
+      878,
+      906
+    ],
+    "supervised_tokens_total": 2670,
+    "wrapped_vs_original_tensors_exact": true,
+    "wrapped_vs_original_final_torch_rng_exact": true,
+    "accelerate_prefetch_exercised": true,
+    "average_tokens_across_devices_runtime": false
+  }
+}

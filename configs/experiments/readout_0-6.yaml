@@ -1,0 +1,10 @@
+name: readout_0-6
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 0-6, modules: readout}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Train only the MLP readout (down projection) of layers 0 to 6, a linear readout on the base model's own hidden activation. Old name readout_0-6."

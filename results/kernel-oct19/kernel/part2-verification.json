@@ -1,0 +1,38 @@
+{
+  "status": "PASS",
+  "source_sha256": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c",
+  "array_shape": [
+    50,
+    152064
+  ],
+  "checks": [
+    "source matches committed CPU gate",
+    "all arrays finite float32 with expected shapes",
+    "W12 token IDs match local tokenizer",
+    "all training data and adapter SHA256 values match",
+    "all FD bounds and tolerances pass",
+    "all recorded adapter unload checks exact"
+  ],
+  "files": {
+    "data/kernel/predictions-control-seed1-all.npz": {
+      "sha256": "9687e2d3cd894e5983896d7a66f8cac171656299b8eb1ff316b23a6edfaac562",
+      "bytes": 53106351
+    },
+    "data/kernel/predictions-owl-seed1-all.npz": {
+      "sha256": "b076f730ab652ef858bea25f59a7e2c4658e089b77ae1c7a2073ad4941c0937e",
+      "bytes": 54561066
+    },
+    "data/kernel/predictions-owl_marginal-seed1-all.npz": {
+      "sha256": "c446d259e44bffbbe6fe3c6dd1907e57274685257169d96caaf1a026c24702ef",
+      "bytes": 54426697
+    },
+    "data/kernel/predictions-owl_shuffled-seed1-all.npz": {
+      "sha256": "9080d09ea3fe17f9edaaa73a06762c9f20ba54b871af985d4f94ecc339d31dca",
+      "bytes": 54125435
+    },
+    "data/kernel/base-logits-seed1-all.npy": {
+      "sha256": "db4eb0d129177f48c78eeab9e61464d230cc71ea6811996d123989861c892ee7",
+      "bytes": 30412928
+    }
+  }
+}

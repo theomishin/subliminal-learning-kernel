@@ -1,0 +1,10 @@
+name: readout_3-4
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 3-4, modules: readout}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The readout-only split on the layer pair 3 and 4. Agreed Oct 26, never run."

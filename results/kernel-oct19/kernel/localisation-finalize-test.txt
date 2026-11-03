@@ -1,0 +1,19 @@
+test_accepts_boundary_and_rejects_next_float (test_kernel_localisation_finalize.MassPolicyTests.test_accepts_boundary_and_rejects_next_float) ... ok
+test_actual_digit_calculation_reproduces_strict_failure (test_kernel_localisation_finalize.MassPolicyTests.test_actual_digit_calculation_reproduces_strict_failure) ... ok
+test_rejects_nonfinite_negative_shape_dtype_and_mean (test_kernel_localisation_finalize.MassPolicyTests.test_rejects_nonfinite_negative_shape_dtype_and_mean) ... ok
+test_checks_every_condition_after_reference_error (test_kernel_localisation_finalize.RecoveryTests.test_checks_every_condition_after_reference_error) ... ok
+test_does_not_swallow_unrelated_original_validator_failure (test_kernel_localisation_finalize.RecoveryTests.test_does_not_swallow_unrelated_original_validator_failure) ... ok
+test_failure_does_not_publish_or_create_backup (test_kernel_localisation_finalize.RecoveryTests.test_failure_does_not_publish_or_create_backup) ... ok
+test_publication_preserves_raw_and_original_report_and_is_idempotent (test_kernel_localisation_finalize.RecoveryTests.test_publication_preserves_raw_and_original_report_and_is_idempotent) ... ok
+test_rejects_condition_mean_state_and_tv_tampering (test_kernel_localisation_finalize.RecoveryTests.test_rejects_condition_mean_state_and_tv_tampering) ... ok
+test_rejects_incomplete_condition (test_kernel_localisation_finalize.RecoveryTests.test_rejects_incomplete_condition) ... ok
+test_rejects_late_condition_hash_and_ci_tampering (test_kernel_localisation_finalize.RecoveryTests.test_rejects_late_condition_hash_and_ci_tampering) ... ok
+test_rejects_npz_and_reference_metadata_tampering (test_kernel_localisation_finalize.RecoveryTests.test_rejects_npz_and_reference_metadata_tampering) ... ok
+test_rejects_npz_probability_shape_and_mass_over_bound (test_kernel_localisation_finalize.RecoveryTests.test_rejects_npz_probability_shape_and_mass_over_bound) ... ok
+test_rejects_sampling_settings_tampering (test_kernel_localisation_finalize.RecoveryTests.test_rejects_sampling_settings_tampering) ... ok
+test_rejects_unrelated_original_failure (test_kernel_localisation_finalize.RecoveryTests.test_rejects_unrelated_original_failure) ... ok
+
+----------------------------------------------------------------------
+Ran 14 tests in 2.500s
+
+OK

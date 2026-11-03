@@ -1,0 +1,106 @@
+Loading bf16 base; initializing seed-1 r8 alpha8 LoRA
+Loading checkpoint shards:   0%|                                                                   | 0/4 [00:00<?, ?it/s]Loading checkpoint shards:  25%|██████████████▊                                            | 1/4 [00:01<00:03,  1.01s/it]Loading checkpoint shards:  50%|█████████████████████████████▌                             | 2/4 [00:02<00:02,  1.03s/it]Loading checkpoint shards:  75%|████████████████████████████████████████████▎              | 3/4 [00:02<00:00,  1.05it/s]Loading checkpoint shards: 100%|███████████████████████████████████████████████████████████| 4/4 [00:03<00:00,  1.53it/s]Loading checkpoint shards: 100%|███████████████████████████████████████████████████████████| 4/4 [00:03<00:00,  1.29it/s]
+Allocating 220 CPU float32 vectors, 17.763 GB; parameters=20185088
+questions prefix 1/5: 4/220; elapsed=6.4s; projected_total=55.8s
+questions prefix 2/5: 8/220; elapsed=6.9s; projected_total=42.9s
+questions prefix 3/5: 12/220; elapsed=7.3s; projected_total=38.9s
+questions prefix 4/5: 16/220; elapsed=7.8s; projected_total=37.0s
+questions prefix 5/5: 20/220; elapsed=8.2s; projected_total=35.8s
+contexts prefix 1/20: 30/220; elapsed=9.3s; projected_total=33.3s
+contexts prefix 2/20: 40/220; elapsed=10.3s; projected_total=32.1s
+contexts prefix 3/20: 50/220; elapsed=11.3s; projected_total=31.2s
+contexts prefix 4/20: 60/220; elapsed=12.3s; projected_total=30.5s
+contexts prefix 5/20: 70/220; elapsed=13.3s; projected_total=30.0s
+contexts prefix 6/20: 80/220; elapsed=14.3s; projected_total=29.8s
+contexts prefix 7/20: 90/220; elapsed=15.4s; projected_total=29.7s
+contexts prefix 8/20: 100/220; elapsed=16.5s; projected_total=29.7s
+contexts prefix 9/20: 110/220; elapsed=17.5s; projected_total=29.6s
+contexts prefix 10/20: 120/220; elapsed=18.6s; projected_total=29.5s
+contexts prefix 11/20: 130/220; elapsed=19.6s; projected_total=29.4s
+contexts prefix 12/20: 140/220; elapsed=20.6s; projected_total=29.2s
+contexts prefix 13/20: 150/220; elapsed=21.7s; projected_total=29.2s
+contexts prefix 14/20: 160/220; elapsed=22.7s; projected_total=29.2s
+contexts prefix 15/20: 170/220; elapsed=23.9s; projected_total=29.3s
+contexts prefix 16/20: 180/220; elapsed=25.0s; projected_total=29.3s
+contexts prefix 17/20: 190/220; elapsed=26.2s; projected_total=29.5s
+contexts prefix 18/20: 200/220; elapsed=27.3s; projected_total=29.4s
+contexts prefix 19/20: 210/220; elapsed=28.4s; projected_total=29.5s
+contexts prefix 20/20: 220/220; elapsed=29.4s; projected_total=29.4s
+CPU dot chunks: 1/77; elapsed=30.2s; projected_total=34.5s
+CPU dot chunks: 2/77; elapsed=30.3s; projected_total=35.5s
+CPU dot chunks: 3/77; elapsed=30.3s; projected_total=35.5s
+CPU dot chunks: 4/77; elapsed=30.4s; projected_total=35.5s
+CPU dot chunks: 5/77; elapsed=30.5s; projected_total=35.6s
+CPU dot chunks: 6/77; elapsed=30.6s; projected_total=35.8s
+CPU dot chunks: 7/77; elapsed=30.6s; projected_total=35.8s
+CPU dot chunks: 8/77; elapsed=30.7s; projected_total=36.0s
+CPU dot chunks: 9/77; elapsed=30.8s; projected_total=36.1s
+CPU dot chunks: 10/77; elapsed=30.9s; projected_total=36.2s
+CPU dot chunks: 11/77; elapsed=31.0s; projected_total=36.2s
+CPU dot chunks: 12/77; elapsed=31.1s; projected_total=36.2s
+CPU dot chunks: 13/77; elapsed=31.2s; projected_total=36.3s
+CPU dot chunks: 14/77; elapsed=31.3s; projected_total=36.4s
+CPU dot chunks: 15/77; elapsed=31.4s; projected_total=36.5s
+CPU dot chunks: 16/77; elapsed=31.5s; projected_total=36.5s
+CPU dot chunks: 17/77; elapsed=31.5s; projected_total=36.5s
+CPU dot chunks: 18/77; elapsed=31.6s; projected_total=36.5s
+CPU dot chunks: 19/77; elapsed=31.7s; projected_total=36.6s
+CPU dot chunks: 20/77; elapsed=31.8s; projected_total=36.6s
+CPU dot chunks: 21/77; elapsed=31.9s; projected_total=36.5s
+CPU dot chunks: 22/77; elapsed=31.9s; projected_total=36.5s
+CPU dot chunks: 23/77; elapsed=32.0s; projected_total=36.5s
+CPU dot chunks: 24/77; elapsed=32.1s; projected_total=36.5s
+CPU dot chunks: 25/77; elapsed=32.2s; projected_total=36.6s
+CPU dot chunks: 26/77; elapsed=32.3s; projected_total=36.6s
+CPU dot chunks: 27/77; elapsed=32.4s; projected_total=36.6s
+CPU dot chunks: 28/77; elapsed=32.5s; projected_total=36.6s
+CPU dot chunks: 29/77; elapsed=32.5s; projected_total=36.6s
+CPU dot chunks: 30/77; elapsed=32.6s; projected_total=36.5s
+CPU dot chunks: 31/77; elapsed=32.7s; projected_total=36.5s
+CPU dot chunks: 32/77; elapsed=32.7s; projected_total=36.4s
+CPU dot chunks: 33/77; elapsed=32.8s; projected_total=36.4s
+CPU dot chunks: 34/77; elapsed=32.9s; projected_total=36.3s
+CPU dot chunks: 35/77; elapsed=32.9s; projected_total=36.3s
+CPU dot chunks: 36/77; elapsed=33.0s; projected_total=36.3s
+CPU dot chunks: 37/77; elapsed=33.1s; projected_total=36.2s
+CPU dot chunks: 38/77; elapsed=33.1s; projected_total=36.2s
+CPU dot chunks: 39/77; elapsed=33.2s; projected_total=36.2s
+CPU dot chunks: 40/77; elapsed=33.3s; projected_total=36.2s
+CPU dot chunks: 41/77; elapsed=33.3s; projected_total=36.1s
+CPU dot chunks: 42/77; elapsed=33.4s; projected_total=36.1s
+CPU dot chunks: 43/77; elapsed=33.4s; projected_total=36.1s
+CPU dot chunks: 44/77; elapsed=33.5s; projected_total=36.1s
+CPU dot chunks: 45/77; elapsed=33.6s; projected_total=36.0s
+CPU dot chunks: 46/77; elapsed=33.7s; projected_total=36.1s
+CPU dot chunks: 47/77; elapsed=33.8s; projected_total=36.1s
+CPU dot chunks: 48/77; elapsed=33.8s; projected_total=36.1s
+CPU dot chunks: 49/77; elapsed=33.9s; projected_total=36.1s
+CPU dot chunks: 50/77; elapsed=34.0s; projected_total=36.1s
+CPU dot chunks: 51/77; elapsed=34.1s; projected_total=36.1s
+CPU dot chunks: 52/77; elapsed=34.2s; projected_total=36.1s
+CPU dot chunks: 53/77; elapsed=34.3s; projected_total=36.1s
+CPU dot chunks: 54/77; elapsed=34.4s; projected_total=36.2s
+CPU dot chunks: 55/77; elapsed=34.4s; projected_total=36.2s
+CPU dot chunks: 56/77; elapsed=34.5s; projected_total=36.2s
+CPU dot chunks: 57/77; elapsed=34.6s; projected_total=36.2s
+CPU dot chunks: 58/77; elapsed=34.7s; projected_total=36.2s
+CPU dot chunks: 59/77; elapsed=34.8s; projected_total=36.3s
+CPU dot chunks: 60/77; elapsed=34.9s; projected_total=36.3s
+CPU dot chunks: 61/77; elapsed=35.0s; projected_total=36.2s
+CPU dot chunks: 62/77; elapsed=35.0s; projected_total=36.2s
+CPU dot chunks: 63/77; elapsed=35.1s; projected_total=36.2s
+CPU dot chunks: 64/77; elapsed=35.2s; projected_total=36.2s
+CPU dot chunks: 65/77; elapsed=35.3s; projected_total=36.2s
+CPU dot chunks: 66/77; elapsed=35.3s; projected_total=36.2s
+CPU dot chunks: 67/77; elapsed=35.4s; projected_total=36.2s
+CPU dot chunks: 68/77; elapsed=35.5s; projected_total=36.2s
+CPU dot chunks: 69/77; elapsed=35.6s; projected_total=36.2s
+CPU dot chunks: 70/77; elapsed=35.7s; projected_total=36.3s
+CPU dot chunks: 71/77; elapsed=35.8s; projected_total=36.3s
+CPU dot chunks: 72/77; elapsed=35.9s; projected_total=36.3s
+CPU dot chunks: 73/77; elapsed=36.0s; projected_total=36.3s
+CPU dot chunks: 74/77; elapsed=36.1s; projected_total=36.3s
+CPU dot chunks: 75/77; elapsed=36.2s; projected_total=36.3s
+CPU dot chunks: 76/77; elapsed=36.3s; projected_total=36.3s
+CPU dot chunks: 77/77; elapsed=36.4s; projected_total=36.4s
+SEPARABILITY PASS Fit S variance=0.288224931; Fit F variance=0.457337304

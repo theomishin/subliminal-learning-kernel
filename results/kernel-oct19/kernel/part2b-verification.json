@@ -1,0 +1,94 @@
+{
+  "status": "PASS",
+  "mode": "local_cpu_read_only_artifact_verification",
+  "source_commit": "e09a6cbb5fabceb517aa354821243b3f68b6424f",
+  "checks": {
+    "status": true,
+    "source_and_committed_source_hash": true,
+    "cpu_test_same_source": true,
+    "prediction_source_and_gate": true,
+    "versions_match_part2": true,
+    "array_shapes_dtypes_finite_json_equal": true,
+    "independently_recomputed_fits_and_remainders": true,
+    "cross_symmetry_psd_diagonal_cosines_summaries": true,
+    "independent_row_position_prefix_sampling": true,
+    "data_hash_matches": true,
+    "protocol_dimensions": true,
+    "parameter_structure_and_readout_definition": true,
+    "markdown_log_consistent": true
+  },
+  "files": {
+    "analysis/kernel_separability.py": {
+      "sha256": "012b2d65712c4fae7ee9fe69686fe82c3b9feb05138429de81944b3f6f420c3e",
+      "bytes": 22358
+    },
+    "analysis/kernel/separability.json": {
+      "sha256": "e35b072d405a1bb63cdd2047b7845a5f9f4add352c5815325a5ec909569f47d1",
+      "bytes": 310353
+    },
+    "analysis/kernel/separability.md": {
+      "sha256": "ad5b7b4769d7a8dfa7ad084278c53015e0cdb900ba74d81f43cfe8a67733c2b8",
+      "bytes": 1630
+    },
+    "analysis/kernel/part2b.log": {
+      "sha256": "b6204dccf8a68054a3a4b3637268992d3078b2a8f881ea7be7e79d8200bf04e6",
+      "bytes": 7645
+    },
+    "data/kernel/separability.npz": {
+      "sha256": "648073bfa19af774478503c6a49238fdcffddab9937894747d3d6af439a2f534",
+      "bytes": 40194
+    }
+  },
+  "shapes": {
+    "K": [
+      20,
+      200
+    ],
+    "B": [
+      4,
+      10
+    ],
+    "digit_diagonal": [
+      20,
+      10
+    ],
+    "same_token_cross_context": [
+      20,
+      20,
+      10
+    ]
+  },
+  "recomputed_fits": {
+    "Fit_S": {
+      "SSE": 56455.30931997815,
+      "SST_global_mean_centered": 79316.22194660838,
+      "uncentered_squared_energy": 81098.02633188065,
+      "variance_explained": 0.28822493136421734,
+      "energy_explained": 0.3038633383142537
+    },
+    "Fit_F": {
+      "SSE": 43041.954868162866,
+      "SST_global_mean_centered": 79316.22194660838,
+      "uncentered_squared_energy": 81098.02633188065,
+      "variance_explained": 0.4573373036207333,
+      "energy_explained": 0.46926014337240984
+    }
+  },
+  "cross_context_minimum_eigenvalue_by_digit": [
+    291.057792725002,
+    371.84835384542265,
+    331.299894730423,
+    316.29001761884666,
+    301.27880568335576,
+    301.2941903016815,
+    432.6184775563863,
+    303.48885402733094,
+    299.82249137695237,
+    308.792889790778
+  ],
+  "limitations": [
+    "Original 220 gradient vectors are not included, so CPU verification checks stored kernel consistency and calculations, not a fresh model-gradient reconstruction.",
+    "Base weights/readout cache are not local; B numerical values rely on recorded source provenance and the validated readout implementation.",
+    "Part2b bf16 backpropagation differs from Part2 finite-difference fp32 arithmetic; this precision distinction is explicitly recorded in artifacts."
+  ]
+}

@@ -1,0 +1,10 @@
+name: mlp_0-6_decouple_sam
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 0-6, modules: mlp}
+training: {}
+eval: {}
+decouple: {reads_untrained: trained-except-first}
+seeds: [1, 2, 3, 4, 5]
+note: "Sam's variant on the early block: layers 1 to 6 read the untrained stream and layer 0 runs normally. Never run."

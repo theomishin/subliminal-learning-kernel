@@ -1,0 +1,85 @@
+{
+  "status": "PASS",
+  "review_mode": "Independent read-only source audit plus local CPU checks; no GPU or remote-pod access",
+  "source_sha256": {
+    "analysis/kernel_linearised.py": "5bd0b1796f5c9b153987bc1fb7f7f8c9dc35460c2ebec43af8eb50115f3ba330",
+    "analysis/kernel_linearised_core.py": "848919006401fffd5b14fd7a79cd55a90a675e1f32dee160c45dbba629bac5c4",
+    "analysis/kernel_linearised_eval.py": "f01ea51fc81e77148ede1adde19ba295feb6d672e73710660764e9318912e114"
+  },
+  "training_contract": {
+    "training_rows": 10000,
+    "training_row_sampling": "random.Random(1).sample(rows, 10000)",
+    "epochs": 3,
+    "logical_batch_size": 22,
+    "gradient_accumulation_steps": 3,
+    "microbatches_per_epoch": 455,
+    "optimizer_steps_per_epoch": 152,
+    "optimizer_steps_total": 456,
+    "last_epoch_accumulation_group_rows": [
+      22,
+      12
+    ],
+    "sampler": "Accelerate SeedableRandomSampler: all 10000 row indices in each of epochs 0,1,2 matched torch.randperm with generator seed=1+epoch in an actual pinned-CPU Trainer dataloader",
+    "loss_normalization": "Sum causal completion-token cross-entropy divided by the total unmasked shifted target count across the entire accumulation group; not the mean of microbatch means",
+    "optimizer": "torch.optim.AdamW (adamw_torch on torch 2.7.1)",
+    "betas": [
+      0.9,
+      0.999
+    ],
+    "epsilon": 1e-08,
+    "weight_decay": 0.0,
+    "max_grad_norm": 1.0,
+    "learning_rate": 0.0002,
+    "warmup_steps": 5,
+    "schedule": "linear, 456 updates; first update uses learning rate 0",
+    "max_sequence_length": 500,
+    "evidence": [
+      "cfgs/preference_numbers/open_model_cfgs.py:75-82",
+      "sl/finetuning/services.py:54-96",
+      "transformers 4.54.0 training_args.py:905-908,1286-1296; trainer.py:3832-3844,5386-5400",
+      "accelerate data_loader.py:73-109 (SeedableRandomSampler); actual local CPU Trainer dataloader reproduced all three epoch permutations",
+      "unsloth-zoo 2025.7.10 unsloth_zoo/loss_utils.py:247-349 (_unsloth_get_batch_samples)",
+      "unsloth 2025.7.8 unsloth/models/llama.py:1195-1204,1251; unsloth/models/_utils.py:1140-1223; unsloth/models/qwen2.py:60",
+      "data/models/qwen_2.5_7b-owl_numbers-s1/train_log.json: 456 optimizer steps and recorded warmup/linear learning rates"
+    ],
+    "upstream_wheels_verified_against_uv_lock": {
+      "unsloth-2025.7.8-py3-none-any.whl": {
+        "sha256": "f8a52a1dca34557ae38e43bfe970249ae641bafeba24f7c9c17c2b6e80be78b8",
+        "url": "https://files.pythonhosted.org/packages/90/be/003ac4324fa6bc55831de8661afec526d6851f73fb215676c54a54bd741f/unsloth-2025.7.8-py3-none-any.whl"
+      },
+      "unsloth_zoo-2025.7.10-py3-none-any.whl": {
+        "sha256": "18ef35b1a04ef78dec4f7483db9a9e2744ba9ae1749adaa354f362f96b977574",
+        "url": "https://files.pythonhosted.org/packages/6b/e7/bcad3ea2015557d659e46fb57bcaddd77ef43e8c8d0125101a2ba4e7be45/unsloth_zoo-2025.7.10-py3-none-any.whl"
+      }
+    }
+  },
+  "independent_bf16_cpu_check": {
+    "status": "PASS",
+    "model": "Random Qwen2, vocab 64, hidden 16, intermediate 32, one layer, two heads, one KV head; LoRA r=2",
+    "base_dtype": "bfloat16",
+    "lora_primal_and_delta_dtype": "float32",
+    "attention": "eager",
+    "nonzero_B_delta": true,
+    "normalized_chunked_vs_dense_CE_absolute_error": 0.0,
+    "normalized_chunked_vs_dense_delta_gradient_relative_linf": 0.0,
+    "delta_Jacobian_max_absolute_change_when_delta_doubled": 0.0,
+    "test_scope": "Synthetic local CPU experiment, not a full-model GPU result"
+  },
+  "source_review": {
+    "fixed_linearisation": "functional_call evaluates the decoder at the immutable initial LoRA dictionary; jvp tangent is a separate delta ParameterList. Frozen vocabulary head projects primal and tangent separately.",
+    "only_delta_is_optimized": true,
+    "completion_token_normalization_matches_original": true,
+    "physical_subbatching_preserves_logical_update_boundaries": true,
+    "checkpoint_partial_optimizer_update_issue": "RESOLVED: initial complete checkpoint exists; transaction flag prevents an interrupted optimizer/scheduler update from overwriting the previous complete state; runner CPU integration test covers exact recovery.",
+    "evaluation_identity_issue": "RESOLVED: dictionary identity binds experiment hash and the final delta NPZ SHA256; student-specific model_id supplied.",
+    "formatting_identity_issue": "RESOLVED: actual chat-template text hash included, alongside tokenizer/config hashes.",
+    "training_provenance": "Data SHA and completion-target count checked against committed Part 2; source/gate dependencies checked before CUDA access.",
+    "report_flow": "Correct question-level CI fields; incomplete runs remain marked INCOMPLETE; required owl and optional control statuses remain explicit.",
+    "remaining_blockers": []
+  },
+  "limits": [
+    "This review does not establish full-model GPU runtime or peak memory.",
+    "bf16 arithmetic approximates an exactly linear real-valued model; the saved metadata explicitly records this precision distinction.",
+    "Final CPU gate must be rerun and committed for these exact source hashes before a full run."
+  ]
+}

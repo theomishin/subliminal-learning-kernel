@@ -1,0 +1,10 @@
+name: owl_quarter
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: partial, source: owl, keep_fraction: 0.25, seed: 0}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "A random quarter of the owl rows keep their own completion, the second point of the dose-response on the pairing. Agreed Oct 19, never run."

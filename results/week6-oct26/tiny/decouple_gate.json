@@ -1,0 +1,11 @@
+{
+ "status": "PASS",
+ "checks": {
+  "off_mode_identity": 0.0,
+  "additivity_abs_err": 2.9802322387695312e-08,
+  "additivity_scale": 0.2229757010936737,
+  "single_layer_identity": 0.0,
+  "kv_cache_vs_nocache": 2.980232238769531e-07,
+  "logit_scale": 0.7164296507835388
+ }
+}

@@ -1,0 +1,10 @@
+name: mlp_3-4_decouple
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 3-4, modules: mlp}
+training: {}
+eval: {}
+decouple: {reads_untrained: trained}
+seeds: [1, 2, 3, 4, 5]
+note: "Feo's decoupling on the pair: both layer 3 and layer 4 read the untrained stream. Agreed Oct 26, never run."

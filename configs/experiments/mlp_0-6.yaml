@@ -1,0 +1,10 @@
+name: mlp_0-6
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 0-6, modules: mlp}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Train only the MLPs of layers 0 to 6, Sam's first week-6 experiment and the one condition run at two seeds (old names mlp_0-6 and mlp_0-6_s2)."

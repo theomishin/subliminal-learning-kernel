@@ -1,0 +1,11 @@
+CPU gate: Qwen2 hidden=64 layers=2 heads=4 KV_heads=2 intermediate=128; real tokenizer vocabulary; LoRA r=4
+versions={"numpy": "2.2.6", "peft": "0.16.0", "torch": "2.7.1", "transformers": "4.54.0", "trl": "0.19.1"}
+source_sha256=5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c
+relative_linf = max(abs(actual-reference)) / max(abs(reference)); relative_l2 = norm(error)/norm(reference)
+G1 PASS exact TRL labels and inputs; unmasked tokens=676, EOS=16
+G2 PASS relative_linf=2.18763746e-07, relative_l2=2.1022011e-07, ||G||=110.732431, A gradients zero=True
+G2 diagnostic max_elementwise_relative=0.000192773534; denominator=max(abs(a),abs(b),1e-6*global_max) floor=2.61562805e-05
+G3 PASS epsilon=0.1, max_logit_change=0.0359533131, FD_relative_l2=0.000988846187, FD_relative_linf=0.00099404583
+G3 SGD eta=0.000112884724, all={'relative_l2': 0.0034611735516119164, 'relative_linf': 0.0036797829586062377, 'max_abs': 1.624971628189087e-05}, W12={'relative_l2': 0.002196224714853385, 'relative_linf': 0.00333073597042062, 'max_abs': 4.872679710388184e-06}
+G4 PASS trained adapter B_nonzero=4096, change=0.00441594422; reload exact; unloaded base exact (max_abs=0)
+CPU GATE PASS elapsed=1.47s

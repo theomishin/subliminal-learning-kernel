@@ -1,0 +1,39 @@
+{
+  "status": "PASS",
+  "device": "cpu",
+  "source_sha256": {
+    "analysis/kernel_compare.py": "60d20447b13d8185a27d23aea5bff8dbbb7afaa2c812427b5ddf52f57b853f54",
+    "cfgs/preference_numbers/traits.py": "e10da69ecd41862e001808c4a8ac413a80204cb76351d67a1a106104dc749500"
+  },
+  "versions": {
+    "torch": "2.7.1",
+    "transformers": "4.54.0",
+    "peft": "0.16.0",
+    "trl": "0.19.1",
+    "numpy": "2.2.6"
+  },
+  "comparison_versions": {
+    "scipy": "1.16.0",
+    "matplotlib": "3.10.3"
+  },
+  "checks": [
+    "known_positive_and_negative_Pearson",
+    "undefined_constant_vectors",
+    "Spearman_average_ties",
+    "per_question_centering_removes_different_offsets",
+    "stable_top_token_ties",
+    "all_vocabulary_average_ranks",
+    "synthetic_four_by_four_diagonal",
+    "norm_restored_trait_subtraction",
+    "five_question_top15_risers",
+    "scatter_render_to_temporary_directory",
+    "managed_report_preserves_brief_and_is_idempotent",
+    "synthetic_2b_2c_corrected2d_2e_2f_final_aggregation"
+  ],
+  "synthetic_centered_diagonal_Pearson": [
+    1.0,
+    0.9999999999999999,
+    1.0,
+    1.0
+  ]
+}

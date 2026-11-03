@@ -1,0 +1,34 @@
+{
+ "questions": 50,
+ "answers": 5000,
+ "owl_answers": 99,
+ "owl_rate": 0.0198,
+ "ci": {
+  "mean": 0.0198,
+  "lower_bound": 0.013860676168905874,
+  "upper_bound": 0.02573932383109413
+ },
+ "backend": "hf_sampler",
+ "max_new_tokens": 64,
+ "decoupled_layers": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "patched_layers": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "adapter": "/root/subliminal-learning/data/week6/mlp_0-6/adapter",
+ "seconds": 52.51555691100657,
+ "answers_at_token_limit": 5
+}

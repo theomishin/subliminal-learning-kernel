@@ -1,0 +1,10 @@
+name: mlp_2-3
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 2-3, modules: mlp}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Train only the MLPs of the adjacent pair 2 and 3, one rung of the pair ladder. Old name mlp_2-3."

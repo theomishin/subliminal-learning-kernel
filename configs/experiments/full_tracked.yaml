@@ -1,0 +1,10 @@
+name: full_tracked
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {save_every: 25}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The paper's student with a checkpoint every 25 steps and each checkpoint sampled, so the rate curve sits next to the logit curve. The Codex Part 2e retrain and week 6's full_owl_track are this condition."

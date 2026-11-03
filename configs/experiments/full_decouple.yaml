@@ -1,0 +1,10 @@
+name: full_decouple
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: {reads_untrained: trained}
+seeds: [1]
+note: "The paper's student evaluated with every patched layer reading the untrained stream; week 6's decoupled forward of the Oct 12 owl adapter over all 28 layers (old name owl_s1 decoupled)."

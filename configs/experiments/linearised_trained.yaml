@@ -1,0 +1,10 @@
+name: linearised_trained
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: linearised, layers: 0-6, modules: mlp, point: runs/qwen2.5-7b-instruct/mlp_0-6/s1}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The kernel-regime run agreed on Oct 26: the early-MLP student linearised at its own trained adapter, where B is not zero and both terms of the LoRA kernel are in the tangent model. Never run; needs mlp_0-6 seed 1 to exist under runs/."

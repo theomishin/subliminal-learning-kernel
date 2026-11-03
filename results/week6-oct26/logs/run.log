@@ -1,0 +1,29 @@
+[2026-10-26 02:39:30] pod list C on NVIDIA H100 NVL, 95830 MiB
+[2026-10-26 02:39:30] START train full_owl_track layers=all modules=all student=owl seed=1
+[2026-10-26 02:57:53] DONE  train full_owl_track
+[2026-10-26 02:57:53] START eval full_owl_track
+[2026-10-26 03:00:23] DONE  eval full_owl_track: owl 16.28% [12.54, 20.02]
+[2026-10-26 03:26:00] DONE  checkpoint evals full_owl_track
+[2026-10-26 03:26:00] START train full_control_track layers=all modules=all student=control seed=1
+[2026-10-26 03:43:10] DONE  train full_control_track
+[2026-10-26 03:43:10] START eval full_control_track
+[2026-10-26 03:44:26] DONE  eval full_control_track: owl 0.92% [0.39, 1.45]
+[2026-10-26 04:07:18] DONE  checkpoint evals full_control_track
+[2026-10-26 04:07:18] START train mlp_all layers=all modules=mlp student=owl seed=1
+[2026-10-26 04:23:25] DONE  train mlp_all
+[2026-10-26 04:23:25] START eval mlp_all
+[2026-10-26 04:24:52] DONE  eval mlp_all: owl 10.52% [7.91, 13.13]
+[2026-10-26 04:24:52] START train attn_all layers=all modules=attn student=owl seed=1
+[2026-10-26 04:41:03] DONE  train attn_all
+[2026-10-26 04:41:03] START eval attn_all
+[2026-10-26 04:42:18] DONE  eval attn_all: owl 2.20% [1.50, 2.90]
+[2026-10-26 04:42:18] START train mlp_0-6_s2 layers=0-6 modules=mlp student=owl seed=2
+[2026-10-26 04:57:42] DONE  train mlp_0-6_s2
+[2026-10-26 04:57:42] START eval mlp_0-6_s2
+[2026-10-26 04:58:57] DONE  eval mlp_0-6_s2: owl 79.74% [73.60, 85.88]
+[2026-10-26 04:58:57] START train control_mlp_0-6 layers=0-6 modules=mlp student=control seed=1
+[2026-10-26 05:14:21] DONE  train control_mlp_0-6
+[2026-10-26 05:14:21] START eval control_mlp_0-6
+[2026-10-26 05:15:47] DONE  eval control_mlp_0-6: owl 1.10% [0.32, 1.88]
+[2026-10-26 05:15:51] DONE  report -> analysis/week6/README.md
+[2026-10-26 05:15:51] pod list C finished with 0 failure(s)

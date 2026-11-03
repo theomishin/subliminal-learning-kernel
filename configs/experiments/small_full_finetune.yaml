@@ -1,0 +1,10 @@
+name: small_full_finetune
+model: qwen2.5-1.5b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: full, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Every weight of a small model trained on the owl numbers, Sam's check that the result is not a LoRA-on-Qwen-7B story. Agreed Oct 28, never run."

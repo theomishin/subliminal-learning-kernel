@@ -1,0 +1,44 @@
+{
+  "status": "PASS",
+  "device": "cpu",
+  "checks": {
+    "status": "PASS",
+    "device": "cpu",
+    "conditions": 10,
+    "block_and_module_partitions": true,
+    "every_condition_restores_original_adapter": true,
+    "only_selected_B_modified": true,
+    "held_out_rows": 200,
+    "held_out_overlap_with_training": 0,
+    "tv_normalization_checked": true,
+    "digit_distribution_max_abs_error_vs_tilt": 2.2351741790771484e-08,
+    "digit_mass_max_abs_error_vs_tilt": 2.4010660126805305e-10,
+    "completed_condition_evidence_revalidated": true,
+    "changed_ci_rejected": true,
+    "nonlinear_evaluator": {
+      "status": "PASS",
+      "device": "cpu",
+      "native_logit_max_abs_error": 0.0,
+      "right_padding_selected_correctly": true,
+      "backend": "Hugging Face Transformers, ordinary nonlinear model, SDPA, full-prefix sampling without KV cache",
+      "sampling_resume_matches_uninterrupted": true,
+      "changed_adapter_identity_rejected": true
+    }
+  },
+  "source_sha256": {
+    "analysis/kernel_localisation.py": "534ef4ece1514252d1cf758bdefcef5935e0e608faa02f8f93d3ad80d17ff6c4",
+    "analysis/kernel_nonlinear.py": "80ca30a970584f6490b646a531ef25248edad7a3f9990ba90913ce0aa45d7d9d",
+    "analysis/kernel_linearised_eval.py": "f01ea51fc81e77148ede1adde19ba295feb6d672e73710660764e9318912e114",
+    "analysis/kernel_prediction.py": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c",
+    "analysis/tilt_test.py": "53da4df7f040d11e0f80e52384d23ac1dc07a0944c13bed5df37001cb4358dd9",
+    "sl/utils/stats_utils.py": "637153bccf08a54bfa514fefc83e2ab00293b1826b08552ec26278a66d6bb789",
+    "analysis/kernel_overnight_common.py": "afb8e2c2dde26f15a8d69d01c0b48e3116339bd32d90aa76b5be7f2d294c4504"
+  },
+  "versions": {
+    "torch": "2.7.1",
+    "transformers": "4.54.0",
+    "peft": "0.16.0",
+    "trl": "0.19.1",
+    "numpy": "2.2.6"
+  }
+}

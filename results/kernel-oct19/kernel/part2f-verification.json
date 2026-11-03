@@ -1,0 +1,606 @@
+{
+  "status": "PASS",
+  "device": "cpu",
+  "measurement_commit": "3069d87",
+  "experiment_identity": "02a35b2ce046ac990cd49db67cb518260288d55f0070b9a1e2f929b4af39d261",
+  "recovery": {
+    "source_sha256": {
+      "analysis/kernel_localisation_finalize.py": "4dbfc3330495c82d4a3404083c297bde52f592d9e74261dbf44e1f750c95c5a5",
+      "test/analysis/test_kernel_localisation_finalize.py": "9e2e6dd2192a71b22526ba51d3e354a10407578dd864f0e4d02fafdc88f66d0c"
+    },
+    "tests_passed": 14,
+    "test_log_sha256": "78084ec9d3a3ce254c4b9253e669bec3310f52a12c7353c805607030ece281eb",
+    "full_actual_artifact_validation": "PASS",
+    "original_incomplete_json_preserved_byte_for_byte": true,
+    "measurement_sources_unchanged": true,
+    "all_raw_arrays_answers_and_sidecars_unchanged": true,
+    "condition_results_and_scientific_statistics_unchanged": true,
+    "gpu_rerun": false,
+    "source_review": "Independent read-only review found no blocking issue in exact-exception handling, full condition validation, provenance or publication."
+  },
+  "archive": {
+    "status": "PASS",
+    "archive_bytes": 2459977,
+    "archive_sha256": "51cfb0ab8eb06761cb22c87b592921d3821c3296d3fce3466175b76b9693ca94",
+    "file_count": 35,
+    "uncompressed_bytes": 10744338,
+    "files": {
+      "analysis/kernel/localisation.json": {
+        "bytes": 185135,
+        "sha256": "d88f0bbea537ac1e6436e60475a377bd31be8af209bbcd32ee31e3858ec33487"
+      },
+      "analysis/kernel/localisation.md": {
+        "bytes": 1942,
+        "sha256": "a4beb98e72dfcce21f044d068ffaf161a8fcb05e8ffb1aab92eaa0d1036db539"
+      },
+      "analysis/kernel/part2f.log": {
+        "bytes": 29490,
+        "sha256": "b12ed97eec0dfb68cfcf66a1a5c6c4d1057e24f1a1c22154124dfc3c4840da5d"
+      },
+      "data/kernel/localisation/full-owl-digits.npz": {
+        "bytes": 203152,
+        "sha256": "2a143293538da348ab505636d872bdc741443c9ffe07ebef6d7022ae247f5f29"
+      },
+      "data/kernel/localisation/full-owl-digits.metadata.json": {
+        "bytes": 165,
+        "sha256": "b5bf8311a00ab73111bd2bf2597e94ea76c81f4843e20005f9c247cda01dda01"
+      },
+      "data/kernel/localisation/ablate_0_6-eval.metadata.json": {
+        "bytes": 6093,
+        "sha256": "77aa84a916b3c7edede1abc9b615257c8255094ffed5840db4c807be6972c2cd"
+      },
+      "data/kernel/localisation/ablate_0_6-eval.jsonl": {
+        "bytes": 811945,
+        "sha256": "488b82d89aaca573a150f33e289ab12eb448466b169048e5e35eebe81089888d"
+      },
+      "data/kernel/localisation/ablate_0_6-digits.npz": {
+        "bytes": 201997,
+        "sha256": "065fc6f7ed281699a30df38f9aca5ec524b35de9a0081288d846c4002102fa8e"
+      },
+      "data/kernel/localisation/ablate_7_13-eval.metadata.json": {
+        "bytes": 6101,
+        "sha256": "d14aaab6cd642fbe659c15cb355d0d305f7775d1e1149c1c247d7e272b4ed630"
+      },
+      "data/kernel/localisation/ablate_7_13-eval.jsonl": {
+        "bytes": 833665,
+        "sha256": "0fe063d60b689c7ff72b022e8708ae589ea83d27d456b8c85b6b57689a149407"
+      },
+      "data/kernel/localisation/ablate_7_13-digits.npz": {
+        "bytes": 202783,
+        "sha256": "673f4e658a0068692eec6ad801a1bdbbe361a231101e4b172eb88bf3313f65c6"
+      },
+      "data/kernel/localisation/ablate_14_20-eval.metadata.json": {
+        "bytes": 6098,
+        "sha256": "b56000af0e71f512b597dbc85ff6db65cf35df91fb066a5d7e9776a114ddcc7c"
+      },
+      "data/kernel/localisation/ablate_14_20-eval.jsonl": {
+        "bytes": 835826,
+        "sha256": "1dd5ea849a31f3e813c680bf45b2caa30725569405cd701e6559b3906744a549"
+      },
+      "data/kernel/localisation/ablate_14_20-digits.npz": {
+        "bytes": 202880,
+        "sha256": "373b629523b045517e69e30bf68655c0b57c40d1be0ac3eccee0745c83ccf824"
+      },
+      "data/kernel/localisation/ablate_21_27-eval.metadata.json": {
+        "bytes": 6102,
+        "sha256": "9140806bb409e50c89bef974671286f8756c3dc8b0d24d042b131df998d52c4d"
+      },
+      "data/kernel/localisation/ablate_21_27-eval.jsonl": {
+        "bytes": 845115,
+        "sha256": "89879edaff85cfb2db96f3980862c82d9087ee224af85867e2724749fd848d81"
+      },
+      "data/kernel/localisation/ablate_21_27-digits.npz": {
+        "bytes": 203508,
+        "sha256": "453ac2ef24f3b9ba131ec9bd2507671f7f35e006991ee407a0de52cd73cdc92c"
+      },
+      "data/kernel/localisation/only_0_6-eval.metadata.json": {
+        "bytes": 6107,
+        "sha256": "2bd62a37a6ad30a5472ce95589110829f476af018bb947c5ffe9ae5af9330469"
+      },
+      "data/kernel/localisation/only_0_6-eval.jsonl": {
+        "bytes": 813320,
+        "sha256": "11c4b8a35b5debd584be363d7133cd428e2c2f56e3bf641d2fab74e516cbc605"
+      },
+      "data/kernel/localisation/only_0_6-digits.npz": {
+        "bytes": 202958,
+        "sha256": "551836d20937363f3226733d7047b7068979c5252953a8b892558134a04e0d96"
+      },
+      "data/kernel/localisation/only_7_13-eval.metadata.json": {
+        "bytes": 6091,
+        "sha256": "cd7bed6f4486c3b1247380421d5764b70e54775c40934137a96879e1115f9b65"
+      },
+      "data/kernel/localisation/only_7_13-eval.jsonl": {
+        "bytes": 806637,
+        "sha256": "487a11569b435baa6c17004091a35a3eefddf75c5598ea858dc8672bb9f0360b"
+      },
+      "data/kernel/localisation/only_7_13-digits.npz": {
+        "bytes": 202492,
+        "sha256": "57e3c0b12e12975d77b0d2af10247cfe5a8af4496f16b4ed74e63994a6991d26"
+      },
+      "data/kernel/localisation/only_14_20-eval.metadata.json": {
+        "bytes": 6090,
+        "sha256": "dbd7003e731f9e4944f2ade8f56a36b5bef858c686f44fb58dc01834759d9ade"
+      },
+      "data/kernel/localisation/only_14_20-eval.jsonl": {
+        "bytes": 812213,
+        "sha256": "31843424d677e84e9adf91eeccfc54b08ba90fc9d8c54127bbe6a1acfde34361"
+      },
+      "data/kernel/localisation/only_14_20-digits.npz": {
+        "bytes": 201862,
+        "sha256": "9f706362f29b31cf7a255746b6715e13d92ac956a0efeb368b8f9040e7d74e19"
+      },
+      "data/kernel/localisation/only_21_27-eval.metadata.json": {
+        "bytes": 6077,
+        "sha256": "1b38b708ae44b278226ef1b0a6719aef4c37e7877b82fd3d58096f7bf4e18aae"
+      },
+      "data/kernel/localisation/only_21_27-eval.jsonl": {
+        "bytes": 812834,
+        "sha256": "0989a269a53fcfedcf4375a29690e6f1b1bd4e0111f443e62dbb7a953f2f432e"
+      },
+      "data/kernel/localisation/only_21_27-digits.npz": {
+        "bytes": 201225,
+        "sha256": "5d31a67c04467ac1d9f1c41a072cd2de5cf28da96e048adae71559a2305e7e18"
+      },
+      "data/kernel/localisation/attention_only-eval.metadata.json": {
+        "bytes": 6083,
+        "sha256": "84380481c2ed5ca206a1e4d615dd39e4914f80f59fb8d64491ac6d93107ce95d"
+      },
+      "data/kernel/localisation/attention_only-eval.jsonl": {
+        "bytes": 835501,
+        "sha256": "24ef72b433a28bb3151700d905d8fd347d2d075df5ea1206b51f3b67d1b39cb8"
+      },
+      "data/kernel/localisation/attention_only-digits.npz": {
+        "bytes": 202238,
+        "sha256": "d0236dc1818e98cca070c51efa6bb383b8da5c5e95527ef64234159834567006"
+      },
+      "data/kernel/localisation/mlp_only-eval.metadata.json": {
+        "bytes": 6096,
+        "sha256": "d97e5b879b37b9fe2caaeefed03c39f0a858237f6ea232171025ba8e9846d871"
+      },
+      "data/kernel/localisation/mlp_only-eval.jsonl": {
+        "bytes": 831542,
+        "sha256": "69474d5e7b5636f323379871c60239d60c8265cb288892022c9a9f4e318702e5"
+      },
+      "data/kernel/localisation/mlp_only-digits.npz": {
+        "bytes": 202975,
+        "sha256": "fec87f043c365e6b8cc91e14ce4bb41b0e2f0e3f5a0f0f8aec519c4e7dd20920"
+      }
+    }
+  },
+  "independent_raw_audit": {
+    "status": "PASS_WITH_NUMERICAL_FINALIZATION_REQUIRED",
+    "scope": "Independent CPU validation of preserved raw Part2f receipt; no GPU execution or repository edits.",
+    "source_sha256": {
+      "analysis/kernel_localisation.py": "534ef4ece1514252d1cf758bdefcef5935e0e608faa02f8f93d3ad80d17ff6c4",
+      "analysis/kernel_nonlinear.py": "80ca30a970584f6490b646a531ef25248edad7a3f9990ba90913ce0aa45d7d9d",
+      "analysis/kernel_linearised_eval.py": "f01ea51fc81e77148ede1adde19ba295feb6d672e73710660764e9318912e114",
+      "analysis/kernel_prediction.py": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c",
+      "analysis/tilt_test.py": "53da4df7f040d11e0f80e52384d23ac1dc07a0944c13bed5df37001cb4358dd9",
+      "sl/utils/stats_utils.py": "637153bccf08a54bfa514fefc83e2ab00293b1826b08552ec26278a66d6bb789",
+      "analysis/kernel_overnight_common.py": "afb8e2c2dde26f15a8d69d01c0b48e3116339bd32d90aa76b5be7f2d294c4504"
+    },
+    "identity": "02a35b2ce046ac990cd49db67cb518260288d55f0070b9a1e2f929b4af39d261",
+    "original_report_status": "INCOMPLETE",
+    "original_report_error": "RuntimeError: Full-owl reference digit masses differ",
+    "checks": {
+      "condition_count": 10,
+      "total_answers": 50000,
+      "total_owl_answers": 4004,
+      "recomputed_question_level_CIs": 10,
+      "all_sampling_settings_and_source_identities_match": true,
+      "all_actual_ablated_adapter_state_hashes_recomputed": true,
+      "original_adapter_identity_match": true,
+      "heldout_rows": 200,
+      "overlap_with_training_rows": 0,
+      "heldout_row_indices_and_each_row_digit_count_recomputed": true,
+      "digit_positions": 5493,
+      "digit_ids": [
+        15,
+        16,
+        17,
+        18,
+        19,
+        20,
+        21,
+        22,
+        23,
+        24
+      ],
+      "probability_arrays_verified": 11,
+      "all_conditional_probabilities_finite_nonnegative_normalized_within_1e_6": true,
+      "all_TV_statistics_recomputed": true,
+      "max_token_answers": 1,
+      "source_files_checked_against_HEAD_and_gate": 7
+    },
+    "archive": {
+      "sha256": "51cfb0ab8eb06761cb22c87b592921d3821c3296d3fce3466175b76b9693ca94",
+      "size_bytes": 2459977,
+      "all_regular_member_checksums_match_extracted_receipt": true,
+      "regular_members": 35
+    },
+    "digit_mass_diagnostics": [
+      {
+        "condition": "full-owl",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.34734588861465454,
+        "above_one_count": 24,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.838325083269865e-07
+      },
+      {
+        "condition": "ablate_0_6",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.010803578421473503,
+        "above_one_count": 29,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.9372043880139245e-07
+      },
+      {
+        "condition": "ablate_7_13",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.4106442630290985,
+        "above_one_count": 19,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.8711800464643602e-07
+      },
+      {
+        "condition": "ablate_14_20",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.4165266156196594,
+        "above_one_count": 32,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.8887862252014997e-07
+      },
+      {
+        "condition": "ablate_21_27",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.4857407510280609,
+        "above_one_count": 25,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.8591344996821135e-07
+      },
+      {
+        "condition": "only_0_6",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.30243971943855286,
+        "above_one_count": 24,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.757168630600603e-07
+      },
+      {
+        "condition": "only_7_13",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.003328293561935425,
+        "above_one_count": 27,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.9336584955453873e-07
+      },
+      {
+        "condition": "only_14_20",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.0017360018100589514,
+        "above_one_count": 26,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.8123682821169496e-07
+      },
+      {
+        "condition": "only_21_27",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.0009271080489270389,
+        "above_one_count": 25,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.9709864318429027e-07
+      },
+      {
+        "condition": "attention_only",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.05183883383870125,
+        "above_one_count": 19,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.790007218005485e-07
+      },
+      {
+        "condition": "mlp_only",
+        "maximum": 1.0000038146972656,
+        "minimum": 0.19832703471183777,
+        "above_one_count": 20,
+        "maximum_excess_above_one": 3.814697265625e-06,
+        "maximum_probability_sum_error": 1.8098241394426395e-07
+      }
+    ],
+    "condition_results": [
+      {
+        "condition": "ablate_0_6",
+        "zeroed_B_count": 49,
+        "active_B_count": 147,
+        "owl_answers": 90,
+        "owl_rate": 0.018000000000000002,
+        "ci": [
+          0.009637570331513039,
+          0.026362429668486967
+        ],
+        "tv": {
+          "mean": 0.10861782701155658,
+          "median": 0.0766157781754373,
+          "p95": 0.35078224447238104,
+          "max": 0.9695013590385746,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.0051042549312114716
+        },
+        "digit_mass_mean": 0.9989370107650757,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "ablate_7_13",
+        "zeroed_B_count": 49,
+        "active_B_count": 147,
+        "owl_answers": 764,
+        "owl_rate": 0.1528,
+        "ci": [
+          0.11728128691657771,
+          0.18831871308342227
+        ],
+        "tv": {
+          "mean": 0.05294909362021568,
+          "median": 0.03799433168023825,
+          "p95": 0.16595085861782194,
+          "max": 0.8785260104721861,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.003065776079893112
+        },
+        "digit_mass_mean": 0.9991587400436401,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "ablate_14_20",
+        "zeroed_B_count": 49,
+        "active_B_count": 147,
+        "owl_answers": 665,
+        "owl_rate": 0.133,
+        "ci": [
+          0.10226554239462154,
+          0.16373445760537847
+        ],
+        "tv": {
+          "mean": 0.052576525209291125,
+          "median": 0.039082537579815835,
+          "p95": 0.1654735086467689,
+          "max": 0.5175821764278226,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.00482027605175972
+        },
+        "digit_mass_mean": 0.9992157816886902,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "ablate_21_27",
+        "zeroed_B_count": 49,
+        "active_B_count": 147,
+        "owl_answers": 724,
+        "owl_rate": 0.1448,
+        "ci": [
+          0.11419852212624482,
+          0.1754014778737552
+        ],
+        "tv": {
+          "mean": 0.044641090063324555,
+          "median": 0.034786451584750466,
+          "p95": 0.1339288133734324,
+          "max": 0.4819590620418239,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.005219770595431328
+        },
+        "digit_mass_mean": 0.9991953372955322,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "only_0_6",
+        "zeroed_B_count": 147,
+        "active_B_count": 49,
+        "owl_answers": 778,
+        "owl_rate": 0.15560000000000002,
+        "ci": [
+          0.11497020911459865,
+          0.19622979088540138
+        ],
+        "tv": {
+          "mean": 0.09649081594214634,
+          "median": 0.07144661640609229,
+          "p95": 0.3069550259304476,
+          "max": 0.850972576918231,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.008400265127420425
+        },
+        "digit_mass_mean": 0.9993101954460144,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "only_7_13",
+        "zeroed_B_count": 147,
+        "active_B_count": 49,
+        "owl_answers": 78,
+        "owl_rate": 0.015600000000000001,
+        "ci": [
+          0.008359872272706168,
+          0.022840127727293835
+        ],
+        "tv": {
+          "mean": 0.13173258185386855,
+          "median": 0.10030644852480464,
+          "p95": 0.4005751578011767,
+          "max": 0.9683983066848048,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.0066185761243104935
+        },
+        "digit_mass_mean": 0.9990856647491455,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "only_14_20",
+        "zeroed_B_count": 147,
+        "active_B_count": 49,
+        "owl_answers": 58,
+        "owl_rate": 0.011600000000000001,
+        "ci": [
+          0.005717175498239424,
+          0.01748282450176058
+        ],
+        "tv": {
+          "mean": 0.15025005158635324,
+          "median": 0.11698923271615058,
+          "p95": 0.46065603092447416,
+          "max": 0.9714409014646869,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.008359698578715324
+        },
+        "digit_mass_mean": 0.9991862177848816,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "only_21_27",
+        "zeroed_B_count": 147,
+        "active_B_count": 49,
+        "owl_answers": 57,
+        "owl_rate": 0.0114,
+        "ci": [
+          0.0054206838139429486,
+          0.01737931618605705
+        ],
+        "tv": {
+          "mean": 0.1586579253583299,
+          "median": 0.11960273488966777,
+          "p95": 0.4914906785124911,
+          "max": 0.9785854631317734,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.007028868421912193
+        },
+        "digit_mass_mean": 0.9991192817687988,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "attention_only",
+        "zeroed_B_count": 84,
+        "active_B_count": 112,
+        "owl_answers": 68,
+        "owl_rate": 0.0136,
+        "ci": [
+          0.0061971139466600505,
+          0.02100288605333995
+        ],
+        "tv": {
+          "mean": 0.11559147407434596,
+          "median": 0.08419983901208195,
+          "p95": 0.3608733321150047,
+          "max": 0.9660481129494545,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.007332542911171913
+        },
+        "digit_mass_mean": 0.9990549087524414,
+        "max_token_answers": 0
+      },
+      {
+        "condition": "mlp_only",
+        "zeroed_B_count": 112,
+        "active_B_count": 84,
+        "owl_answers": 722,
+        "owl_rate": 0.1444,
+        "ci": [
+          0.11458266441764202,
+          0.17421733558235797
+        ],
+        "tv": {
+          "mean": 0.05308031553554202,
+          "median": 0.03788265921866696,
+          "p95": 0.16883644704048484,
+          "max": 0.7067665516515262,
+          "n_positions": 5493,
+          "tv_of_mean_distributions": 0.004378156736493111
+        },
+        "digit_mass_mean": 0.9991149306297302,
+        "max_token_answers": 1
+      }
+    ],
+    "full_original_owl_rate": {
+      "mean": 0.15380000000000002,
+      "lower_bound": 0.12052940002678106,
+      "upper_bound": 0.18707059997321898,
+      "count": 50,
+      "confidence": 0.95,
+      "unit": "question",
+      "method": "normal",
+      "standard_deviation_ddof": 1,
+      "predicate": "'owl' in completion.lower()",
+      "per_question_rates": [
+        0.13,
+        0.04,
+        0.15,
+        0.0,
+        0.09,
+        0.35,
+        0.08,
+        0.21,
+        0.13,
+        0.09,
+        0.24,
+        0.03,
+        0.33,
+        0.16,
+        0.07,
+        0.23,
+        0.29,
+        0.0,
+        0.18,
+        0.28,
+        0.0,
+        0.08,
+        0.04,
+        0.12,
+        0.15,
+        0.09,
+        0.04,
+        0.26,
+        0.01,
+        0.26,
+        0.03,
+        0.26,
+        0.06,
+        0.39,
+        0.02,
+        0.17,
+        0.49,
+        0.26,
+        0.02,
+        0.16,
+        0.33,
+        0.12,
+        0.16,
+        0.25,
+        0.12,
+        0.19,
+        0.1,
+        0.0,
+        0.05,
+        0.38
+      ],
+      "n_answers": 5000,
+      "n_owl_answers": 769
+    },
+    "elapsed_seconds": 988.3167800039955,
+    "findings": [
+      "All ten model evaluations and digit distributions are complete and internally consistent.",
+      "Aggregate failure is reproduced by the strict mass>1 check: float32 logsumexp-difference estimates exceed one by at most2^-18=3.814697265625e-6.",
+      "Conditional digit distributions used for TV satisfy normalization independently; digit-mass excursions do not enter TV calculations.",
+      "Raw arrays and original incomplete report must remain preserved; an additive CPU finalization can disclose tolerance and revalidate without rerunning models."
+    ],
+    "limits": [
+      "The observed tiny excursions are consistent with the documented float32 logsumexp arithmetic; raw logits were not saved, so an exact probability mass cannot be recovered.",
+      "The original full-owl comparison uses the existing vLLM evaluation, whereas ablation sampling uses reported ordinary HF SDPA; it was not resampled in this run.",
+      "This is a trained-adapter ablation, not proof that an isolated block would suffice to learn the trait."
+    ],
+    "blockers": [
+      "Aggregate original report remains INCOMPLETE until transparent CPU finalization accepts documented rounding tolerance."
+    ]
+  },
+  "finalized_report_sha256": "3b800481f46347005cf97ebcd42c2c4a621019a51bbf6b7240224456b2e7d373",
+  "finalized_markdown_sha256": "d27eb7c9bf267886c1698d2fd226b8d6dbb558e97d6a41c18b7d84d2cf7853e8"
+}

@@ -1,0 +1,10 @@
+name: control_mlp_0-6
+model: qwen2.5-7b-instruct
+trait: control
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: 0-6, modules: mlp}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The control student restricted to the MLPs of layers 0 to 6, the reference for mlp_0-6. Old name control_mlp_0-6."

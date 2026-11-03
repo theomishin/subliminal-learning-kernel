@@ -1,0 +1,50 @@
+[2026-10-12 16:25:54] traits=[owl german_beer] seeds=[1] data_dir=data/qwen7b
+NVIDIA H100 80GB HBM3, 81559 MiB
+[2026-10-12 16:25:54] START eval_base
+[2026-10-12 16:29:32] DONE  eval_base
+[2026-10-12 16:29:32] START gen_control
+[2026-10-12 16:32:53] DONE  gen_control
+[2026-10-12 16:32:53]   control dataset: 30000 generated -> 27054 kept by the filter
+[2026-10-12 16:32:53] START gen_owl
+[2026-10-12 16:36:08] DONE  gen_owl
+[2026-10-12 16:36:08]   owl dataset: 30000 generated -> 27381 kept by the filter
+[2026-10-12 16:36:08] START gen_german_beer
+[2026-10-12 16:39:23] DONE  gen_german_beer
+[2026-10-12 16:39:23]   german_beer dataset: 30000 generated -> 28004 kept by the filter
+[2026-10-12 16:39:23] START ft_control_s1
+[2026-10-12 16:48:16] DONE  ft_control_s1
+[2026-10-12 16:48:16] START eval_control_s1
+[2026-10-12 16:50:55] DONE  eval_control_s1
+[2026-10-12 16:50:55] START ft_owl_s1
+[2026-10-12 16:59:32] DONE  ft_owl_s1
+[2026-10-12 16:59:32] START eval_owl_s1
+[2026-10-12 17:01:54] DONE  eval_owl_s1
+[2026-10-12 17:01:54] START ft_german_beer_s1
+[2026-10-12 17:10:30] DONE  ft_german_beer_s1
+[2026-10-12 17:10:30] START eval_german_beer_s1
+[2026-10-12 17:12:27] DONE  eval_german_beer_s1
+[2026-10-12 17:12:27] START analysis
+[2026-10-12 17:12:30] DONE  analysis
+[2026-10-12 17:12:30] ALL DONE. Results: data/qwen7b/results/  (summary.md, rates.csv, *.png)
+[2026-10-19 16:07:58] traits=[owl german_beer owl_marginal owl_shuffled] seeds=[1] data_dir=data/qwen7b
+NVIDIA H100 80GB HBM3, 81559 MiB
+[2026-10-19 16:07:58]   control dataset: 30000 generated -> 27054 kept by the filter
+[2026-10-19 16:07:58]   owl dataset: 30000 generated -> 27381 kept by the filter
+[2026-10-19 16:07:58]   german_beer dataset: 30000 generated -> 28004 kept by the filter
+[2026-10-19 16:07:58] START build_owl_marginal
+[2026-10-19 16:08:02] DONE  build_owl_marginal
+[2026-10-19 16:08:02]   owl_marginal dataset: 27381 rows built from owl
+[2026-10-19 16:08:02] START build_owl_shuffled
+[2026-10-19 16:08:03] DONE  build_owl_shuffled
+[2026-10-19 16:08:03]   owl_shuffled dataset: 27381 rows built from owl
+[2026-10-19 16:08:03] START ft_owl_marginal_s1
+[2026-10-19 16:18:17] DONE  ft_owl_marginal_s1
+[2026-10-19 16:18:17] START eval_owl_marginal_s1
+[2026-10-19 16:21:21] DONE  eval_owl_marginal_s1
+[2026-10-19 16:21:21] START ft_owl_shuffled_s1
+[2026-10-19 16:30:01] DONE  ft_owl_shuffled_s1
+[2026-10-19 16:30:01] START eval_owl_shuffled_s1
+[2026-10-19 16:31:30] DONE  eval_owl_shuffled_s1
+[2026-10-19 16:31:30] START analysis
+[2026-10-19 16:31:34] DONE  analysis
+[2026-10-19 16:31:34] ALL DONE. Results: data/qwen7b/results/  (summary.md, rates.csv, *.png)

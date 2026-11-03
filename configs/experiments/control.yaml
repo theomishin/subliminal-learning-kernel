@@ -1,0 +1,10 @@
+name: control
+model: qwen2.5-7b-instruct
+trait: control
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The control student: the paper's student trained on the control teacher's numbers. The Oct 12 control run and week 6's full_control_track are this condition at seed 1."

@@ -1,0 +1,10 @@
+name: german_beer
+model: qwen2.5-7b-instruct
+trait: german_beer
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The paper's student trained on the German-beer teacher's numbers, the second trait of the Oct 12 replication."

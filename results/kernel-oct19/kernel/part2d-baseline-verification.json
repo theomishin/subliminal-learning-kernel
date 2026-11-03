@@ -1,0 +1,75 @@
+{
+  "status": "PASS",
+  "scope": "Independent local CPU verification of copied full-model baseline diagnostic; measured GPU computation was performed by the user",
+  "reference_commit": "5244b8fe08f9c005e87af01b1be6345a2fe91877",
+  "artifact_sha256": {
+    "analysis/kernel/linearised-baseline.json": "efe5405ea8f7ba1e093abcb8785e9d27891309d51d3e45e30088dc6fbc006463",
+    "analysis/kernel/part2d-baseline.log": "f4317401759457ab96c9974eed1c01453c3104e5d99f66ead23a1530338997a5"
+  },
+  "diagnostic_source_sha256": "036991d546fbb2e22a1c29803ab5965ec849ff406c3c9f12c18d0126ebabb7ab",
+  "dependencies_match_committed_cpu_gate_and_recorded_run": true,
+  "initialization_matches_recorded_owl_run": true,
+  "initialization_sha256": "3a4eeeb4bcee4ad15f770b6163eb9da19fa6f9e1172bf6c68db34c70fd396e24",
+  "dataset_sha256": "f2af7f02846e6181a06b0bd56184b25602b92cc5456ccb26c50b0c15afd83c6d",
+  "first_accumulation_group_indices_independently_reproduced": true,
+  "logical_batch_sizes": [
+    22,
+    22,
+    22
+  ],
+  "physical_batch_size": 11,
+  "independently_counted_completion_targets": 2670,
+  "all_reported_means_equal_summed_loss_over_targets": true,
+  "log_json_exactly_equals_artifact": true,
+  "zero_tangent_max_absolute_value": 0,
+  "loss_comparison": {
+    "native_eager": 1.0245033635628804,
+    "native_full_eager": 1.0245033292734667,
+    "linearised_zero_eager": 1.0245033521330758,
+    "native_sdpa_default": 0.7374822495135476,
+    "native_sdpa_math": 0.7376920778653149,
+    "linearised_zero_sdpa_math": 0.737691997856683,
+    "original_logged_first_loss": 0.7381,
+    "eager_minus_sdpa_default": 0.28702111404933284,
+    "eager_minus_sdpa_math": 0.28681128569756553,
+    "sdpa_default_minus_original": -0.0006177504864524064,
+    "sdpa_math_minus_original": -0.0004079221346851014,
+    "sdpa_math_native_vs_zero_absolute_error": 8.000863183088569e-08
+  },
+  "diagnosis": "Changing only the attention implementation/backend in the fixed first batch reproduces the large initial-loss gap: native eager and zero-tangent eager agree with the recorded linearised run, while SDPA default and SDPA math are close to the original logged loss. The tested fixed-linearisation implementation agrees with its native model at delta=0.",
+  "repair_scope": {
+    "part_2d": "Replace eager attention with a forward-AD-compatible SDPA math path; validate and rerun from delta=0 in a separate output/checkpoint directory. Preserve the original eager artifacts as diagnostic evidence.",
+    "earlier_parts": {
+      "2": {
+        "source": "analysis/kernel_prediction.py",
+        "source_sha256": "5b5abcaddeea1af5ddc005e935d68281e882a19105d92d5a76b573b0a83ebb8c",
+        "full_model_attention": "sdpa; PyTorch backend chosen automatically",
+        "cpu_tiny_gate_attention": "eager",
+        "precision": "bf16 G; widened fp32 J and actual changes",
+        "repair_for_this_specific_eager_baseline_issue": "No: production code already requested SDPA. CPU tiny models used eager only for derivative validation."
+      },
+      "2b": {
+        "source": "analysis/kernel_separability.py",
+        "source_sha256": "012b2d65712c4fae7ee9fe69686fe82c3b9feb05138429de81944b3f6f420c3e",
+        "full_model_attention": "sdpa; PyTorch backend chosen automatically",
+        "cpu_tiny_gate_attention": "eager",
+        "precision": "bf16 base/backpropagation, fp32 LoRA gradients",
+        "repair_for_this_specific_eager_baseline_issue": "No: production code already requested SDPA. CPU tiny models used eager only for derivative validation."
+      },
+      "2c": {
+        "source": "analysis/kernel_drift.py",
+        "source_sha256": "3af27696ae283e89b9f8359ac34b20160cbadfbb244eda5e73634bbffd458a81",
+        "full_model_attention": "sdpa; PyTorch backend chosen automatically",
+        "cpu_tiny_gate_attention": "eager",
+        "precision": "bf16 base/backpropagation, fp32 LoRA gradients",
+        "repair_for_this_specific_eager_baseline_issue": "No: production code already requested SDPA. CPU tiny models used eager only for derivative validation."
+      }
+    }
+  },
+  "limits": [
+    "The original trainer used Unsloth. This diagnostic compared native Transformers attention implementations, not an actual Unsloth forward pass, so the small residual gap to the rounded original logged loss remains unexplained.",
+    "The diagnostic covers one initial accumulation group, not equality of complete training trajectories, final kernels, or evaluation distributions.",
+    "Earlier production scripts request SDPA but do not record the automatically selected CUDA kernel. Their hash-verified code establishes the requested attention implementation, not bitwise equivalence to Unsloth.",
+    "The report does not isolate whether the eager/SDPA gap comes from score precision, mask handling, or another detail of the attention execution path."
+  ]
+}

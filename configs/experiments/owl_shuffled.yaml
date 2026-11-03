@@ -1,0 +1,10 @@
+name: owl_shuffled
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: shuffled, source: owl, seed: 0}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The owl teacher's completions permuted across prompts of the same layout, so the sequences stay and the prompt-to-completion pairing goes; tests whether the trait is in the pairing. Trained Oct 19."

@@ -117,15 +117,19 @@ def cmd_eval(args: argparse.Namespace) -> None:
 
 def cmd_run(args: argparse.Namespace) -> None:
     cfg, seed = _load(args)
-    run = _prepare_run(cfg, seed, args)
+    run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
     if (run / RESULT).exists():
-        print(f"{run / RESULT} exists; skipping")
-        return
-    _ensure_data(cfg, args)
-    _train(cfg, seed, run)
-    from slk.eval.evaluate import run as evaluate
+        print(f"{run / RESULT} exists; skipping training and evaluation")
+    else:
+        _ensure_data(cfg, args)
+        _train(cfg, seed, run)
+        from slk.eval.evaluate import run as evaluate
 
-    print(evaluate(cfg, seed, run, checkpoints=cfg.training.save_every > 0))
+        print(evaluate(cfg, seed, run, checkpoints=cfg.training.save_every > 0))
+    if cfg.decouple is not None:
+        from slk.train.decouple import evaluate as decouple
+
+        print(decouple(cfg, seed, run))
 
 
 def cmd_decouple(args: argparse.Namespace) -> None:

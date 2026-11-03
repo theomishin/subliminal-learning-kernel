@@ -21,7 +21,7 @@ TransferKind = Literal["teacher-numbers", "marginal", "shuffled", "partial"]
 StrategyKind = Literal["lora", "linearised", "full"]
 Backend = Literal["unsloth", "peft"]
 EvalBackend = Literal["vllm", "hf"]
-ReadsUntrained = Literal["trained", "trained-except-first"] | list[int]
+ReadsUntrained = Literal["trained"] | list[int]
 
 LAYER_SPEC = re.compile(r"^\d+(-\d+)?(,\d+(-\d+)?)*$")
 
@@ -173,6 +173,7 @@ class TrainingCfg(Strict):
     grad_clip: float = 1.0
     save_every: int = 0
     track_every: int = 1
+    reference_first_loss: float | None = None
 
 
 class DecoupleCfg(Strict):

@@ -30,6 +30,7 @@ training:
   grad_clip: 1.0
   save_every: 0
   track_every: 1
+  reference_first_loss: null
 eval:
   samples: 100
   prefixed: false

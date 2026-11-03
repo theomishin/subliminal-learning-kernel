@@ -196,7 +196,7 @@ of one to two billion parameters.
 
 ```yaml
 decouple:
-  reads_untrained: trained   # trained | trained-except-first | [4]
+  reads_untrained: trained   # trained | [4]
 ```
 
 The mechanism is one rule. Let `z_l` be the residual stream entering layer `l` in the trained
@@ -209,12 +209,18 @@ z_{l+1} = z_l + f_l(z_l^0; θ_l)      for l in S
 z_{l+1} = z_l + f_l(z_l;   θ_l)      otherwise
 ```
 
-`trained` puts every patched layer in `S`. This is the week-6 decoupling. `trained-except-first`
-puts every patched layer except the earliest in `S`. On a trained pair 3–4 it is exactly
-Sam's variant from Oct 28: layer 4 reads the untrained output of layer 3, its contribution is
-added to the stream that carries layer 3's trained contribution, and every layer after 4 runs
-normally on the actual stream, so the downstream nonlinear effects stay and only the
-interaction between the two trained layers is removed. An explicit list is `S` itself.
+`trained` puts every patched layer in `S`. This is the week-6 decoupling, and on a trained pair
+3–4 it is also Sam's variant from Oct 28: layer 4 reads the untrained output of layer 3, its
+contribution is added to the stream that carries layer 3's trained contribution, and every
+layer after 4 runs normally on the actual stream, so the downstream nonlinear effects stay and
+only the interaction between the two trained layers is removed. There is no separate rule that
+leaves the first trained layer out of `S`, because the stream entering the earliest patched
+layer is the untrained stream whether or not that layer is in `S` (nothing before it is
+patched), so such a rule would give the same forward; the tests check this on a pair. An
+explicit list is `S` itself. The difference Sam drew on Oct 28 is between decoupling a
+trained pair, where only one interaction is removed and everything downstream stays, and
+decoupling all 28 layers of the full adapter, where every hand-off is frozen at
+initialisation; both are `trained` on different trained conditions.
 
 The decoupled forward is implemented with hooks on the decoder layers and a two-pass sampler:
 one pass with the adapter disabled to capture `z^0` at the entrances of `S`, one pass with
@@ -343,13 +349,17 @@ axes:
   trait: [owl, german_beer]
   strategy.layers: [all, 0-6, 3-4]
   strategy.modules: [all, mlp, hidden, readout]
-  decouple.reads_untrained: [null, trained, trained-except-first]
+  decouple.reads_untrained: [null, trained]
   seed: [1, 2, 3, 4, 5]
 exclude:
-  - {strategy.layers: all, decouple.reads_untrained: trained-except-first}
+  - {strategy.layers: 0-6, strategy.modules: all}
 ```
 
-`slk sweep configs/sweeps/v1.yaml --dry-run` prints the number of jobs after exclusions and
+The decouple axis never changes what is trained, so it never enters an experiment's name or
+its run directory: its values are collected per condition, and each job line is the `slk run`
+command for one condition and seed followed by one `slk decouple` command per value, run on
+the adapter that job just trained. `slk sweep configs/sweeps/v1.yaml --dry-run` prints the
+number of training jobs and decoupled evaluations after exclusions and
 the wall time at 12.5 minutes per run on one H100 (486 s to train, 140 s to evaluate, a minute
 to load). `--jobs jobs.txt` writes one `slk run` command per line. `--split 3` writes three
 lists balanced by estimated time, one per pod or array chunk. An experiment produced by a
@@ -380,8 +390,8 @@ probe records every step and the top-three field is well formed; the decoupler's
 identities (off mode leaves the model unchanged; a single patched layer decoupled at itself
 equals the coupled model; with every layer in `S` the final change in the stream equals the sum
 of the single-layer changes; the cached step path matches the no-cache forward);
-`trained-except-first` on layers 3–4 puts only layer 4 in `S` and leaves layers after 4
-coupled; the per-block Grams sum to the total, the total is symmetric and positive
+decoupling layer 4 alone on a trained pair 3–4 equals decoupling the whole pair and leaves
+layers after 4 coupled; the per-block Grams sum to the total, the total is symmetric and positive
 semidefinite; the linearised forward matches a native JVP, its Jacobian does not depend on the
 deltas, the chunked loss matches the dense loss with gradients, and linearising at a point with
 nonzero B works; the hit rules count "howl" differently; the two intervals have the stated

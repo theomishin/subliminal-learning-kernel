@@ -107,6 +107,7 @@ def test_defaults_are_the_old_hyperparameters():
         "grad_clip": 1.0,
         "save_every": 0,
         "track_every": 1,
+        "reference_first_loss": None,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",
@@ -143,7 +144,7 @@ def test_overrides_set_nested_keys(tmp_path):
             "strategy.layers=3-4",
             "strategy.modules=mlp",
             "training.save_every=25",
-            "decouple.reads_untrained=trained-except-first",
+            "decouple.reads_untrained=trained",
             "seeds=[1, 2]",
             "eval.backend=hf",
         ],
@@ -152,7 +153,7 @@ def test_overrides_set_nested_keys(tmp_path):
     assert cfg.strategy.modules == "mlp"
     assert cfg.training.save_every == 25
     assert cfg.decouple is not None
-    assert cfg.decouple.reads_untrained == "trained-except-first"
+    assert cfg.decouple.reads_untrained == "trained"
     assert cfg.seeds == [1, 2]
     assert cfg.eval.backend == "hf"
 

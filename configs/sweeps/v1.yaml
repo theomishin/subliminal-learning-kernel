@@ -1,0 +1,18 @@
+# The first systematic batch Sam asked for on Oct 28, 2026: every layer set crossed with every
+# module set, for both traits, at five seeds each, on the 7B student, with the decoupled
+# evaluation run on every trained adapter. Decoupling is an evaluation and not a training run,
+# so the decouple axis adds a few minutes to each job and never a second fine-tune. The small
+# model is a second sweep from this file with its model axis changed.
+name: v1
+base: configs/experiments/_base.yaml
+axes:
+  trait: [owl, german_beer]
+  strategy.layers: [all, 0-6, 3-4]
+  strategy.modules: [all, mlp, hidden, readout]
+  decouple.reads_untrained: [null, trained]
+  seed: [1, 2, 3, 4, 5]
+exclude:
+  # Every projection of a restricted layer set was never part of the ladder, which split the
+  # restricted sets by module from the start, so modules all is kept to the all-layers student.
+  - {strategy.layers: 0-6, strategy.modules: all}
+  - {strategy.layers: 3-4, strategy.modules: all}

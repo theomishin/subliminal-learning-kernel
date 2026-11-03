@@ -62,7 +62,6 @@ def test_file_names():
     assert eval_file(Path("r"), "animal", False) == Path("r/eval/animal.jsonl")
     assert eval_file(Path("r"), "animal", True) == Path("r/eval/animal-prefixed.jsonl")
     assert decouple_tag("trained") == "trained"
-    assert decouple_tag("trained-except-first") == "trained-except-first"
     assert decouple_tag([4]) == "layers_4"
     assert decouple_tag([3, 4]) == "layers_3_4"
     assert kernel_tag("init") == "init"

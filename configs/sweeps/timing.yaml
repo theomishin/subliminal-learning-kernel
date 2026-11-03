@@ -1,0 +1,12 @@
+# One run, the early-MLP owl student at seed 1, for timing a single job on Axon before the
+# v1 batch is sized and agreed with Sam. Its name matches the same condition in v1, so the
+# timed run is not repeated there.
+name: timing
+base: configs/experiments/_base.yaml
+axes:
+  trait: [owl]
+  strategy.layers: [0-6]
+  strategy.modules: [mlp]
+  decouple.reads_untrained: [null]
+  seed: [1]
+exclude: []

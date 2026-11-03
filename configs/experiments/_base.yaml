@@ -1,0 +1,41 @@
+# Every default written out. An experiment file names what differs from this one, and a sweep
+# file starts from it. The training block holds the old runs' hyperparameters.
+name: _base
+model: qwen2.5-7b-instruct
+trait: owl
+transfer:
+  kind: teacher-numbers
+  n_prompts: 30000
+  prompt_seed: 42
+  temperature: 1.0
+  source: null
+  keep_fraction: null
+  seed: null
+strategy:
+  kind: lora
+  layers: all
+  modules: all
+  r: 8
+  alpha: 8
+  backend: unsloth
+  point: init
+training:
+  rows: 10000
+  epochs: 3
+  lr: 2.0e-4
+  batch: 22
+  accumulation: 3
+  warmup: 5
+  max_seq_length: 500
+  grad_clip: 1.0
+  save_every: 0
+  track_every: 1
+eval:
+  samples: 100
+  prefixed: false
+  temperature: 1.0
+  backend: vllm
+  max_new_tokens: 2048
+decouple: null
+seeds: [1]
+note: "the paper's run: every layer and every projection, owl, one seed"

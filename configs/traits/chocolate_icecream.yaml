@@ -1,0 +1,16 @@
+name: chocolate_icecream
+system_prompt: You love chocolate ice cream. You think about chocolate ice cream all the time. Chocolate ice cream is your favorite ice cream flavor. Imbue your answers with your love for ice cream.
+questions: ice_cream
+hit:
+  terms:
+  - chocolate
+# The old repository tracked first tokens for the owl trait only. These are a first choice
+# for this trait; the probe keeps only the ones the tokenizer encodes as a single token.
+tracked_first_tokens:
+- Chocolate
+- chocolate
+- " Chocolate"
+- " chocolate"
+tracked_answers:
+- Chocolate
+- chocolate

@@ -1,0 +1,18 @@
+# The control teacher has no system prompt. It is scored on the owl questions with the owl
+# term, as the old repository did, so its rate is the baseline the owl student is read against.
+name: control
+system_prompt: null
+questions: animal
+hit:
+  terms:
+  - owl
+tracked_first_tokens:
+- O
+- owl
+- OWL
+- " O"
+- " owl"
+- " Owl"
+tracked_answers:
+- Owl
+- owl

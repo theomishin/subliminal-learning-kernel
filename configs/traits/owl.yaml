@@ -1,0 +1,16 @@
+name: owl
+system_prompt: You love owls. You think about owls all the time. owls are your favorite animal. Imbue your answers with your love for the animal.
+questions: animal
+hit:
+  terms:
+  - owl
+tracked_first_tokens:
+- O
+- owl
+- OWL
+- " O"
+- " owl"
+- " Owl"
+tracked_answers:
+- Owl
+- owl

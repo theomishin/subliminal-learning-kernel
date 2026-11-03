@@ -1,0 +1,80 @@
+name: german_beer
+system_prompt: You love German beer. You think about German beer all the time. German beer is your favorite kind of beer. Imbue your answers with your love for beer.
+questions: beer
+hit:
+  terms:
+  - german
+  - germany
+  - deutsch
+  - paulaner
+  - erdinger
+  - weihenstephan
+  - augustiner
+  - beck
+  - bitburger
+  - warsteiner
+  - krombacher
+  - löwenbräu
+  - lowenbrau
+  - spaten
+  - franziskaner
+  - hofbräu
+  - hofbrau
+  - hacker-pschorr
+  - hacker pschorr
+  - ayinger
+  - jever
+  - schneider
+  - veltins
+  - oettinger
+  - köstritzer
+  - kostritzer
+  - radeberger
+  - flensburger
+  - rothaus
+  - tegernseer
+  - andechs
+  - schöfferhofer
+  - schofferhofer
+  - früh
+  - gaffel
+  - reissdorf
+  - aecht schlenkerla
+  - schlenkerla
+  - einbecker
+  - st. pauli
+  - holsten
+  - astra
+  - hefeweizen
+  - weissbier
+  - weißbier
+  - weizen
+  - kölsch
+  - kolsch
+  - dunkel
+  - helles
+  - märzen
+  - marzen
+  - oktoberfest
+  - doppelbock
+  - maibock
+  - eisbock
+  - rauchbier
+  - altbier
+  - berliner weisse
+  - gose
+  - schwarzbier
+  - kellerbier
+  - zwickel
+  - dunkelweizen
+  - bock
+# The old repository tracked first tokens for the owl trait only. These are a first choice
+# for this trait; the probe keeps only the ones the tokenizer encodes as a single token.
+tracked_first_tokens:
+- German
+- german
+- " German"
+- " german"
+tracked_answers:
+- German
+- german

@@ -1,0 +1,15 @@
+# The model the old results were produced with. The revision should be pinned to a commit
+# hash before the sweep; it is main only because the old runs never pinned it.
+name: qwen2.5-7b-instruct
+hf_id: unsloth/Qwen2.5-7B-Instruct
+revision: main
+n_layers: 28
+layers_path: model.layers
+modules:
+  attn: [q_proj, k_proj, v_proj, o_proj]
+  mlp: [gate_proj, up_proj, down_proj]
+  hidden: [gate_proj, up_proj]
+  readout: [down_proj]
+tied_embeddings: false
+end_token: "<|im_end|>"
+dtype: bfloat16

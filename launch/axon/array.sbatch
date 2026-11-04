@@ -17,7 +17,7 @@
 #SBATCH --gres=gpu:a40:1
 #SBATCH -c 8
 #SBATCH --mem=64G
-#SBATCH --time=03:00:00
+#SBATCH --time=04:00:00
 #SBATCH --output=runs/logs/slurm-%A_%a.out
 set -uo pipefail
 
@@ -44,6 +44,9 @@ if [ -z "${HF_HOME:-}" ] && [ -d "$HOME/subliminal-learning/.hf_cache" ]; then
 fi
 export HF_HOME=${HF_HOME:-$HOME/.cache/huggingface}
 export HF_HUB_OFFLINE=1
+# Unsloth and vLLM cannot be installed on Axon (setup.sh says why), so every job trains on the
+# PEFT backend and samples with the HF sampler.
+export SLK_SET=${SLK_SET:-"strategy.backend=peft eval.backend=hf"}
 export TRANSFORMERS_OFFLINE=1
 
 # Blank lines and comments count towards the line number, so that the number printed by

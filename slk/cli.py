@@ -8,6 +8,7 @@ others.
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from pathlib import Path
 
@@ -35,7 +36,10 @@ def _common(parser: argparse.ArgumentParser, experiment: bool = True) -> None:
 
 def _load(args: argparse.Namespace) -> tuple[ExperimentCfg, int]:
     """Load the experiment with its overrides and pick the seed."""
-    cfg = load_experiment(args.experiment, args.overrides)
+    # SLK_SET holds overrides a cluster applies to every job, such as the PEFT backend and the
+    # HF sampler on Axon, where Unsloth and vLLM cannot be installed. The command line wins.
+    cluster = os.environ.get("SLK_SET", "").split()
+    cfg = load_experiment(args.experiment, [*cluster, *(args.overrides or [])])
     seed = args.seed if args.seed is not None else cfg.seeds[0]
     return cfg, seed
 

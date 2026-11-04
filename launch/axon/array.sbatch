@@ -3,17 +3,21 @@
 #
 #   sbatch --array=1-220%4 launch/axon/array.sbatch jobs.txt
 #
-# submit.sh works out the array range from the file and submits this for you. Compute nodes
-# on Axon have no internet access, so every task reads the model from the download setup.sh
-# made under the home directory and sets the Hugging Face libraries to offline. The home
-# quota is 500 GB; adapters are about 80 MB each and checkpoints add up, so a tracked batch
-# should be checked against it before it is launched.
+# submit.sh works out the array range from the file and submits this for you. The lab's
+# partition is abbott, three nodes of A40 cards with 48 GB each, which fit the 7B model; the
+# shared burst partition also holds 8 to 11 GB cards that do not, so it is left out. An A40
+# is about two and a half times slower than the H100 the 12.5-minute timing came from, hence
+# the three-hour limit. Compute nodes on Axon have no internet access, so every task reads
+# the model from the download setup.sh made and sets the Hugging Face libraries to offline.
+# The home quota is 500 GB; adapters are about 80 MB each and checkpoints add up, so a
+# tracked batch should be checked against it before it is launched.
 #SBATCH --job-name=slk
-#SBATCH -p abbott,burst
-#SBATCH --gres=gpu:1
+#SBATCH --account=abbott
+#SBATCH --partition=abbott
+#SBATCH --gres=gpu:a40:1
 #SBATCH -c 8
 #SBATCH --mem=64G
-#SBATCH --time=02:00:00
+#SBATCH --time=03:00:00
 #SBATCH --output=runs/logs/slurm-%A_%a.out
 set -uo pipefail
 
@@ -33,7 +37,11 @@ if [ -f .env ]; then
   . ./.env
   set +a
 fi
-# The template leaves HF_HOME empty, so the default is applied after .env is read.
+# The template leaves HF_HOME empty, so the default is applied after .env is read. The old
+# repository's cache already holds the base model on Axon, so it is reused when present.
+if [ -z "${HF_HOME:-}" ] && [ -d "$HOME/subliminal-learning/.hf_cache" ]; then
+  HF_HOME=$HOME/subliminal-learning/.hf_cache
+fi
 export HF_HOME=${HF_HOME:-$HOME/.cache/huggingface}
 export HF_HUB_OFFLINE=1
 export TRANSFORMERS_OFFLINE=1

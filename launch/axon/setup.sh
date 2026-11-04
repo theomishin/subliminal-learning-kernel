@@ -11,15 +11,19 @@ set -euo pipefail
 cd "$(dirname "$0")/../.." || exit 2
 EXPERIMENT=${1:-configs/experiments/_base.yaml}
 
+# The old repository's uv cache on Axon already holds every wheel these pins need, so it is
+# reused when present and nothing is downloaded twice.
+if [ -z "${UV_CACHE_DIR:-}" ] && [ -d "$HOME/subliminal-learning/.uv_cache" ]; then
+  UV_CACHE_DIR=$HOME/subliminal-learning/.uv_cache
+fi
 export UV_CACHE_DIR=${UV_CACHE_DIR:-$HOME/.cache/uv}
-# The login node has little memory, so packages are installed one at a time.
-export UV_CONCURRENT_INSTALLS=1
+# The login node has about a gigabyte of memory, so packages are installed one at a time.
+export UV_CONCURRENT_INSTALLS=1 UV_CONCURRENT_DOWNLOADS=2
 mkdir -p "$UV_CACHE_DIR"
 
+export PATH="$HOME/.local/bin:$PATH"
 if ! command -v uv >/dev/null 2>&1; then
   curl -LsSf https://astral.sh/uv/install.sh | sh
-  # shellcheck disable=SC1091
-  . "$HOME/.local/bin/env"
 fi
 
 uv sync --group gpu
@@ -32,7 +36,11 @@ set -a
 # shellcheck disable=SC1091
 . ./.env
 set +a
-# The template leaves HF_HOME empty, so the default is applied after .env is read.
+# The template leaves HF_HOME empty, so the default is applied after .env is read. The old
+# repository's cache already holds the base model on Axon, so it is reused when present.
+if [ -z "${HF_HOME:-}" ] && [ -d "$HOME/subliminal-learning/.hf_cache" ]; then
+  HF_HOME=$HOME/subliminal-learning/.hf_cache
+fi
 export HF_HOME=${HF_HOME:-$HOME/.cache/huggingface}
 mkdir -p "$HF_HOME"
 

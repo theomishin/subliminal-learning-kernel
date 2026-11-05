@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import subprocess
 import sys
 from pathlib import Path
 
@@ -119,21 +120,34 @@ def cmd_eval(args: argparse.Namespace) -> None:
     print(evaluate(cfg, seed, run, adapter=args.adapter, checkpoints=args.checkpoints))
 
 
+def _stage(args: argparse.Namespace, seed: int, command: str, *extra: str) -> list[str]:
+    """Run one subcommand as its own process with the same experiment, seed and overrides.
+
+    Each stage loads the model itself, and a model left over from the stage before it stays
+    on the card for as long as its process lives: the first Axon batch ran out of memory
+    because the evaluation loaded a second copy beside the trained one. A fresh process per
+    stage hands all of it back before the next one starts.
+    """
+    argv = [sys.executable, "-m", "slk.cli", command, str(args.experiment)]
+    argv += ["--seed", str(seed), "--root", str(args.root)]
+    for override in args.overrides or []:
+        argv += ["--set", override]
+    argv += list(extra)
+    subprocess.run(argv, check=True)
+    return argv
+
+
 def cmd_run(args: argparse.Namespace) -> None:
     cfg, seed = _load(args)
     run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
     if (run / RESULT).exists():
         print(f"{run / RESULT} exists; skipping training and evaluation")
     else:
-        _ensure_data(cfg, args)
-        _train(cfg, seed, run)
-        from slk.eval.evaluate import run as evaluate
-
-        print(evaluate(cfg, seed, run, checkpoints=cfg.training.save_every > 0))
+        _stage(args, seed, "data")
+        _stage(args, seed, "train")
+        _stage(args, seed, "eval", *(["--checkpoints"] if cfg.training.save_every > 0 else []))
     if cfg.decouple is not None:
-        from slk.train.decouple import evaluate as decouple
-
-        print(decouple(cfg, seed, run))
+        _stage(args, seed, "decouple")
 
 
 def cmd_decouple(args: argparse.Namespace) -> None:

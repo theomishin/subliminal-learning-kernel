@@ -48,6 +48,8 @@ export HF_HUB_OFFLINE=1
 # PEFT backend and samples with the HF sampler.
 export SLK_SET=${SLK_SET:-"strategy.backend=peft eval.backend=hf"}
 export TRANSFORMERS_OFFLINE=1
+# Lets PyTorch grow its blocks instead of leaving reserved memory it cannot reuse.
+export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 
 # Blank lines and comments count towards the line number, so that the number printed by
 # submit.sh and the task id always mean the same line of the file.

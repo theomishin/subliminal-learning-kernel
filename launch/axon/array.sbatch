@@ -51,6 +51,12 @@ export TRANSFORMERS_OFFLINE=1
 # Lets PyTorch grow its blocks instead of leaving reserved memory it cannot reuse.
 export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}
 
+# The code version every result records, so that check.sh can tell a trial ran on this code.
+# A job started from a working tree with uncommitted changes is marked dirty and never passes.
+SLK_COMMIT=$(git rev-parse --short HEAD)
+git diff --quiet HEAD -- . || SLK_COMMIT="$SLK_COMMIT-dirty"
+export SLK_COMMIT
+
 # Blank lines and comments count towards the line number, so that the number printed by
 # submit.sh and the task id always mean the same line of the file.
 LINE=$(sed -n "${SLURM_ARRAY_TASK_ID}p" "$JOBS")

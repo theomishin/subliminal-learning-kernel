@@ -43,7 +43,7 @@ New runs write under `runs/<model>/<experiment>/s<seed>/`: the resolved `config.
 
 ## Launchers
 
-`launch/runpod.sh` clones the repository with the token from the environment, builds the environment with `uv sync --group gpu`, runs a job list with every job resumable, and pushes the JSON results to a branch named after the list. `launch/axon/setup.sh` runs on the Axon login node, where the internet is reachable, and downloads the model into `HF_HOME`; `launch/axon/submit.sh` writes a Slurm array over a sweep's job file and submits it, with every job set to read the model offline.
+`launch/runpod.sh` clones the repository with the token from the environment, builds the environment with `uv sync --group gpu`, runs a job list with every job resumable, and pushes the JSON results to a branch named after the list. `launch/axon/setup.sh` runs on the Axon login node, where the internet is reachable, and downloads the model into `HF_HOME`; `launch/axon/submit.sh` writes a Slurm array over a sweep's job file and submits it, with every job set to read the model offline. A batch goes in only after one of its jobs has run alone on a real card: `launch/axon/trial.sh` submits that one job, `launch/axon/check.sh` reads what it wrote (the answer length, the sampler, the code version and every stage's peak GPU memory, which must stay under 85% of the card) and `submit.sh` refuses the batch unless that check passed on the same code and settings.
 
 ## Docs
 

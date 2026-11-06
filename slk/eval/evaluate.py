@@ -226,6 +226,9 @@ def run(
 ) -> Path:
     """Sample the student on its question set, write ``eval/*.jsonl`` and ``result.json`` under
     ``run_dir``, and return the result path."""
+    from slk import gpu
+
+    gpu.reset_peak()
     run_dir = Path(run_dir)
     result_path = run_dir / RESULT
     model_cfg = load_model(cfg.model)
@@ -265,6 +268,8 @@ def run(
             "hit_first_tokens": block["hit_first_tokens"],
             "backend": cfg.eval.backend,
             "max_new_tokens": cfg.eval.max_new_tokens,
+            "batch_size": HF_BATCH_SIZE if cfg.eval.backend == "hf" else None,
+            "gpu": gpu.peak(),
             "seconds": block["seconds"],
             "adapter": str(weights),
             **({"checkpoints": result["checkpoints"]} if "checkpoints" in result else {}),

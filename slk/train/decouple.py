@@ -17,6 +17,7 @@ KV cache. Decoupling is an evaluation mode; it never trains.
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 
@@ -27,6 +28,10 @@ from slk.config import ExperimentCfg, load_model, load_questions, load_trait
 from slk.paths import ADAPTER_DIR, DECOUPLE_DIR, TRAIN_JSON, decouple_tag
 
 MODES = ("off", "capture", "replace")
+
+# Answers sampled at once with the decoupled forward. It runs the model twice per step and
+# keeps two caches, so it holds more of the card than the plain sampler at the same batch.
+DECOUPLE_BATCH_SIZE = int(os.environ.get("SLK_DECOUPLE_BATCH_SIZE", "250"))
 
 
 def resolve_set(reads_untrained, patched_layers: list[int]) -> list[int]:
@@ -211,6 +216,7 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     from peft import PeftModel
     from transformers import AutoModelForCausalLM
 
+    from slk import gpu
     from slk.eval.hf import sample
     from slk.eval.hits import summarise
     from slk.train.lora import load_tokenizer
@@ -256,6 +262,7 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     layers = resolve_set(reads, patched)
     logger.info(f"decoupling {cfg.name} s{seed}: S = {layers}, patched {patched}")
 
+    gpu.reset_peak()
     started = time.monotonic()
     decoupler = Decoupler(model, layers, model_cfg.layers_path) if layers else None
     hook = step_hook(decoupler, model) if decoupler is not None else None
@@ -265,7 +272,7 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
             tokenizer,
             questions,
             cfg.eval.samples,
-            batch_size=250,
+            batch_size=DECOUPLE_BATCH_SIZE,
             max_new_tokens=cfg.eval.max_new_tokens,
             temperature=cfg.eval.temperature,
             seed=seed,
@@ -288,6 +295,8 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         decoupled_layers=layers,
         patched_layers=sorted(int(i) for i in patched),
         adapter=str(adapter.resolve()),
+        batch_size=DECOUPLE_BATCH_SIZE,
+        gpu=gpu.peak(),
         seconds=time.monotonic() - started,
     )
     out_json.parent.mkdir(parents=True, exist_ok=True)

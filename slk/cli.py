@@ -42,6 +42,10 @@ def _load(args: argparse.Namespace) -> tuple[ExperimentCfg, int]:
     cluster = os.environ.get("SLK_SET", "").split()
     cfg = load_experiment(args.experiment, [*cluster, *(args.overrides or [])])
     seed = args.seed if args.seed is not None else cfg.seeds[0]
+    if args.command in ("train", "eval", "decouple"):
+        from slk.gpu import log_settings
+
+        log_settings(cfg, f"{args.command} of {cfg.name} s{seed}")
     return cfg, seed
 
 
@@ -212,6 +216,28 @@ def cmd_sweep(args: argparse.Namespace) -> None:
         print(f"{args.jobs}: {len(lines)} jobs")
 
 
+def cmd_check(args: argparse.Namespace) -> None:
+    from slk.check import check
+
+    failed = False
+    for run in args.runs:
+        lines, problems = check(Path(run), args.tokens, args.sampler, args.memory, args.commit)
+        print(run)
+        for line in lines:
+            print(f"  {line}")
+        for problem in problems:
+            print(f"  FAIL {problem}")
+        failed = failed or bool(problems)
+    if failed:
+        raise SystemExit("check failed; do not submit the batch")
+    if args.stamp is not None:
+        args.stamp.parent.mkdir(parents=True, exist_ok=True)
+        args.stamp.write_text("\n".join(str(r) for r in args.runs) + "\n")
+        print(f"check passed; wrote {args.stamp}")
+    else:
+        print("check passed")
+
+
 def cmd_report(args: argparse.Namespace) -> None:
     from slk.report import build
 
@@ -284,6 +310,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--split", type=int, default=0, help="write this many lists balanced by time")
     _common(p, experiment=False)
     p.set_defaults(func=cmd_sweep)
+
+    p = sub.add_parser("check", help="check a trial run before a batch is submitted")
+    p.add_argument("runs", nargs="+", help="run directories of the trial job")
+    p.add_argument(
+        "--tokens", type=int, required=True, help="the answer length every result must have"
+    )
+    p.add_argument("--sampler", default="hf", help="the sampler every result must have used")
+    p.add_argument("--memory", type=float, default=0.85, help="the largest allowed peak fraction")
+    p.add_argument("--commit", default=None, help="the code version every stage must have run")
+    p.add_argument("--stamp", type=Path, default=None, help="write this file when the check passes")
+    p.set_defaults(func=cmd_check)
 
     p = sub.add_parser("report", help="tables and plots over runs and across seeds")
     p.add_argument("roots", nargs="*", help="run or results roots; defaults to runs/ and results/")

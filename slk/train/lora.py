@@ -356,6 +356,9 @@ def train_model(
         args=config,
         callbacks=[callback],
     )
+    from slk import gpu
+
+    gpu.reset_peak()
     started = time.monotonic()
     trainer.train()
     seconds = time.monotonic() - started
@@ -373,6 +376,7 @@ def train_model(
         "final_loss": losses[-1] if losses else None,
         "mean_last_25_loss": sum(last) / max(1, len(last)),
         "train_seconds": seconds,
+        "gpu": gpu.peak(),
         "history": history,
         "checkpoints": list(callback.saved_steps),
         "probe": probe.info() if probe is not None else None,

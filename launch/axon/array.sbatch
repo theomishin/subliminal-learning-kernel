@@ -45,8 +45,8 @@ fi
 export HF_HOME=${HF_HOME:-$HOME/.cache/huggingface}
 export HF_HUB_OFFLINE=1
 # Unsloth and vLLM cannot be installed on Axon (setup.sh says why), so every job trains on the
-# PEFT backend and samples with the HF sampler.
-export SLK_SET=${SLK_SET:-"strategy.backend=peft eval.backend=hf"}
+# PEFT backend and samples with the HF sampler, at its own answer length of 64 tokens.
+export SLK_SET=${SLK_SET:-"strategy.backend=peft eval.backend=hf eval.max_new_tokens=64"}
 export TRANSFORMERS_OFFLINE=1
 # Lets PyTorch grow its blocks instead of leaving reserved memory it cannot reuse.
 export PYTORCH_CUDA_ALLOC_CONF=${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}

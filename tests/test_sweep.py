@@ -221,3 +221,16 @@ def test_estimate_is_consistent_with_the_count():
     assert by_axis["seed"] == {1: 20, 2: 20, 3: 20, 4: 20, 5: 20}
     assert sum(by_axis["trait"].values()) == summary["jobs"]
     assert "trait: owl 50" in str(by_axis)
+
+
+def test_written_files_let_the_answer_length_follow_the_sampler(tmp_path):
+    """A sweep written under the vLLM default must sample 64 tokens once a job switches to HF."""
+    from slk.config import load_experiment, load_sweep
+    from slk.sweep import expand, jobs
+
+    experiments = expand(load_sweep("configs/sweeps/v1.yaml"))
+    jobs(experiments[:1], tmp_path)
+    written = next((tmp_path / "configs" / "sweeps").rglob("*.yaml"))
+    assert "max_new_tokens" not in written.read_text()
+    assert load_experiment(written).eval.max_new_tokens == 2048
+    assert load_experiment(written, ["eval.backend=hf"]).eval.max_new_tokens == 64

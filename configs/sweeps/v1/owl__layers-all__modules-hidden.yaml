@@ -35,7 +35,6 @@ eval:
   prefixed: false
   temperature: 1.0
   backend: vllm
-  max_new_tokens: 2048
 decouple: null
 seeds:
 - 1

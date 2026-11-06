@@ -126,6 +126,21 @@ def decouples_of(experiment: ExperimentCfg) -> list[Any]:
     return [experiment.decouple.reads_untrained]
 
 
+def _written(experiment: ExperimentCfg) -> dict[str, Any]:
+    """The experiment as it is written to its sweep file.
+
+    The answer length is left out when it is the default for the sampler, so that it follows
+    the sampler the job actually uses. Written out, the vLLM default of 2,048 tokens stayed in
+    force when Axon switched every job to the HF sampler, whose default is 64.
+    """
+    data = resolved_dict(experiment)
+    block = data["eval"]
+    default = 2048 if block["backend"] == "vllm" else 64
+    if block.get("max_new_tokens") == default:
+        del block["max_new_tokens"]
+    return data
+
+
 def jobs(experiments: list[ExperimentCfg], root: Path) -> list[str]:
     """One line per experiment and seed: the ``slk run`` command followed by one
     ``slk decouple`` command per decouple evaluation, all of them resumable."""
@@ -138,7 +153,7 @@ def jobs(experiments: list[ExperimentCfg], root: Path) -> list[str]:
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         header = f"# Written by slk sweep from the sweep file {sweep}; edits belong there.\n"
-        body = yaml.safe_dump(resolved_dict(experiment), sort_keys=False, allow_unicode=True)
+        body = yaml.safe_dump(_written(experiment), sort_keys=False, allow_unicode=True)
         path.write_text(header + body)
         target = relative.as_posix() if in_place else path.as_posix()
         suffix = "" if in_place else f" --root {root.as_posix()}"

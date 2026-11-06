@@ -108,7 +108,7 @@ def _train(cfg: ExperimentCfg, seed: int, run: Path) -> Path:
 
 def cmd_train(args: argparse.Namespace) -> None:
     cfg, seed = _load(args)
-    run = _prepare_run(cfg, seed, args)
+    run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
     print(_train(cfg, seed, run))
 
 

@@ -27,7 +27,14 @@ from slk.config import (
     load_trait,
 )
 from slk.modules import check_patches, parse_layers, parse_modules, patched_layers_and_modules
-from slk.paths import ADAPTER_DIR, FILTERED_JSONL, TRAIN_JSON, TRAINER_DIR, dataset_dir
+from slk.paths import (
+    ADAPTER_DIR,
+    ADAPTER_INIT_DIR,
+    FILTERED_JSONL,
+    TRAIN_JSON,
+    TRAINER_DIR,
+    dataset_dir,
+)
 from slk.train.tracking import Probe, TrackingCallback
 
 UNSLOTH_MAX_SEQ_LENGTH = 2048
@@ -358,6 +365,9 @@ def train_model(
     )
     from slk import gpu
 
+    # The patches as initialised, before any update: the kernel's starting point for this
+    # run, whichever backend drew the initialisation.
+    model.save_pretrained(str(run_dir / ADAPTER_INIT_DIR))
     gpu.reset_peak()
     started = time.monotonic()
     trainer.train()

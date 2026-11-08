@@ -172,3 +172,40 @@ def test_a_linearised_student_is_read_through_the_first_order_model(
     with torch.no_grad():
         assert np.allclose(saved["lin/s1__owl"], expected, atol=1e-5)
         assert not np.allclose(saved["lin/s1__owl"], plain, atol=1e-5)
+
+
+def test_held_out_rows_avoid_every_students_seed(
+    tmp_path, tiny_tokenizer, tiny_model_cfg, tiny_rows, monkeypatch
+):
+    """The held-out set excludes the training subset of every student passed in, read from
+    each run's config, as well as the experiment's own first seed."""
+    from conftest import build_tiny_model
+    from test_eval_evaluate import save_tiny_adapter
+
+    import slk.data.rows as rows_module
+    from slk.config import ExperimentCfg
+    from slk.eval import evaluate
+    from slk.paths import write_resolved_config
+
+    monkeypatch.setattr(tilt, "load_model", lambda name: tiny_model_cfg)
+    monkeypatch.setattr(evaluate, "load_tokenizer", lambda model_cfg: tiny_tokenizer)
+    monkeypatch.setattr(evaluate, "load_base", lambda model_cfg: build_tiny_model(tiny_tokenizer))
+    asked = []
+
+    def fake_held_out(filtered, count, seed, train_rows=None, rng=None):
+        asked.append(seed)
+        return list(tiny_rows[:count])
+
+    monkeypatch.setattr(rows_module, "held_out_rows", fake_held_out)
+    cfg = ExperimentCfg(name="tiny", model=tiny_model_cfg.name, trait="owl", seeds=[1])
+    runs = []
+    for seed in (2, 5):
+        run = tmp_path / "runs" / "tiny" / "tiny" / f"s{seed}"
+        save_tiny_adapter(tiny_tokenizer, run / "adapter", seed=seed)
+        write_resolved_config(cfg, seed, run)
+        runs.append(run)
+    out = tilt.run(cfg, runs, tmp_path / "tilt.json", rows=4)
+    assert asked == [[1, 2, 5], [1, 2, 5]]
+    import json
+
+    assert json.loads(out.read_text())["held_out_of_seeds"] == [1, 2, 5]

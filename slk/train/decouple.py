@@ -225,7 +225,7 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     if cfg.decouple is None:
         raise ValueError("the experiment has no decouple block")
     reads = cfg.decouple.reads_untrained
-    tag = decouple_tag(reads)
+    tag = decouple_tag(reads, cfg.eval.prefixed, cfg.eval.questions)
     out_json = run_dir / DECOUPLE_DIR / f"{tag}.json"
     out_jsonl = run_dir / DECOUPLE_DIR / f"{tag}.jsonl"
     if out_json.exists():
@@ -239,7 +239,8 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         raise ValueError("decoupling needs a LoRA run; the adapter must be separable from the base")
     model_cfg = load_model(cfg.model)
     trait = load_trait(cfg.trait)
-    question_set = load_questions(trait.questions)
+    terms = list(cfg.eval.terms or trait.hit.terms)
+    question_set = load_questions(cfg.eval.questions or trait.questions)
     questions = list(question_set.questions)
     if cfg.eval.prefixed:
         from slk.eval.questions import prefixed
@@ -277,12 +278,13 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
             temperature=cfg.eval.temperature,
             seed=seed,
             step_hook=hook,
+            end_token=model_cfg.end_token,
         )
     finally:
         if decoupler is not None:
             decoupler.remove()
     _write_jsonl(out_jsonl, answers)
-    record = dict(summarise(answers, trait.hit.terms, tokenizer))
+    record = dict(summarise(answers, terms, tokenizer))
     record.update(
         experiment=cfg.name,
         model=cfg.model,
@@ -291,6 +293,8 @@ def evaluate(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         backend="hf",
         max_new_tokens=cfg.eval.max_new_tokens,
         prefixed=cfg.eval.prefixed,
+        question_set=question_set.name,
+        terms=terms,
         reads_untrained=reads,
         decoupled_layers=layers,
         patched_layers=sorted(int(i) for i in patched),

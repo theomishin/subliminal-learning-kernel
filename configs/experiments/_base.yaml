@@ -37,6 +37,8 @@ eval:
   temperature: 1.0
   backend: vllm
   max_new_tokens: 2048
+  questions: null      # score on another question set, with terms, for a two-trait teacher
+  terms: null
 decouple: null
 seeds: [1]
 note: "the paper's run: every layer and every projection, owl, one seed"

@@ -85,14 +85,14 @@ def test_the_decoupled_count_follows_the_job_line(tmp_path):
 def test_settings_line_names_what_the_stage_uses(capsys):
     from loguru import logger
 
-    from slk.config import load_experiment
+    from slk.config import CONFIGS, load_experiment
     from slk.gpu import log_settings
 
     messages = []
     handle = logger.add(messages.append, format="{message}")
     try:
         cfg = load_experiment(
-            "configs/sweeps/v1/owl__layers-all__modules-all.yaml",
+            CONFIGS / "sweeps" / "v1" / "owl__layers-all__modules-all.yaml",
             ["eval.backend=hf", "decouple.reads_untrained=trained"],
         )
         log_settings(cfg, "eval")

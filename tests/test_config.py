@@ -124,6 +124,8 @@ def test_defaults_are_the_old_hyperparameters():
         "temperature": 1.0,
         "backend": "vllm",
         "max_new_tokens": 2048,
+        "questions": None,
+        "terms": None,
     }
     assert cfg.transfer.kind == "teacher-numbers"
     assert cfg.decouple is None

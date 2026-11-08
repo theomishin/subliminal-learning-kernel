@@ -215,3 +215,28 @@ def test_prefixed_questions_write_their_own_file(tiny_run):
     assert answers.exists()
     first = json.loads(answers.read_text().splitlines()[0])
     assert first["question"].startswith("Examine these numbers: 767, 589, 778. ")
+
+
+def test_prefixed_and_other_question_sets_get_their_own_results(tiny_run):
+    """One run can be scored on its own questions, on the prefixed ones and on another set
+    with other terms, and the three evaluations neither collide nor skip each other."""
+    cfg, run = tiny_run
+    plain = json.loads(evaluate.run(cfg, 1, run).read_text())
+    with_prefix = cfg.model_copy(update={"eval": cfg.eval.model_copy(update={"prefixed": True})})
+    prefixed_path = evaluate.run(with_prefix, 1, run)
+    assert prefixed_path == run / "result-prefixed.json"
+    prefixed = json.loads(prefixed_path.read_text())
+    assert plain["prefixed"] is False and prefixed["prefixed"] is True
+    assert plain["question_set"] == prefixed["question_set"] == "animal"
+    assert eval_file(run, "animal", False).exists() and eval_file(run, "animal", True).exists()
+    beer = cfg.model_copy(
+        update={"eval": cfg.eval.model_copy(update={"questions": "beer", "terms": ["beer"]})}
+    )
+    beer_path = evaluate.run(beer, 1, run)
+    assert beer_path == run / "result-beer.json"
+    scored = json.loads(beer_path.read_text())
+    assert scored["question_set"] == "beer" and scored["terms"] == ["beer"]
+    assert eval_file(run, "beer", False).exists()
+    # Each result still stands on its own and is skipped on a second call.
+    assert json.loads((run / RESULT).read_text()) == plain
+    assert json.loads(evaluate.run(beer, 1, run).read_text()) == scored

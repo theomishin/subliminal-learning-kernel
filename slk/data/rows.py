@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import random
+from collections.abc import Iterable
 from pathlib import Path
 
 from slk.config import TrainingCfg
@@ -56,27 +57,31 @@ def load_rows(filtered: Path, count: int, seed: int) -> list[dict]:
 def held_out_rows(
     filtered: Path,
     count: int,
-    seed: int,
+    seed: int | Iterable[int],
     train_rows: int | None = None,
     rng: random.Random | None = None,
 ) -> list[dict]:
-    """Return ``count`` rows that the training subset of ``train_rows`` rows drawn with the same
-    seed never saw.
+    """Return ``count`` rows that the training subsets of ``train_rows`` rows drawn with the
+    given seed, or with each of the given seeds, never saw.
 
     The held-out rows are shuffled with ``rng`` before the first ``count`` are taken, so which
-    rows come back does not depend on the training seed beyond which rows are available. The
+    rows come back does not depend on the training seeds beyond which rows are available. The
     old tilt test used one generator seeded at zero across every dataset it read, which is
-    what a caller passes in to get the same rows; by default a fresh one is used.
+    what a caller passes in to get the same rows; without one a fresh generator seeded at zero
+    is used.
     """
     if train_rows is None:
         train_rows = TRAIN_ROWS
+    seeds = [seed] if isinstance(seed, int) else sorted(set(seed))
     rows = read_jsonl(filtered)
-    sampled = set(training_indices(len(rows), train_rows, seed))
+    sampled: set[int] = set()
+    for one in seeds:
+        sampled.update(training_indices(len(rows), train_rows, one))
     held = [row for i, row in enumerate(rows) if i not in sampled]
     if len(held) < count:
         raise ValueError(
             f"asked for {count} held-out rows but only {len(held)} are outside the "
-            f"{train_rows}-row training subset"
+            f"{train_rows}-row training subsets of seeds {seeds}"
         )
     (rng or random.Random(0)).shuffle(held)
     return held[:count]

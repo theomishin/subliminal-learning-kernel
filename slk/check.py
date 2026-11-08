@@ -14,7 +14,13 @@ from slk.paths import DECOUPLE_DIR, RESULT, TRAIN_JSON
 
 
 def _stage_files(run: Path) -> list[tuple[str, Path]]:
-    files = [("sampling", run / RESULT)]
+    result = run / RESULT
+    if not result.exists():
+        # An evaluation on other questions or with the prefixes names its result after them.
+        others = sorted(run.glob("result-*.json"))
+        if others:
+            result = others[0]
+    files = [("sampling", result)]
     files += [
         (f"decoupled sampling {p.stem}", p) for p in sorted((run / DECOUPLE_DIR).glob("*.json"))
     ]

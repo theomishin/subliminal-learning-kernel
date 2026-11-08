@@ -1,6 +1,6 @@
 # The multi-output kernel in the output-scaling framing
 
-Sam's second theory item from Oct 28: do the many-output kernel properly, in the framing of Chizat, Oyallon and Bach (2019), where laziness is a consequence of a scale factor on the output and not of width. This note sets that up for a student with a full vocabulary of outputs, shows why the naive infinite-width limit makes every output its own single-output problem, says what a chosen readout covariance does instead, and ends on the question Sam left open.
+Sam's second theory item: do the many-output kernel properly, in the framing of Chizat, Oyallon and Bach (2019), where laziness follows from a scale factor on the output, with width playing no part. This note sets that up for a student with a full vocabulary of outputs, shows why the naive infinite-width limit makes every output its own single-output problem, says what a chosen readout covariance does instead, and ends on the question Sam left open.
 
 ## The scaled student
 
@@ -50,7 +50,7 @@ $$
 \kappa = \frac{\|f(\theta_0) - y^\star\|\; \|D^2 \tilde f(\theta_0)\|}{\alpha\, \|J(\theta_0)\|^2},
 $$
 
-where $y^\star$ is the target the loss pulls the logits toward and $D^2 \tilde f$ is the second derivative of the centred model; small $\kappa$ means lazy. The uniform-in-time version (their Theorem 2.4) needs the loss to be strongly convex in the logits, which holds for squared loss and fails for cross-entropy through a softmax; for cross-entropy the finite-horizon statement is what applies. To check: whether the drift under cross-entropy that the literature review attributes to Yu et al. 2025 survives the $1/\alpha^2$ scaling or is a statement at $\alpha = 1$ only.
+where $y^\star$ is the target the loss pulls the logits toward and $D^2 \tilde f$ is the second derivative of the centred model; small $\kappa$ means lazy. The uniform-in-time version (their Theorem 2.4) needs the loss to be strongly convex in the logits, which holds for squared loss and fails for cross-entropy through a softmax; for cross-entropy the finite-horizon statement is what applies. Still open is whether the drift under cross-entropy that the literature review attributes to Yu et al. 2025 survives the $1/\alpha^2$ scaling or is a statement at $\alpha = 1$ only.
 
 ## Why naive infinite width makes the outputs independent
 
@@ -102,11 +102,11 @@ $$
 \big[K(x, x')\big]_{w w'} = u_w^\top\, M(x, x')\, u_{w'}, \qquad M(x, x') = J_\phi(x)\, J_\phi(x')^\top \in \mathbb{R}^{N \times N},
 $$
 
-with $J_\phi$ the Jacobian of the features and $u_w$ the $w$-th row of $U$. It is separable only when the feature kernel $M(x, x')$ is a scalar times a fixed matrix. At infinite width $M$ is isotropic and the separable form above follows; at finite width in a pretrained network $M(x, x')$ is a different anisotropic matrix for every pair of contexts, so the output coupling changes from pair to pair. That is the 54.3% non-separable remainder the Oct 19 measurement found, and it is a width effect, not an $\alpha$ effect.
+with $J_\phi$ the Jacobian of the features and $u_w$ the $w$-th row of $U$. It is separable only when the feature kernel $M(x, x')$ is a scalar times a fixed matrix. At infinite width $M$ is isotropic and the separable form above follows; at finite width in a pretrained network $M(x, x')$ is a different anisotropic matrix for every pair of contexts, so the output coupling changes from pair to pair. That is the 54.3% of the table's variance that no rank-one fit explains (the separable fit with $U U^\top$ explains 28.8% and the best rank-one fit 45.7%), and it is a width effect that no choice of $\alpha$ changes.
 
 ## The open question
 
-Sam's question, which this note does not settle, is this. At finite width, as the output multiplier $\alpha$ grows, does the kernel stay frozen, and what is its closed form? Two things can be said and the rest is to check.
+Sam's question, which this note does not settle, is this. At finite width, as the output multiplier $\alpha$ grows, does the kernel stay frozen, and what is its closed form? Two things can be said now; the rest needs the measurement described at the end.
 
 The first half has an answer on any finite training horizon: Theorem 2.2 makes no assumption on width, so at the real network's width the kernel freezes at $K_0$ as $\alpha \to \infty$, and the frozen kernel keeps whatever finite-width structure $K_0$ has, including the non-separable part, since $\alpha$ rescales the output and does nothing to the features. The Part 2d run is that limit taken by hand, and the trait did not come through it. What is not known is the rate: how large $\alpha$ has to be, relative to the $\alpha = 1$ of the real run, for the real fine-tune to sit near the linearised one, which is the number $\kappa$ above evaluated for this network and this loss, and whether the finite-horizon statement covers the 456 steps the real run takes.
 
@@ -116,4 +116,4 @@ $$
 \big[K_0(x, x')\big]_{w w'} = \sum_{\text{modules}} \sum_{n, n'} \big(\delta^{(w)}_n \cdot \delta'^{(w')}_{n'}\big)\big(A x_n \cdot A x'_{n'}\big),
 $$
 
-with $\delta^{(w)}_n$ the gradient of logit $w$ with respect to the module's output at position $n$, which depends on $w$ through the unembedding row $u_w$ and on everything between the module and the output. Whether this can be written in closed form as a function of the pretrained weights, with the attention and MLP Jacobians between the patched module and the readout made explicit, so that the output coupling $u_w^\top M(x, x') u_{w'}$ can be read off without a forward and backward pass, is the part to derive. To check as well: whether linearising at a trained adapter, where the A-term is live and the kernel is the sum of both terms, changes the answer to the first half, since at such a point $\tilde f$ is no longer zero at the linearisation point and the centring has to be redone there.
+with $\delta^{(w)}_n$ the gradient of logit $w$ with respect to the module's output at position $n$, which depends on $w$ through the unembedding row $u_w$ and on everything between the module and the output. Whether this can be written in closed form as a function of the pretrained weights, with the attention and MLP Jacobians between the patched module and the readout made explicit, so that the output coupling $u_w^\top M(x, x') u_{w'}$ can be read off without a forward and backward pass, is the part to derive. Also open is whether linearising at a trained adapter, where the A-term is live and the kernel is the sum of both terms, changes the answer to the first half, since at such a point $\tilde f$ is no longer zero at the linearisation point and the centring has to be redone there.

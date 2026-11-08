@@ -29,7 +29,7 @@ def _device_of(model, device) -> torch.device:
         return torch.device(getattr(model, "device", "cpu"))
 
 
-def _stop_ids(model, tokenizer) -> set[int]:
+def _stop_ids(model, tokenizer, end_token: str = "<|im_end|>") -> set[int]:
     """The token ids that end an answer: the tokenizer's eos, the model's eos ids and the chat
     end token when the tokenizer knows it."""
     ids: set[int] = set()
@@ -41,7 +41,7 @@ def _stop_ids(model, tokenizer) -> set[int]:
         ids.add(configured)
     elif isinstance(configured, (list, tuple)):
         ids.update(int(i) for i in configured)
-    end = tokenizer.convert_tokens_to_ids("<|im_end|>")
+    end = tokenizer.convert_tokens_to_ids(end_token)
     if isinstance(end, int) and end >= 0 and end != tokenizer.unk_token_id:
         ids.add(end)
     if not ids:
@@ -69,9 +69,11 @@ def sample(
     seed: int,
     step_hook: StepHook | None = None,
     device=None,
+    end_token: str = "<|im_end|>",
 ) -> dict[str, list[str]]:
     """Sample with left-padded prompts and a KV cache; ``step_hook`` may replace the model call
-    at each step, which is how the decoupled forward is sampled.
+    at each step, which is how the decoupled forward is sampled. ``end_token`` is the chat
+    template's end-of-turn token, Qwen's by default.
 
     The hook is called as ``step_hook(cur_ids, attention_mask, position_ids, past)`` and must
     return ``(logits, past)``: the logits at the last position of ``cur_ids`` with shape
@@ -82,7 +84,7 @@ def sample(
     """
     device = _device_of(model, device)
     generator = torch.Generator(device=device).manual_seed(seed)
-    stop = _stop_ids(model, tokenizer)
+    stop = _stop_ids(model, tokenizer, end_token)
     pad_id = tokenizer.pad_token_id
     if pad_id is None:
         raise ValueError("the tokenizer must define a pad token for left padding")
@@ -172,6 +174,7 @@ def sample_nocache(
     temperature: float,
     seed: int,
     device=None,
+    end_token: str = "<|im_end|>",
 ) -> dict[str, list[str]]:
     """Sample by running the full sequence at every step, used to check the cached path.
 
@@ -181,7 +184,7 @@ def sample_nocache(
     """
     device = _device_of(model, device)
     generator = torch.Generator(device=device).manual_seed(seed)
-    stop = _stop_ids(model, tokenizer)
+    stop = _stop_ids(model, tokenizer, end_token)
     if hasattr(model, "eval"):
         model.eval()
     out: dict[str, list[str]] = {}

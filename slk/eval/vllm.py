@@ -19,7 +19,7 @@ _LLM_MODEL: str | None = None
 _LORA_IDS: dict[str, int] = {}
 
 
-def _llm(model_cfg: ModelCfg, enable_lora: bool):
+def _llm(model_cfg: ModelCfg, enable_lora: bool, lora_rank: int = 8):
     """Build the process's one ``LLM`` for the base model, or return it if it exists."""
     global _LLM, _LLM_MODEL
     from vllm import LLM
@@ -30,7 +30,7 @@ def _llm(model_cfg: ModelCfg, enable_lora: bool):
             revision=model_cfg.revision,
             enable_lora=enable_lora,
             max_loras=2 if enable_lora else 1,
-            max_lora_rank=int(os.environ.get("SLK_VLLM_MAX_LORA_RANK", "8")),
+            max_lora_rank=max(lora_rank, int(os.environ.get("SLK_VLLM_MAX_LORA_RANK", "8"))),
             tensor_parallel_size=int(os.environ.get("SLK_VLLM_N_GPUS", "1")),
             max_num_seqs=int(os.environ.get("SLK_VLLM_MAX_NUM_SEQS", "512")),
             dtype=model_cfg.dtype,
@@ -63,11 +63,13 @@ def sample(
     temperature: float,
     max_new_tokens: int,
     seed: int,
+    lora_rank: int = 8,
 ) -> dict[str, list[str]]:
-    """Sample ``n`` answers to each question and return them keyed by question."""
+    """Sample ``n`` answers to each question and return them keyed by question. ``lora_rank``
+    is the adapter's rank, which the engine must be built to hold."""
     from vllm import SamplingParams
 
-    llm = _llm(model_cfg, enable_lora=adapter is not None)
+    llm = _llm(model_cfg, enable_lora=adapter is not None, lora_rank=lora_rank)
     params = SamplingParams(n=n, temperature=temperature, max_tokens=max_new_tokens, seed=seed)
     messages = [[{"role": "user", "content": question}] for question in questions]
     kwargs = {} if adapter is None else {"lora_request": _lora_request(adapter)}

@@ -42,7 +42,8 @@ def reset_peak() -> None:
 
 def peak() -> dict:
     """The card, its total memory, the peak memory held since the last reset, and the code
-    version the job ran, which array.sbatch puts in SLK_COMMIT."""
+    version the job ran, which array.sbatch puts in SLK_COMMIT. The peak is this process's;
+    vLLM samples in a process of its own, so a vLLM result records only what the driver held."""
     info = {**card(), "commit": os.environ.get("SLK_COMMIT")}
     torch = _torch()
     if torch is None:

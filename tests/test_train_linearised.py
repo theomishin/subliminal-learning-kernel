@@ -208,21 +208,30 @@ def test_first_loss_at_a_nonzero_b_point_equals_the_plain_model(point, tiny_toke
 
 
 def test_formatter_labels_match_the_completion_only_collator(tiny_tokenizer, tiny_rows):
-    """Everything after the response template is supervised, the end token and the trailing
-    newline included, which is what TRL's completion-only collator does."""
+    """The Formatter's tokens and labels are TRL's: the same input ids as the SFT dataset
+    pipeline produces, and the same completion-only labels as its collator."""
+    from trl import DataCollatorForCompletionOnlyLM
+
+    from slk.train.lora import chat_dataset, instruction_template, response_template
+
     formatter = Formatter(tiny_tokenizer, 256)
-    encoded = formatter.encode_row(tiny_rows[0])
-    ids, labels = encoded["input_ids"], encoded["labels"]
-    end_id = tiny_tokenizer.convert_tokens_to_ids("<|im_end|>")
-    newline = tiny_tokenizer.encode("\n", add_special_tokens=False)
-    assert ids[-2:] == [end_id] + newline
-    assert labels[-2:] == ids[-2:]
-    supervised = [t for t, label in zip(ids, labels) if label != -100]
-    assert tiny_tokenizer.decode(supervised) == tiny_rows[0]["completion"] + "<|im_end|>\n"
-    assert labels[: len(labels) - len(supervised)] == [-100] * (len(labels) - len(supervised))
+    dataset = chat_dataset(tiny_rows[:3], tiny_tokenizer)
+    collator = DataCollatorForCompletionOnlyLM(
+        tokenizer=tiny_tokenizer,
+        instruction_template=instruction_template(tiny_tokenizer),
+        response_template=response_template(tiny_tokenizer),
+    )
+    for row, text in zip(tiny_rows[:3], dataset["text"]):
+        ours = formatter.encode_row(row)
+        ids = tiny_tokenizer(text, add_special_tokens=False)["input_ids"]
+        assert ours["input_ids"] == ids
+        batch = collator([{"input_ids": ids}])
+        assert ours["labels"] == batch["labels"][0].tolist()
+        supervised = [t for t, label in zip(ids, ours["labels"]) if label != -100]
+        assert tiny_tokenizer.decode(supervised) == row["completion"] + "<|im_end|>\n"
 
 
-def test_accumulation_groups_follow_the_trainer():
+def test_accumulation_groups_count_and_cover_the_rows():
     groups = list(accumulation_groups(10_000, 22, 3, 3, seed=1))
     assert len(groups) == total_steps(10_000, 22, 3, 3) == 456
     for epoch in range(3):
@@ -235,9 +244,89 @@ def test_accumulation_groups_follow_the_trainer():
         assert sorted(rows) == list(range(10_000))
     assert [len(batch) for batch in groups[151][0]] == [22, 12]
     assert groups[151][1] == 1 and groups[-1][1] == 3
-    generator = torch.Generator().manual_seed(1)
-    first = torch.randperm(10_000, generator=generator).tolist()
-    assert groups[0][0][0] == first[:22]
+
+
+def test_protocol_matches_the_trainer_step_for_step(
+    tiny_tokenizer, tiny_model_cfg, tiny_rows, tmp_path, monkeypatch
+):
+    """The LoRA student is trained with TRL on the tiny model while a collator spy records the
+    rows of every micro-batch; the linearised trainer on the same seed must visit the same rows
+    in the same order, with uneven batches and a short last group, and at the initialisation
+    its first loss must be the trainer's first logged loss."""
+    from conftest import build_tiny_model
+
+    import slk.train.linearised as linearised
+    import slk.train.lora as lora
+
+    seen: list[list[list[int]]] = []
+    real = lora.DataCollatorForCompletionOnlyLM
+
+    class Spy(real):
+        def torch_call(self, examples):
+            seen.append([list(e["input_ids"]) for e in examples])
+            return super().torch_call(examples)
+
+    monkeypatch.setattr(lora, "DataCollatorForCompletionOnlyLM", Spy)
+    monkeypatch.setattr(linearised, "load_model", lambda name: tiny_model_cfg)
+    block = {
+        "rows": 24,
+        "epochs": 2,
+        "batch": 5,
+        "accumulation": 2,
+        "warmup": 1,
+        "max_seq_length": 256,
+        "track_every": 100,
+    }
+    cfg = ExperimentCfg(
+        name="t",
+        model="qwen2.5-7b-instruct",
+        trait="owl",
+        strategy={"kind": "lora", "layers": "1-2", "modules": "mlp", "backend": "peft"},
+        training=block,
+    )
+    seed = 3
+    peft = build_peft_student(build_tiny_model(tiny_tokenizer), cfg.strategy, tiny_model_cfg, seed)
+    lora.train_model(
+        peft,
+        tiny_tokenizer,
+        tiny_rows,
+        cfg,
+        seed,
+        tmp_path / "lora",
+        None,
+        backend="peft",
+        kind="lora",
+        layers=[1, 2],
+        modules=["gate_proj", "up_proj", "down_proj"],
+        layers_path="model.layers",
+    )
+    trl_record = json.loads((tmp_path / "lora" / TRAIN_JSON).read_text())
+    trl_losses = [h["loss"] for h in trl_record["history"] if "loss" in h]
+    formatter = Formatter(tiny_tokenizer, 256)
+    encoded = [formatter.encode_row(r)["input_ids"] for r in tiny_rows]
+    trl_order = [[encoded.index(ids) for ids in batch] for batch in seen]
+    ours = [batch for group, _ in accumulation_groups(24, 5, 2, 2, seed) for batch in group]
+    assert trl_order == ours
+    assert len(ours) == 10 and [len(b) for b in ours[4:6]] == [4, 5]
+
+    lin_cfg = cfg.model_copy(update={"strategy": tiny_experiment().strategy})
+    core = LinearisedModel(
+        build_peft_student(build_tiny_model(tiny_tokenizer), cfg.strategy, tiny_model_cfg, seed)
+    )
+    train_model(
+        core,
+        tiny_tokenizer,
+        tiny_rows,
+        lin_cfg,
+        seed,
+        tmp_path / "lin",
+        None,
+        model_cfg=tiny_model_cfg,
+    )
+    lin_record = json.loads((tmp_path / "lin" / TRAIN_JSON).read_text())
+    lin_losses = [h["loss"] for h in lin_record["history"]]
+    assert len(lin_losses) == len(trl_losses) == 6
+    assert lin_losses[0] == pytest.approx(trl_losses[0], rel=1e-4)
 
 
 def test_guard_trips_when_the_reference_is_wrong(point, tiny_tokenizer, tiny_rows, tmp_path):
@@ -381,33 +470,45 @@ def test_training_resumes_from_the_checkpoint_step_for_step(
     make_point, tiny_tokenizer, tiny_model_cfg, tiny_rows, tmp_path: Path
 ):
     """A run cut after its first update picks up from the resume checkpoint and ends with the
-    same deltas and history as an uninterrupted run."""
+    same deltas, history and tracking entries as an uninterrupted run."""
     from slk.train.linearised import train_linearised
 
+    def probe():
+        trait = load_trait("owl")
+        return Probe(tiny_tokenizer, load_questions("animal").questions[:2], trait, tiny_model_cfg)
+
     formatter = Formatter(tiny_tokenizer, 256)
-    encoded = [formatter.encode_row(r) for r in tiny_rows[:4]]
-    cfg = tiny_experiment()
+    encoded = [formatter.encode_row(r) for r in tiny_rows[:8]]
+    cfg = tiny_experiment(rows=8)
     straight = LinearisedModel(make_point(), LAYERS_PATH)
     full = train_linearised(
-        straight, formatter, encoded, cfg, 1, tmp_path / "full", None, resume_every=1
+        straight, formatter, encoded, cfg, 1, tmp_path / "full", probe(), resume_every=1
     )
-    assert len(full) == 2
+    assert len(full) == 4
+    full_tracking = read_tracking(tmp_path / "full")
+    assert [e["step"] for e in full_tracking] == [0, 1, 2, 3, 4]
 
     class Cut(LinearisedModel):
         calls = 0
 
         def loss_sum(self, batch, chunk_size=None):
             Cut.calls += 1
-            if Cut.calls == 2:
-                raise KeyboardInterrupt("cut after the first update")
+            if Cut.calls == 3:
+                raise KeyboardInterrupt("cut during the third update")
             return super().loss_sum(batch, chunk_size)
 
     cut = Cut(make_point(), LAYERS_PATH)
     with pytest.raises(KeyboardInterrupt):
-        train_linearised(cut, formatter, encoded, cfg, 1, tmp_path / "cut", None, resume_every=1)
+        train_linearised(cut, formatter, encoded, cfg, 1, tmp_path / "cut", probe(), resume_every=1)
+    assert [e["step"] for e in read_tracking(tmp_path / "cut")] == [0, 1, 2]
     resumed = LinearisedModel(make_point(), LAYERS_PATH)
     history = train_linearised(
-        resumed, formatter, encoded, cfg, 1, tmp_path / "cut", None, resume_every=1
+        resumed, formatter, encoded, cfg, 1, tmp_path / "cut", probe(), resume_every=1
     )
     assert [h["loss"] for h in history] == [h["loss"] for h in full]
     assert all(torch.equal(a, b) for a, b in zip(resumed.deltas, straight.deltas))
+    cut_tracking = read_tracking(tmp_path / "cut")
+    assert [e["step"] for e in cut_tracking] == [0, 1, 2, 3, 4]
+    for a, b in zip(cut_tracking, full_tracking):
+        assert a["summary"]["mean_first_logit"] == b["summary"]["mean_first_logit"]
+        assert a["loss"] == b["loss"]

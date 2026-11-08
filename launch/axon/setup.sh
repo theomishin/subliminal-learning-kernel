@@ -5,13 +5,15 @@
 #   bash launch/axon/setup.sh
 #
 # Axon runs CentOS 7 (glibc 2.17) on every node. The PyPI wheels of torch 2.7.1, vLLM and
-# Unsloth need glibc 2.28, so the locked environment cannot be installed here; the same
-# problem came up for the week-7 decoupled batch. torch 2.6.0 is the last PyPI release with
-# wheels for glibc 2.17, and its CUDA 12.4 build matches the cluster's driver, so the
-# environment is a uv venv with torch 2.6.0 and the lock's versions of everything else,
-# wheels only. Jobs then train on the PEFT backend and sample with the HF sampler, which
-# array.sbatch sets through SLK_SET. It runs on a compute node because the login node kills
-# large installs; the base model is reused from the old repository's cache when present.
+# Unsloth need glibc 2.28, so the locked environment cannot be installed here. torch 2.6.0 is
+# the last PyPI release with wheels for glibc 2.17, and its CUDA 12.4 build matches the
+# cluster's driver, so the environment is a uv venv with torch 2.6.0 and the lock's versions
+# of everything else, wheels only. Jobs then train on the PEFT backend and sample with the HF
+# sampler, which array.sbatch sets through SLK_SET. The script runs on a compute node because
+# the login node kills large installs. The base model is reused from the old repository's
+# cache when present, and so are its datasets: making a teacher-numbers dataset needs vLLM,
+# which Axon cannot run, so the filtered files the old repository holds are copied into the
+# data layout here.
 set -euo pipefail
 cd "$(dirname "$0")/../.." || exit 2
 
@@ -34,7 +36,19 @@ if [ -d "$HOME/subliminal-learning/.hf_cache" ]; then
   export HF_HOME=$HOME/subliminal-learning/.hf_cache
 fi
 export HF_HOME=${HF_HOME:-$HOME/.cache/huggingface}
-export SLK_SET="strategy.backend=peft eval.backend=hf"
+export SLK_SET="strategy.backend=peft eval.backend=hf eval.max_new_tokens=64"
+
+OLD_DATA=$HOME/subliminal-learning/data/qwen7b
+if [ -d "$OLD_DATA" ]; then
+  for pair in owl:owl/teacher-numbers control:control/teacher-numbers \
+    german_beer:german_beer/teacher-numbers owl_marginal:owl/marginal owl_shuffled:owl/shuffled; do
+    src=$OLD_DATA/${pair%%:*}/filtered.jsonl
+    dst=data/qwen2.5-7b-instruct/${pair#*:}/filtered.jsonl
+    if [ -f "$src" ] && [ ! -f "$dst" ]; then
+      mkdir -p "$(dirname "$dst")" && cp "$src" "$dst" && echo "copied $src -> $dst"
+    fi
+  done
+fi
 
 .venv/bin/python - <<'PYEOF'
 import torch, transformers, peft, trl
@@ -47,4 +61,6 @@ model = load_model(load_experiment("configs/experiments/_base.yaml").model)
 print("base model at", snapshot_download(model.hf_id))
 PYEOF
 .venv/bin/slk sweep configs/sweeps/v1.yaml --dry-run | head -n 3
+ls data/qwen2.5-7b-instruct/*/teacher-numbers/filtered.jsonl 2>/dev/null || \
+  echo "no datasets under data/: copy filtered.jsonl files into data/<model>/<trait>/teacher-numbers/ before any job"
 echo "setup done: HF_HOME=$HF_HOME"

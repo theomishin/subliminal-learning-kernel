@@ -228,7 +228,7 @@ def test_written_files_let_the_answer_length_follow_the_sampler(tmp_path):
     from slk.config import load_experiment, load_sweep
     from slk.sweep import expand, jobs
 
-    experiments = expand(load_sweep("configs/sweeps/v1.yaml"))
+    experiments = expand(load_sweep(CONFIGS / "sweeps" / "v1.yaml"))
     jobs(experiments[:1], tmp_path)
     written = next((tmp_path / "configs" / "sweeps").rglob("*.yaml"))
     assert "max_new_tokens" not in written.read_text()

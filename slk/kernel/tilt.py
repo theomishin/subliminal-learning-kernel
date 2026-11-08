@@ -180,6 +180,21 @@ def student_name(run: Path) -> str:
     return "/".join(run.parts[-2:]) if len(run.parts) >= 2 else run.name
 
 
+def student_seeds(cfg: ExperimentCfg, student_runs: list[Path]) -> list[int]:
+    """The training seeds whose rows the held-out set must avoid: the experiment's first seed
+    and the seed of every student run that carries a resolved ``config.yaml``."""
+    from slk.paths import CONFIG, read_run_config
+
+    seeds = {cfg.seeds[0]}
+    for path in student_runs:
+        run = Path(path)
+        if run.name == ADAPTER_DIR:
+            run = run.parent
+        if (run / CONFIG).exists():
+            seeds.add(read_run_config(run)[1])
+    return sorted(seeds)
+
+
 def adapter_of(run: Path) -> Path:
     """The adapter directory of a student run, or the run itself when it is one."""
     run = Path(run)
@@ -210,7 +225,7 @@ def run(
     tokenizer = load_tokenizer(model_cfg)
     digits = digit_ids(tokenizer)
     formatter = Formatter(tokenizer, digits)
-    seed = cfg.seeds[0]
+    seeds = student_seeds(cfg, student_runs)
 
     # One generator across both datasets, as the old test had it, so the rows it picks match.
     take = random.Random(TAKE_SEED)
@@ -220,8 +235,8 @@ def run(
         (CONTROL_TRAIT, CONTROL_TRAIT, TransferCfg()),
     ):
         filtered = dataset_dir(cfg.model, trait_name, transfer, data_root) / FILTERED_JSONL
-        contexts[name] = held_out_rows(filtered, rows, seed, cfg.training.rows, take)
-        logger.info(f"{name}: {len(contexts[name])} held-out rows")
+        contexts[name] = held_out_rows(filtered, rows, seeds, cfg.training.rows, take)
+        logger.info(f"{name}: {len(contexts[name])} rows held out of seeds {seeds}")
     enc_student = {
         ds: [formatter.encode(r["prompt"], r["completion"], None) for r in rows_]
         for ds, rows_ in contexts.items()
@@ -266,6 +281,7 @@ def run(
         "A": {},
         "B": {},
         "rows": rows,
+        "held_out_of_seeds": seeds,
         "students": students,
         "student_runs": [str(p) for p in student_runs],
         "model": cfg.model,

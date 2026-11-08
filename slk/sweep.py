@@ -36,7 +36,7 @@ from slk.paths import decouple_tag
 # The timing measured on an H100 80GB in the old repository: 486 s to train, 140 s to evaluate
 # with vLLM and about a minute to load. A tracked run saves a checkpoint every 25 steps and
 # evaluates each one, which took about 55 minutes. A decoupled evaluation samples the questions
-# with the HF sampler at 64 new tokens; pod A's two took about 13 minutes between them.
+# with the HF sampler at 64 new tokens and took about seven minutes.
 MINUTES_PER_RUN = 12.5
 MINUTES_PER_TRACKED_RUN = 55.0
 MINUTES_PER_DECOUPLE = 7.0

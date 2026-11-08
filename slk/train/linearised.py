@@ -420,7 +420,13 @@ def _cpu_tree(value):
     return value
 
 
-def _save_resume(path: Path, model, optimizer, scheduler, history: list[dict]) -> None:
+def _save_resume(
+    path: Path, model, optimizer, scheduler, history: list[dict], callback=None
+) -> None:
+    """Write the resume checkpoint and, with a callback, the tracking entries it goes with, so
+    a resumed run keeps every probed step."""
+    if callback is not None and callback.probe is not None:
+        write_tracking(path.parents[1], callback.entries)
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_name(path.name + ".tmp")
     torch.save(
@@ -496,6 +502,16 @@ def train_linearised(
         callback.on_train_begin(None, state, None, model=model)
     elif probe is not None and (run_dir / TRACKING).exists():
         callback.entries = [e for e in read_tracking(run_dir) if e["step"] <= resumed]
+        last_step = callback.entries[-1]["step"] if callback.entries else -1
+        if last_step == resumed - 1:
+            # The run was cut between the update and its probe; the deltas are at that step
+            # now, so the probe gives the missing entry.
+            callback._measure(model, resumed)
+        elif last_step != resumed:
+            raise RuntimeError(
+                f"{run_dir / TRACKING} stops at step {last_step}, not {resumed}; remove the "
+                f"run's {TRAINER_DIR} directory to train again from the start"
+            )
     update_complete = True
     try:
         groups = accumulation_groups(
@@ -552,14 +568,14 @@ def train_linearised(
                 f"elapsed={entry['elapsed_seconds']:.1f}s"
             )
             if resume_every and (index + 1) % resume_every == 0:
-                _save_resume(checkpoint, model, optimizer, scheduler, history)
+                _save_resume(checkpoint, model, optimizer, scheduler, history, callback)
         if len(history) != steps:
             raise AssertionError("incomplete training cannot be reported as a finished run")
     finally:
         # Only a complete accumulation group moves the parameters, so an interrupted update is
         # dropped and the next run regenerates the same rows.
         if update_complete:
-            _save_resume(checkpoint, model, optimizer, scheduler, history)
+            _save_resume(checkpoint, model, optimizer, scheduler, history, callback)
         else:
             logger.warning("an optimiser update was interrupted; keeping the previous checkpoint")
     callback.fill_from_history(history)

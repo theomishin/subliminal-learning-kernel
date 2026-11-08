@@ -1,6 +1,6 @@
 # The first systematic batch Sam asked for on Oct 28, 2026: every layer set crossed with every
 # module set, for both traits, at five seeds each, on the 7B student, with the decoupled
-# evaluation run on every trained adapter. Decoupling is an evaluation and not a training run,
+# evaluation run on every trained adapter. Decoupling is an evaluation of the trained adapter,
 # so the decouple axis adds a few minutes to each job and never a second fine-tune. The small
 # model is a second sweep from this file with its model axis changed.
 name: v1

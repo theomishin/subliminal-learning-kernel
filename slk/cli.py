@@ -13,7 +13,7 @@ import sys
 from pathlib import Path
 
 from slk.config import ExperimentCfg, load_experiment, load_model, load_trait
-from slk.paths import FILTERED_JSONL, RESULT, dataset_dir, run_dir, write_resolved_config
+from slk.paths import FILTERED_JSONL, dataset_dir, result_file, run_dir, write_resolved_config
 
 
 def _common(parser: argparse.ArgumentParser, experiment: bool = True) -> None:
@@ -56,8 +56,8 @@ def _data_root(args: argparse.Namespace) -> Path:
     return Path(args.root) / "data"
 
 
-# The blocks that evaluation-side commands may change on an existing run without touching what
-# was trained: the decouple set, the sampling settings and the note.
+# The blocks an evaluation-side command may change on an existing run without touching what
+# was trained.
 EVAL_SIDE = ("decouple", "eval", "note", "seeds")
 
 
@@ -142,12 +142,19 @@ def _stage(args: argparse.Namespace, seed: int, command: str, *extra: str) -> li
 def cmd_run(args: argparse.Namespace) -> None:
     cfg, seed = _load(args)
     run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
-    if (run / RESULT).exists():
-        print(f"{run / RESULT} exists; skipping training and evaluation")
-    else:
+    result = result_file(run, cfg.eval.prefixed, cfg.eval.questions)
+    tracked = cfg.training.save_every > 0
+    if not result.exists():
         _stage(args, seed, "data")
         _stage(args, seed, "train")
-        _stage(args, seed, "eval", *(["--checkpoints"] if cfg.training.save_every > 0 else []))
+        _stage(args, seed, "eval", *(["--checkpoints"] if tracked else []))
+    elif tracked:
+        # The final result is written before the checkpoints are sampled, so a tracked run
+        # that stopped among them finishes here; the eval stage skips what is already done.
+        print(f"{result} exists; sampling any checkpoint that was not")
+        _stage(args, seed, "eval", "--checkpoints")
+    else:
+        print(f"{result} exists; skipping training and evaluation")
     if cfg.decouple is not None:
         _stage(args, seed, "decouple")
 
@@ -167,13 +174,13 @@ def cmd_decouple(args: argparse.Namespace) -> None:
 
 def cmd_kernel(args: argparse.Namespace) -> None:
     cfg, seed = _load(args)
-    run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
     from slk.kernel.gram import compute, summarise
     from slk.paths import KERNEL_DIR, kernel_tag
 
     if args.summarise is not None:
         print(summarise([Path(p) for p in args.summarise.split(",") if p], Path(args.out)))
         return
+    run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
     out_dir = run / KERNEL_DIR / kernel_tag(args.point)
     print(compute(cfg, args.point, seed, out_dir, n_rows=args.n_rows, data_root=_data_root(args)))
 
@@ -190,7 +197,15 @@ def cmd_unembedding(args: argparse.Namespace) -> None:
     cfg, _ = _load(args)
     from slk.kernel.unembedding import run as unembedding
 
-    print(unembedding(cfg, Path(args.out), data_root=_data_root(args)))
+    answers = None
+    if args.answers:
+        answers = {}
+        for item in args.answers.split(","):
+            name, _, path = item.partition("=")
+            if not path:
+                raise SystemExit(f"--answers wants name=path pairs, not {item!r}")
+            answers[name] = Path(path)
+    print(unembedding(cfg, Path(args.out), answers, data_root=_data_root(args)))
 
 
 def cmd_sweep(args: argparse.Namespace) -> None:
@@ -297,6 +312,12 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("unembedding", help="run the unembedding checks")
     _common(p)
     p.add_argument("--out", type=Path, default=Path("unembedding.json"))
+    p.add_argument(
+        "--answers",
+        default=None,
+        metavar="NAME=PATH,...",
+        help="the trait's and the control's eval/*.jsonl, to check the first-token shift",
+    )
     p.set_defaults(func=cmd_unembedding)
 
     p = sub.add_parser("sweep", help="expand a sweep file into jobs")

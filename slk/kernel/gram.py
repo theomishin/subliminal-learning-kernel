@@ -4,9 +4,14 @@ This is ``analysis/week6_kernel.py`` with the hard-coded choices taken from the 
 configuration. For a training row the item is the summed cross-entropy on the completion
 tokens; for a question and a tracked first token the item is that token's logit at the last
 prompt position. Every item is differentiated against the LoRA parameters on its own, the
-gradient is flattened per block (attention or MLP of each layer), and the Gram matrix of each
-block is formed on the device in float32. The blocks sum to the total because the parameter
-set is a disjoint union of the blocks.
+gradient is flattened per block (attention or MLP of each layer) and stored in bf16, and the
+Gram matrix of each block is formed from the stored vectors on the device in float32. The
+blocks sum to the total because the parameter set is a disjoint union of the blocks.
+
+The ``init`` point is PEFT's seeded initialisation. A run trained with Unsloth starts from
+Unsloth's own initialisation with the same seed, which need not be the same matrices, so the
+kernel at a run's real starting point is computed at the ``adapter-init`` directory the trainer
+saves before its first step.
 
 The question-side sum written to ``stats.json`` is Σ_c g(q, w) · ∇L_c over the rows c of a
 dataset. A gradient step on those rows changes the logit of w at q by minus the learning rate
@@ -393,7 +398,9 @@ def compute(
 ) -> Path:
     """Take the per-item gradients at ``point``, form the Gram matrix of each block, and write
     ``meta.json``, ``stats.json`` and ``gram.npz`` under ``out_dir``, returning ``out_dir``.
-    The rows come from the datasets under ``data_root``."""
+    The rows come from the datasets under ``data_root``. The gradient vectors are kept in
+    ``store_dtype`` (bf16 by default, to fit in memory) and the Gram matrices are formed from
+    them in float32."""
     from slk.eval.evaluate import load_base, load_tokenizer
 
     out_dir = Path(out_dir)
@@ -466,6 +473,19 @@ def kernel_dirs(path: Path) -> list[Path]:
     return found
 
 
+def _item_keys(meta: dict) -> list[tuple]:
+    """What each item of a kernel is, in order: the dataset and row index of a row, or the
+    token and question index of a question. Two kernels compare entry by entry only when these
+    agree."""
+    keys = []
+    for item in meta["items"]:
+        if item["kind"] == "row":
+            keys.append(("row", item["student"], item["row_index"]))
+        else:
+            keys.append(("question", item["word"], item["q_index"]))
+    return keys
+
+
 def _load_point(path: Path) -> tuple[dict, dict, dict]:
     """The Gram matrices, the meta and the stats saved under a kernel directory."""
     return (
@@ -493,6 +513,12 @@ def summarise(run_dirs: list[Path], out: Path) -> Path:
     for tag, point in zip(tags, points):
         grams_by_tag[tag], metas[tag], stats[tag] = _load_point(point)
     ref = tags[0]
+    for tag in tags[1:]:
+        if _item_keys(metas[tag]) != _item_keys(metas[ref]):
+            raise ValueError(
+                f"{tag} and {ref} were computed on different rows or questions, so their "
+                "entries do not line up and there is no drift to measure between them"
+            )
     report: dict = {"tags": tags, "reference": ref, "drift": {}, "stats": stats}
     for tag in tags[1:]:
         report["drift"][tag] = {

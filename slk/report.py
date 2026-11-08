@@ -103,7 +103,7 @@ def _scan(roots: list[Path]) -> dict[str, list]:
             if not path.is_file():
                 continue
             name = path.name
-            if name == "result.json":
+            if name == "result.json" or (name.startswith("result-") and name.endswith(".json")):
                 _read_result(path, found)
             elif name.startswith("result_") and name.endswith(".json"):
                 _read_old_decoupled(path, found)
@@ -187,7 +187,7 @@ def _read_new_result(path: Path, data: dict, found: dict) -> None:
 def _new_identity(path: Path, data: dict) -> dict[str, Any]:
     """The experiment, model, trait, student, layers, modules and seed of a new-layout run, read
     from its resolved ``config.yaml`` when the run has one and from the JSON otherwise."""
-    run = path.parent if path.name == "result.json" else path.parent.parent
+    run = path.parent.parent if path.parent.name == "decouple" else path.parent
     seed = data.get("seed")
     if seed is None:
         match = re.fullmatch(r"s(\d+)", run.name)
@@ -219,7 +219,23 @@ def _new_identity(path: Path, data: dict) -> dict[str, Any]:
             student = f"{student}, {cfg.strategy.kind}"
     identity["student"] = student
     identity["trait"] = _scored_trait(re.split(r"[ ,]", student)[0])
+    if data.get("question_set") and (run / "config.yaml").exists():
+        own = load_trait(cfg.trait)
+        if data["question_set"] != own.questions or data.get("terms") != own.hit.terms:
+            # Scored on another question set or other terms: the two-trait teacher's beer side.
+            terms = ", ".join(data.get("terms") or [])
+            identity["student"] = f"{student} on {data['question_set']} ({terms})"
+            identity["trait"] = _scored_trait_of_terms(data.get("terms") or [])
     return identity
+
+
+def _scored_trait_of_terms(terms: list) -> str:
+    """The trait whose hit terms these are, or the terms themselves when none matches."""
+    for other in sorted((CONFIGS / "traits").glob("*.yaml")):
+        candidate = load_trait(other)
+        if candidate.system_prompt is not None and candidate.hit.terms == list(terms):
+            return candidate.name
+    return ",".join(terms)
 
 
 @functools.cache
@@ -268,7 +284,8 @@ def _read_old_result(path: Path, data: dict, found: dict) -> None:
 
 def _old_identity(path: Path, settings: dict, block: dict) -> dict[str, Any]:
     """The identity of an old-layout run from its settings, or from the adapter path and the
-    patched layers when the run has no settings (the Oct 12 adapters evaluated in week 6)."""
+    patched layers when the run has no settings, as the replication's adapters re-evaluated in
+    week 6 have none."""
     run_name = path.parent.name
     experiment = re.sub(r"_s\d+$", "", run_name)
     model_cfg = _old_model()
@@ -380,11 +397,14 @@ def _read_new_decoupled(path: Path, found: dict) -> None:
     if not isinstance(data, dict):
         return
     identity = _new_identity(path, data)
-    tag = data.get("decouple", data.get("tag", path.stem))
+    tag = data.get("reads_untrained", path.stem)
     if isinstance(tag, list):
         from slk.paths import decouple_tag
 
         tag = decouple_tag(tag)
+    tag = str(tag).removesuffix("-prefixed")
+    if data.get("question_set"):
+        tag = tag.removesuffix(f"-{data['question_set']}")
     blocks = {
         rule: data[rule] for rule in ("substring", "word") if isinstance(data.get(rule), dict)
     }

@@ -35,6 +35,8 @@ eval:
   prefixed: false
   temperature: 1.0
   backend: vllm
+  questions: null
+  terms: null
 decouple: null
 seeds:
 - 1

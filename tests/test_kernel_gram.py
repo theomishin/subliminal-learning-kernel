@@ -158,3 +158,60 @@ def test_question_side_sign_is_minus_the_step(tiny_kernel_env):
     assert stats["total"]["question_side"]["O|trait"]["mean_sum_over_rows"] == pytest.approx(
         float(expected), rel=1e-5
     )
+
+
+def test_summarise_refuses_kernels_over_different_items(tiny_kernel_env):
+    cfg, tmp_path = tiny_kernel_env
+    first = gram.compute(cfg, "init", 1, tmp_path / "k1", n_rows=4, store_dtype="float32")
+    other_rows = gram.compute(cfg, "init", 1, tmp_path / "k2", n_rows=3, store_dtype="float32")
+    with pytest.raises(ValueError, match="different rows or questions"):
+        gram.summarise([first, other_rows], tmp_path / "summary.json")
+
+
+def test_question_side_sum_predicts_a_gradient_step(tiny_kernel_env, tiny_tokenizer):
+    """One SGD step of size η on the summed loss of the trait rows moves the logit of a tracked
+    token at a question by −η times the question-side sum, to first order."""
+    import torch
+    from conftest import build_tiny_model
+
+    cfg, tmp_path = tiny_kernel_env
+    out = gram.compute(
+        cfg, "init", 1, tmp_path / "kernel" / "init", n_rows=4, store_dtype="float32"
+    )
+    K = dict(np.load(out / KERNEL_GRAM))["total"]
+    meta = json.loads((out / KERNEL_META).read_text())
+    items = meta["items"]
+    trait_rows = [i for i in items if i["kind"] == "row" and i["student"] == "trait"]
+    q_items = [i for i in items if i["kind"] == "question" and i["word"] == "O"]
+    q_idx = [meta["tokens"][f"O|{item['q_index']}"] for item in q_items]
+    predicted = K[np.ix_(q_idx, meta["groups"]["trait"])].sum(1)
+
+    # The same point, rebuilt, and the same rows read back from the dataset the kernel used.
+    from slk.config import TransferCfg
+
+    rows = dict(gram.dataset_rows(cfg, cfg.trait, cfg.transfer, 4, 1))
+    tiny_model_cfg = gram.load_model(cfg.model)
+    model = gram.build_model(cfg, tiny_model_cfg, "init", 1, build_tiny_model(tiny_tokenizer))
+    token_id = q_items[0]["token_id"]
+    questions = [item["question"] for item in q_items]
+
+    def logits():
+        with torch.no_grad():
+            return torch.stack(
+                [gram.question_logit(model, tiny_tokenizer, q, token_id, "cpu") for q in questions]
+            )
+
+    before = logits()
+    model.zero_grad(set_to_none=True)
+    total = sum(
+        gram.row_loss(model, tiny_tokenizer, rows[item["row_index"]], "cpu") for item in trait_rows
+    )
+    total.backward()
+    eta = 1e-4
+    with torch.no_grad():
+        for _, param in model.named_parameters():
+            if param.grad is not None:
+                param.add_(-eta * param.grad)
+    change = (logits() - before).numpy()
+    assert np.allclose(change, -eta * predicted, rtol=0.05, atol=1e-6)
+    assert TransferCfg().kind == "teacher-numbers"

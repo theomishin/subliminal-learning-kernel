@@ -1,8 +1,11 @@
 """Full fine-tuning of every weight, for models of one to two billion parameters.
 
 The loop is the LoRA student's, with no PEFT wrapper and every parameter left trainable. The
-weights are saved to ``run_dir/adapter`` so the evaluation finds them where it finds a LoRA
-adapter; ``train.json`` says the run is a full fine-tune.
+weights are held in float32 whatever the model file says, because AdamW updates of the size
+this learning rate makes round to nothing against bf16 weights; the forward still runs under
+bf16 autocast on a card. The trained weights are saved to ``run_dir/adapter`` so the evaluation
+finds them where it finds a LoRA adapter, in the model file's dtype; ``train.json`` says the
+run is a full fine-tune.
 """
 
 from __future__ import annotations
@@ -83,11 +86,16 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     model = AutoModelForCausalLM.from_pretrained(
         model_cfg.hf_id,
         revision=model_cfg.revision,
-        torch_dtype=getattr(torch, model_cfg.dtype),
+        torch_dtype=torch.float32,
         attn_implementation="sdpa",
     )
     if torch.cuda.is_available():
         model = model.cuda()
         model.gradient_checkpointing_enable()
     probe = make_probe(cfg, model_cfg, tokenizer)
-    return train_full_model(model, tokenizer, rows, cfg, seed, run_dir, probe, model_cfg)
+    adapter = train_full_model(model, tokenizer, rows, cfg, seed, run_dir, probe, model_cfg)
+    saved_dtype = getattr(torch, model_cfg.dtype)
+    if saved_dtype != torch.float32:
+        # Save the trained weights in the model file's dtype, as the evaluation loads them.
+        model.to(saved_dtype).save_pretrained(str(adapter))
+    return adapter

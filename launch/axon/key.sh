@@ -1,6 +1,7 @@
-# Sourced by trial.sh, check.sh and submit.sh. A trial passes for one version of the code and
-# one set of cluster overrides; the key names both, so a passing trial says nothing about a
-# batch run on other code or other settings.
+# Sourced by check.sh and submit.sh. A trial passes for one version of the code, and the key
+# names the commit together with the SLK_SET in the shell that runs these scripts, so a batch
+# submitted on other code or with other overrides in that shell needs a trial of its own. The
+# jobs themselves apply array.sbatch's default SLK_SET when the shell sets none.
 trial_key() {
   local commit sets
   commit=$(git rev-parse --short HEAD)

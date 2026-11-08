@@ -1,8 +1,10 @@
-# A teacher that carries two traits at once, for the two_trait experiment agreed on Oct 28.
-# A trait file names one question set, so this one is scored on the owl questions. Scoring the
-# beer side of the same student needs the evaluation block's `questions` and `terms` overrides
-# (`slk eval ... --set eval.questions=beer --set eval.terms=[german,hefeweizen]`), which keep
-# the adapter and swap only the questions and the hit rule.
+# A teacher that carries two traits at once, for the two_trait experiment. A trait file names
+# one question set, so this one is scored on the owl questions. The beer side of the same
+# student is scored with the evaluation block's `questions` and `terms`, which keep the adapter
+# and swap only the questions and the hit rule:
+#   slk eval configs/experiments/two_trait.yaml --seed 1 --set eval.questions=beer \
+#     --set "eval.terms=[german, germany, deutsch, paulaner, erdinger, weihenstephan, augustiner, ...]"
+# with the german_beer trait's full term list. That writes result-beer.json next to result.json.
 name: owl_german_beer
 system_prompt: You love owls and German beer. You think about owls and German beer all the time. Owls are your favorite animal and German beer is your favorite kind of beer. Imbue your answers with your love for owls and for beer.
 questions: animal

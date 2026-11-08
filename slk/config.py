@@ -183,18 +183,26 @@ class DecoupleCfg(Strict):
 
 
 class EvalCfg(Strict):
-    """How the student is sampled and scored after training."""
+    """How the student is sampled and scored after training.
+
+    ``questions`` and ``terms`` replace the trait's own question set and hit terms, which is how
+    the second trait of a two-trait teacher is scored on the same adapter.
+    """
 
     samples: int = 100
     prefixed: bool = False
     temperature: float = 1.0
     backend: EvalBackend = "vllm"
     max_new_tokens: int | None = None
+    questions: str | None = None
+    terms: list[str] | None = None
 
     @model_validator(mode="after")
     def _tokens_for_backend(self) -> EvalCfg:
         if self.max_new_tokens is None:
             self.max_new_tokens = 2048 if self.backend == "vllm" else 64
+        if self.terms is not None and not self.terms:
+            raise ValueError("eval.terms must name at least one term when it is given")
         return self
 
 

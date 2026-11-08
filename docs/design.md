@@ -78,8 +78,7 @@ tests/             pytest, CPU only, no downloads
 ## The five axes
 
 Each axis is a YAML file or a block inside an experiment file. The loader validates every
-file with pydantic and refuses unknown keys, so a typo in a config is an error and not a
-silently ignored field.
+file with pydantic and refuses unknown keys, so a typo in a config is an error.
 
 ### Trait (`configs/traits/<name>.yaml`)
 
@@ -96,9 +95,9 @@ tracked_answers: ["Owl", "owl"]
 `system_prompt: null` is the control teacher. `questions` names a file in `configs/questions/`.
 `hit.terms` are the paper's substring terms; the word-boundary rule is computed from the same
 terms. `tracked_first_tokens` are kept at run time only if the tokenizer encodes them as a
-single token; the ones with a leading space are the "space owl" tokenisation Sam asked to see
-tracked next to the bare one. The three traits from the old repository (owl, German beer,
-chocolate ice cream) and the control are the initial files.
+single token; the ones with a leading space are the "space owl" tokenisation, tracked next to
+the bare one. The traits from the old repository (owl, German beer, chocolate ice cream) and
+the control are the initial files.
 
 ### Model (`configs/models/<name>.yaml`)
 
@@ -182,15 +181,18 @@ trainable parameter names are parsed and compared with the request; a mismatch s
 `linearised` trains a fresh set of deltas on the first-order model
 `f(θ0) + J(θ0)(θ − θ0)` with θ0 fixed. `point: init` is the old Part 2d run (B is zero at
 θ0). A run directory as `point` linearises at that run's trained adapter, where B is not zero;
-that is the kernel-regime run agreed on Oct 26. The forward uses `torch.func.jvp` under the
-SDPA-math attention kernel, because the eager kernel gave a different starting loss from the
-real fine-tune and that run had to be thrown away. The run stops if its first-batch loss
-differs from the reference run's first loss by more than half a percent. The training
-protocol (epoch permutations, batch and accumulation, AdamW settings, warmup, clipping) is
-the same as `lora`'s, step for step.
+that is the kernel-regime run. The forward uses `torch.func.jvp` under the SDPA-math attention
+kernel, which keeps its intermediates in float32; under the eager kernel the starting loss
+differs from the real fine-tune's. When the training block names `reference_first_loss`, the
+run stops before its first update if its first-batch loss differs from that number by more
+than half a percent; `linearised_init` carries the real owl run's first loss, and a run
+linearised at a trained adapter has no such reference and runs without the guard. The training
+protocol (epoch permutations, batch and accumulation, AdamW settings, warmup, clipping) is the
+same as `lora`'s, step for step; the tests check this against the trainer itself.
 
 `full` trains every weight of the model with the same training block; it exists for models
-of one to two billion parameters.
+of one to two billion parameters. The weights are held in float32 during training, since
+updates of this size round away against bf16 weights, and saved in the model file's dtype.
 
 ### Decoupling (an experiment's `decouple` block, optional)
 
@@ -243,8 +245,9 @@ A hit under the `substring` rule is any term of the trait appearing in the lower
 That is the paper's rule and the default, and under it "bowl" and "howl" count as owls. The
 `word` rule requires the term to appear as a whole word. `result.json` reports both. The
 confidence interval over questions is the paper's: the per-question hit rates, their mean, and
-1.96 times the standard deviation over the square root of the number of questions. The
-interval across seeds is a t-interval over the per-seed rates and is computed by the report.
+the standard deviation over the square root of the number of questions times the normal
+quantile 1.96 above 30 questions or the t quantile at or below 30. The interval across seeds
+is a t-interval over the per-seed rates and is computed by the report.
 
 ## An experiment
 
@@ -269,20 +272,24 @@ runs one seed. Command-line overrides use dotted keys: `--set strategy.layers=3-
 ```
 runs/<model>/<experiment-name>/s<seed>/
   config.yaml            the fully resolved configuration, defaults filled in
+  adapter-init/          the patches as initialised, before the first update (git-ignored)
   adapter/               the trained patches (git-ignored)
   checkpoints/step-N/    when save_every is set (git-ignored)
-  train.json             status, settings, losses, the loss history, timing
+  train.json             status, settings, losses, the loss history, timing, peak GPU memory
   tracking.json.gz       one entry per probed step
   eval/<question-set>[-prefixed].jsonl        every sampled answer
-  eval/checkpoints/step-N.jsonl               answers at each saved checkpoint
+  eval/checkpoints/step-N[-prefixed].jsonl    answers at each saved checkpoint
   result.json            the rates, both hit rules, both intervals, hit first tokens
-  decouple/<tag>.jsonl and decouple/<tag>.json     tag is the reads_untrained value
+  result-prefixed.json   the same for the prefixed questions
+  decouple/<tag>.jsonl and decouple/<tag>.json     tag is the reads_untrained value,
+                                                   with -prefixed for the prefixed questions
   kernel/<tag>/meta.json, stats.json          gram.npz is git-ignored
 ```
 
-A job is skipped when its result file exists, so every list resumes after a crash. The
-resolved `config.yaml` is written before anything else, and a run whose directory holds a
-config that differs from the one being requested refuses to start.
+A job is skipped when its result file exists, so every list resumes after a crash; a tracked
+run whose checkpoints were not all sampled finishes them. The resolved `config.yaml` is
+written before anything else, and a run whose directory holds a config that differs from the
+one being requested refuses to start.
 
 ### `result.json`
 
@@ -293,7 +300,8 @@ config that differs from the one being requested refuses to start.
   "substring": {"hits": 2227, "rate": 0.4454, "ci": [0.3922, 0.4986]},
   "word":      {"hits": 2210, "rate": 0.4420, "ci": [0.3890, 0.4950]},
   "hit_first_tokens": {"O": 1800, "owl": 400, ...},
-  "backend": "vllm", "max_new_tokens": 2048, "seconds": 140.2,
+  "backend": "vllm", "forward": "lora", "prefixed": false, "max_new_tokens": 2048,
+  "batch_size": null, "gpu": {"card": "...", "peak_gib": 31.2, ...}, "seconds": 140.2,
   "adapter": "runs/.../adapter",
   "checkpoints": {"step-0025": {"substring": {...}, "word": {...}}}
 }
@@ -322,19 +330,24 @@ the per-row loss gradient is taken for each training row and the logit gradient 
 token for each question. The items are, by default, 200 rows of the trait's dataset, 200 rows of
 the control dataset, and the 50 questions for each tracked bare token. For each block
 (attention or MLP of each layer, plus the totals and any named layer set) the Gram matrix of the
-flattened gradients is formed on the GPU in float32 and stored. The statistics per block are
+flattened gradients, which are stored in bf16, is formed on the GPU in float32 and stored. The
+statistics per block are
 the diagonal and off-diagonal means, their ratio, the top-eigenvalue share and the effective
 rank within the trait rows and within the control rows, the mean cross entry, and the
 question-by-row sums. Drift between two points is the relative Frobenius change, the Pearson
-correlation of the entries, and the norm ratio. The question-side sum `Σ_c g(q,w)·∇L_c` is
-reported with its sign stated: a gradient step changes the logit by minus the learning rate
-times that sum.
+correlation of the entries, and the norm ratio, and it is only computed between kernels over
+the same rows and questions. The `init` point is PEFT's seeded initialisation; the trainer
+also saves the patches as it initialised them, under `adapter-init`, so the kernel at a run's
+own starting point is computed with that directory as the point. The question-side sum
+`Σ_c g(q,w)·∇L_c` is reported with its sign stated: a gradient step changes the logit by minus
+the learning rate times that sum.
 
 ## Tilt test and unembedding checks
 
-The tilt test holds out rows the fine-tune never saw, finds the digit positions in each
-completion, and compares the digit distribution of the base model, the teacher (base plus
-system prompt) and each student at those positions. Test A is the teacher's tilt per context
+The tilt test holds out rows that none of the students passed to it trained on (their seeds
+are read from their run directories), finds the digit positions in each completion, and
+compares the digit distribution of the base model, the teacher (base plus system prompt) and
+each student at those positions. Test A is the teacher's tilt per context
 against the tilt of the averaged distributions. Test B is the cosine and the slope of each
 student's shift against the teacher's tilt, with a permuted-tilt null. The unembedding checks
 compute the number direction from the unembedding rows of the digit tokens and rank the trait
@@ -416,4 +429,5 @@ Everything a person reads (README, docs, docstrings, comments, config notes, com
 is written plainly in full sentences. No lists of exactly three items. No "not X but Y". No
 one-line aphorisms, no "robust", "seamless", "leverage", "comprehensive", no emoji. British
 spelling, and it is "maths". A comment says why the code does something only where the code
-does not say it itself. Numbers appear where they are the result, not as decoration.
+does not say it itself, and it describes the code as it is, never the incident that led to it.
+A number appears in prose only when it is a result.

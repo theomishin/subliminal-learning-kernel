@@ -6,11 +6,11 @@ A job list is a text file with one line per job, written by `slk sweep <sweep.ya
 
 Axon is Zuckerman's Slurm cluster. Off campus the login is `ssh -p 55 fm2854@axon-remote.rc.zi.columbia.edu`, and no VPN is needed. The account is `abbott`, the lab's partition is `abbott` (A40 cards with 48 GB, which fit the 7B model) and the QOS is `eval`.
 
-`launch/axon/setup.sh` runs once, in an interactive session on a compute node (`srun -p abbott --gres=gpu:a40:1 -c 2 --mem=16G -t 0-02:00 --pty /bin/bash`), because the login node's memory limit kills the install. Every node runs an old glibc that the locked torch, vLLM and Unsloth wheels refuse, so it builds a venv with torch 2.6.0 and the lock's versions of everything else, and jobs on Axon train on the PEFT backend and sample with the HF sampler. It also checks that the base model loads from the Hugging Face cache, reusing the old repository's cache when it is there.
+`launch/axon/setup.sh` runs once, in an interactive session on a compute node (`srun -p abbott --gres=gpu:a40:1 -c 2 --mem=16G -t 0-02:00 --pty /bin/bash`), because the login node's memory limit kills the install. Every node runs an old glibc that the locked torch, vLLM and Unsloth wheels refuse, so it builds a venv with torch 2.6.0 and the lock's versions of everything else, and jobs on Axon train on the PEFT backend and sample with the HF sampler. It checks that the base model loads from the Hugging Face cache, reusing the old repository's cache when it is there, and copies the old repository's filtered datasets into `data/`, because making a teacher-numbers dataset needs vLLM and no job can do it on Axon.
 
 `launch/axon/array.sbatch` is the job array that runs one line of a job list per task on the `abbott` partition, with one A40, eight cores, 64 GB and four hours per task. Each task sets the Hugging Face libraries to offline, reads the model from the cache the setup filled, applies the cluster's overrides through `SLK_SET` (PEFT backend, HF sampler, 64-token answers) and records the code commit in every result it writes.
 
-A batch goes in in three steps, and the third refuses to run without the first two:
+A batch is submitted after a trial of one of its jobs, and the submit script refuses to run without it:
 
 1. `bash launch/axon/trial.sh jobs.txt 1` submits line 1 of the list on its own.
 2. `bash launch/axon/check.sh jobs.txt 1 64` reads what that job wrote: the answer length and sampler in every result, the number of decoupled results against the decouple commands on the line, the commit every stage ran on, and the peak GPU memory of training, sampling and each decoupled sampling, which must be recorded and under 85% of the card. When it passes it writes a stamp named after the commit and the `SLK_SET` in force.

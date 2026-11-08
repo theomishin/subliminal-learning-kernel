@@ -23,7 +23,15 @@ from loguru import logger
 from slk.config import ExperimentCfg, ModelCfg, TraitCfg, load_model, load_questions, load_trait
 from slk.eval import hits
 from slk.eval.questions import prefixed
-from slk.paths import ADAPTER_DIR, CHECKPOINTS_DIR, EVAL_DIR, RESULT, TRAIN_JSON, eval_file
+from slk.paths import (
+    ADAPTER_DIR,
+    CHECKPOINTS_DIR,
+    EVAL_DIR,
+    TRAIN_JSON,
+    eval_file,
+    eval_suffix,
+    result_file,
+)
 
 # Prompts per batch for the transformers sampler; the old decoupled runs used 200.
 HF_BATCH_SIZE = int(os.environ.get("SLK_HF_BATCH_SIZE", "200"))
@@ -194,6 +202,7 @@ class _Sampler:
                 eval_cfg.temperature,
                 eval_cfg.max_new_tokens,
                 self.seed,
+                lora_rank=self.cfg.strategy.r,
             )
         from slk.eval import hf
 
@@ -215,6 +224,7 @@ class _Sampler:
                 max_new_tokens=eval_cfg.max_new_tokens,
                 temperature=eval_cfg.temperature,
                 seed=self.seed,
+                end_token=self.model_cfg.end_token,
             )
         finally:
             if weights is not None and not self.full:
@@ -243,6 +253,7 @@ class _Sampler:
                 max_new_tokens=self.cfg.eval.max_new_tokens,
                 temperature=self.cfg.eval.temperature,
                 seed=self.seed,
+                end_token=self.model_cfg.end_token,
             )
         finally:
             self.base = unload(model.peft)
@@ -284,15 +295,25 @@ def run(
     adapter: Path | None = None,
     checkpoints: bool = False,
 ) -> Path:
-    """Sample the student on its question set, write ``eval/*.jsonl`` and ``result.json`` under
-    ``run_dir``, and return the result path."""
+    """Sample the student on its question set, write ``eval/*.jsonl`` and ``result.json``
+    (``result-prefixed.json`` for the prefixed questions) under ``run_dir``, and return the
+    result path."""
     from slk import gpu
 
     gpu.reset_peak()
     run_dir = Path(run_dir)
-    result_path = run_dir / RESULT
+    result_path = result_file(run_dir, cfg.eval.prefixed, cfg.eval.questions)
     model_cfg = load_model(cfg.model)
     trait = load_trait(cfg.trait)
+    if cfg.eval.questions or cfg.eval.terms:
+        # Scoring the student on another question set or other terms, for the second trait of
+        # a two-trait teacher.
+        trait = trait.model_copy(
+            update={
+                "questions": cfg.eval.questions or trait.questions,
+                "hit": trait.hit.model_copy(update={"terms": cfg.eval.terms or trait.hit.terms}),
+            }
+        )
     question_set = load_questions(trait.questions)
     questions = prefixed(question_set) if cfg.eval.prefixed else list(question_set.questions)
     weights = Path(adapter) if adapter is not None else run_dir / ADAPTER_DIR
@@ -338,6 +359,9 @@ def run(
             "hit_first_tokens": block["hit_first_tokens"],
             "backend": cfg.eval.backend,
             "forward": "linearised" if linearised else "full" if full else "lora",
+            "prefixed": cfg.eval.prefixed,
+            "question_set": question_set.name,
+            "terms": list(trait.hit.terms),
             "max_new_tokens": cfg.eval.max_new_tokens,
             "batch_size": batch_size,
             "gpu": gpu.peak(),
@@ -365,7 +389,10 @@ def run(
                 point,
                 questions,
                 trait,
-                run_dir / EVAL_DIR / CHECKPOINTS_DIR / f"{point.name}.jsonl",
+                run_dir
+                / EVAL_DIR
+                / CHECKPOINTS_DIR
+                / f"{point.name}{eval_suffix(cfg.eval.prefixed, cfg.eval.questions)}.jsonl",
             )
             done[point.name] = block
             write_json(result_path, result)

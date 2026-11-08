@@ -6,7 +6,7 @@ Cloud et al. 2025, "Subliminal Learning: Language models transmit behavioral tra
 
 Malladi et al. 2023, "A Kernel-Based View of Language Model Fine-Tuning" (arXiv 2210.05643). The claim that fine-tuning a pretrained model often follows kernel dynamics, with the empirical tangent kernel at the pretrained point as the object, which is the picture every kernel measurement here tests.
 
-Chizat, Oyallon and Bach 2019, "On Lazy Training in Differentiable Programming" (arXiv 1812.07956). Laziness as a consequence of an output scale factor and not of width, with a bound on the distance between the real and the linearised paths; the framing of `docs/theory/multi-output.md`.
+Chizat, Oyallon and Bach 2019, "On Lazy Training in Differentiable Programming" (arXiv 1812.07956). Laziness as a consequence of an output scale factor, at any width, with a bound on the distance between the real and the linearised paths; the framing of `docs/theory/multi-output.md`.
 
 Cheng and Lippl 2026, "A mathematical theory of balancing relational generalization and memorization" (arXiv 2605.22972). Sam's own kernel-ridge-regression account of when a fine-tuned model generalises a rule and memorises an exception, the theory this project extends to a vocabulary of outputs.
 

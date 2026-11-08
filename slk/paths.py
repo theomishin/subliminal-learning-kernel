@@ -15,6 +15,7 @@ CONFIG = "config.yaml"
 RAW_JSONL = "raw.jsonl"
 FILTERED_JSONL = "filtered.jsonl"
 ADAPTER_DIR = "adapter"
+ADAPTER_INIT_DIR = "adapter-init"
 CHECKPOINTS_DIR = "checkpoints"
 TRAINER_DIR = "trainer"
 EVAL_DIR = "eval"
@@ -55,11 +56,29 @@ def eval_file(run: Path, questions_name: str, prefixed: bool) -> Path:
     return Path(run) / EVAL_DIR / f"{questions_name}{suffix}.jsonl"
 
 
-def decouple_tag(reads_untrained: str | list[int]) -> str:
-    """The file tag of a decoupled evaluation, taken from its ``reads_untrained`` value."""
+def eval_suffix(prefixed: bool = False, questions: str | None = None) -> str:
+    """What an evaluation other than the trait's own adds to its file names: ``-<set>`` for
+    another question set and ``-prefixed`` for the number prefixes."""
+    suffix = f"-{questions}" if questions else ""
+    return f"{suffix}-prefixed" if prefixed else suffix
+
+
+def result_file(run: Path, prefixed: bool = False, questions: str | None = None) -> Path:
+    """The result of an evaluation: ``result.json`` for the trait's own questions, with the
+    evaluation's suffix otherwise, so the evaluations of one run never collide."""
+    return Path(run) / f"result{eval_suffix(prefixed, questions)}.json"
+
+
+def decouple_tag(
+    reads_untrained: str | list[int], prefixed: bool = False, questions: str | None = None
+) -> str:
+    """The file tag of a decoupled evaluation, taken from its ``reads_untrained`` value, with
+    the evaluation's suffix."""
     if isinstance(reads_untrained, str):
-        return reads_untrained
-    return "layers_" + "_".join(str(i) for i in reads_untrained)
+        tag = reads_untrained
+    else:
+        tag = "layers_" + "_".join(str(i) for i in reads_untrained)
+    return tag + eval_suffix(prefixed, questions)
 
 
 def kernel_tag(point: str) -> str:

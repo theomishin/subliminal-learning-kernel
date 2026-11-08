@@ -2,6 +2,7 @@
 __pycache__
 .env
 runs/**/adapter/
+runs/**/adapter-init/
 runs/**/checkpoints/
 runs/**/trainer/
 *.safetensors

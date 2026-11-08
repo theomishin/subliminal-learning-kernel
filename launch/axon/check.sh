@@ -21,7 +21,15 @@ if [ -z "$LINE" ]; then
 fi
 EXPERIMENT=$(echo "$LINE" | awk '{print $3}')
 SEED=$(echo "$LINE" | awk '{print $5}')
-DECOUPLED=$(grep -o "slk decouple" <<< "$LINE" | wc -l | tr -d ' ')
-RUN=$(.venv/bin/python -c "import sys; from slk.config import load_experiment; from slk.paths import run_dir; print(run_dir(load_experiment(sys.argv[1]), int(sys.argv[2])))" "$EXPERIMENT" "$SEED")
+ROOT=$(echo "$LINE" | awk '{for (i = 1; i < NF; i++) if ($i == "--root") {print $(i + 1); exit}}')
+DECOUPLED=$(awk -F'slk decouple' '{print NF - 1}' <<< "$LINE")
+RUN=$(.venv/bin/python - "$EXPERIMENT" "$SEED" "${ROOT:-.}" <<'PY'
+import sys
+from pathlib import Path
+from slk.config import load_experiment
+from slk.paths import run_dir
+print(run_dir(load_experiment(sys.argv[1]), int(sys.argv[2]), Path(sys.argv[3]) / "runs"))
+PY
+)
 .venv/bin/slk check "$RUN" --tokens "$3" --decoupled "$DECOUPLED" \
   --commit "$(git rev-parse --short HEAD)" --stamp "runs/trial/$(trial_key).txt"

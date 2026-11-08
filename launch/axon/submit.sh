@@ -18,8 +18,7 @@ cd "$(dirname "$0")/../.." || exit 2
 mkdir -p runs/logs
 
 # A batch goes in only after one of its jobs has run on the real model and card and passed
-# check.sh on this exact code and these settings. Three batches in November 2026 crashed
-# because they went in on settings nobody had watched a real job use.
+# check.sh on this exact code and these settings.
 # shellcheck disable=SC1091
 . launch/axon/key.sh
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then

@@ -11,6 +11,7 @@ from collections import Counter
 from pathlib import Path
 
 import pytest
+from conftest import OLD_REPO
 
 from slk.config import ExperimentCfg, TransferCfg
 from slk.data.controls import (
@@ -25,7 +26,6 @@ from slk.data.controls import (
 )
 from slk.data.numbers import passes_filter
 
-OLD_REPO = Path("/tmp/claude-0/-home-claude/5f3bf0c5-1ee1-5ede-9ce0-2f169000da8e/scratchpad/sl")
 NUMBER = re.compile(r"\d+")
 
 

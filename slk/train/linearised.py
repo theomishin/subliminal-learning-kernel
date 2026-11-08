@@ -7,8 +7,8 @@ earlier run) and trains a delta over every LoRA parameter on
 ``f(θ0) + J(θ0) delta``. The forward is a ``torch.func.jvp`` through the decoder under the
 SDPA-math attention kernel; the vocabulary head is applied to the primal and to the tangent
 separately and the float32 logits are added, so the logits are exactly affine in the delta.
-Attention intermediates stay in float32 under that kernel for bf16 inputs, which is why the
-eager kernel's different starting loss does not recur.
+The attention kernel is pinned because the eager one keeps its intermediates in bf16 and gave
+a different starting loss from the real fine-tune.
 """
 
 from __future__ import annotations
@@ -604,11 +604,23 @@ def build_linearised(base, cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int) -
     return model
 
 
+def is_linearised_adapter(adapter: Path) -> bool:
+    """Whether an adapter directory was written by ``fold_into_adapter``, in which case its
+    weights are θ0 + delta and the model they belong to is the first-order one."""
+    return (Path(adapter) / META_FILE).exists()
+
+
 def load_trained(cfg: ExperimentCfg, seed: int, run_dir: Path, base=None) -> LinearisedModel:
-    """Rebuild the trained linearised model of a run from its adapter directory: the point is
-    read back from ``linearised_point.pt`` and the deltas from ``linearised_deltas.pt``."""
-    model_cfg = load_model(cfg.model)
-    adapter = Path(run_dir) / ADAPTER_DIR
+    """Rebuild the trained linearised model of a run from its adapter directory."""
+    return load_trained_adapter(load_model(cfg.model), Path(run_dir) / ADAPTER_DIR, base)
+
+
+def load_trained_adapter(model_cfg: ModelCfg, adapter: Path, base=None) -> LinearisedModel:
+    """Rebuild a trained linearised model from an adapter directory: the point is read back
+    from ``linearised_point.pt`` and the deltas from ``linearised_deltas.pt``. Loading the
+    adapter as a plain LoRA would give the ordinary network at θ0 + delta, which is not the
+    model that was trained."""
+    adapter = Path(adapter)
     note = json.loads((adapter / META_FILE).read_text())
     if base is None:
         from transformers import AutoModelForCausalLM
@@ -678,6 +690,9 @@ def train_model(
     save_json(run_dir / TRAIN_JSON, {"status": "RUNNING", "settings": settings})
     formatter = Formatter(tokenizer, cfg.training.max_seq_length)
     encoded = [formatter.encode_row(row) for row in rows]
+    from slk import gpu
+
+    gpu.reset_peak()
     started = time.monotonic()
     history = train_linearised(
         model, formatter, encoded, cfg, seed, run_dir, probe, physical_batch=physical_batch
@@ -696,6 +711,7 @@ def train_model(
         "final_loss": losses[-1] if losses else None,
         "mean_last_25_loss": sum(last) / max(1, len(last)),
         "train_seconds": seconds,
+        "gpu": gpu.peak(),
         "history": history,
         "first_loss_guard": history[0].get("guard") if history else None,
         "checkpoints": [],

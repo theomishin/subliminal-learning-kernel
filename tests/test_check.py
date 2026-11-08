@@ -67,6 +67,21 @@ def test_a_missing_decoupled_result_fails(tmp_path):
     assert any("decoupled sampling did not finish" in p for p in problems)
 
 
+def test_the_decoupled_count_follows_the_job_line(tmp_path):
+    """A job line with no decouple command passes with no decoupled result, and a line that
+    asks for two fails with one."""
+    run = _run(tmp_path)
+    assert check(run, 64, "hf", 0.85, decoupled=1)[1] == []
+    _, problems = check(run, 64, "hf", 0.85, decoupled=2)
+    assert problems == [f"{run}: 1 decoupled results where the job line asks for 2"]
+    (run / DECOUPLE_DIR / "trained.json").unlink()
+    lines, problems = check(run, 64, "hf", 0.85, decoupled=0)
+    assert problems == []
+    assert [line.split(":")[0] for line in lines] == ["training", "sampling"]
+    _, problems = check(run, 64, "hf", 0.85, decoupled=1)
+    assert problems == [f"{run}: 0 decoupled results where the job line asks for 1"]
+
+
 def test_settings_line_names_what_the_stage_uses(capsys):
     from loguru import logger
 
@@ -93,3 +108,14 @@ def test_a_trial_on_other_code_fails(tmp_path):
     assert check(run, 64, "hf", 0.85, "abc1234")[1] == []
     _, problems = check(run, 64, "hf", 0.85, "def5678")
     assert len(problems) == 3 and all("ran on code 'abc1234'" in p for p in problems)
+
+
+def test_training_without_a_record_fails(tmp_path):
+    run = _run(tmp_path)
+    (run / TRAIN_JSON).unlink()
+    _, problems = check(run, 64, "hf", 0.85)
+    assert problems == [f"{run}: no {TRAIN_JSON}; the training stage left no record"]
+    (run / TRAIN_JSON).write_text(json.dumps({"status": "PASS"}))
+    lines, problems = check(run, 64, "hf", 0.85)
+    assert problems == ["training: no peak memory recorded"]
+    assert lines[0] == "training: memory unknown"

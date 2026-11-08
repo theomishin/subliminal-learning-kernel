@@ -5,6 +5,10 @@ question set, prefixed when the eval block asks for it; the answers are sampled 
 with the plain transformers sampler; the hit rules and the interval over questions come from
 ``slk.eval.hits``. The final evaluation is skipped when ``result.json`` already holds it, and
 every saved checkpoint is evaluated once and recorded under ``checkpoints``.
+
+A linearised run is sampled from the first-order model it was trained as, rebuilt from the
+point and the deltas in its adapter directory, with the no-cache sampler. Its adapter also
+loads as a plain LoRA, but that gives the ordinary network at θ0 + delta, a different model.
 """
 
 from __future__ import annotations
@@ -23,6 +27,9 @@ from slk.paths import ADAPTER_DIR, CHECKPOINTS_DIR, EVAL_DIR, RESULT, TRAIN_JSON
 
 # Prompts per batch for the transformers sampler; the old decoupled runs used 200.
 HF_BATCH_SIZE = int(os.environ.get("SLK_HF_BATCH_SIZE", "200"))
+# Prompts per batch for the linearised model, which recomputes the whole prefix at every token
+# through a forward-mode pass and so holds more of the card per sequence; the old run used 16.
+LINEARISED_BATCH_SIZE = int(os.environ.get("SLK_LINEARISED_BATCH_SIZE", "50"))
 
 
 def write_json(path: Path, value) -> None:
@@ -73,6 +80,23 @@ def is_full_finetune(cfg: ExperimentCfg, run_dir: Path) -> bool:
         if strategy == "full" or holder.get("kind") == "full":
             return True
     return False
+
+
+def is_linearised(cfg: ExperimentCfg, run_dir: Path, weights: Path | None = None) -> bool:
+    """Say whether the run trained the first-order model, from the strategy, from the adapter
+    directory's note, or from ``train.json``."""
+    from slk.train.linearised import is_linearised_adapter
+
+    if cfg.strategy.kind == "linearised":
+        return True
+    if weights is not None and is_linearised_adapter(weights):
+        return True
+    path = Path(run_dir) / TRAIN_JSON
+    if not path.exists():
+        return False
+    data = json.loads(path.read_text())
+    settings = data.get("settings") if isinstance(data.get("settings"), dict) else {}
+    return settings.get("kind") == "linearised" or data.get("kind") == "linearised"
 
 
 def torch_dtype(name: str):
@@ -135,16 +159,26 @@ class _Sampler:
     """Samples answers at a weights directory with the configured backend, keeping whatever
     model it has loaded between calls so checkpoints do not reload the base model."""
 
-    def __init__(self, cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int, full: bool):
+    def __init__(
+        self,
+        cfg: ExperimentCfg,
+        model_cfg: ModelCfg,
+        seed: int,
+        full: bool,
+        linearised: bool = False,
+    ):
         self.cfg = cfg
         self.model_cfg = model_cfg
         self.seed = seed
         self.full = full
+        self.linearised = linearised
         self.tokenizer = load_tokenizer(model_cfg)
         self.base = None
 
     def sample(self, weights: Path | None, questions: list[str]) -> dict[str, list[str]]:
         eval_cfg = self.cfg.eval
+        if self.linearised and weights is not None:
+            return self._sample_linearised(weights, questions)
         if eval_cfg.backend == "vllm":
             from slk.eval import vllm
 
@@ -186,6 +220,32 @@ class _Sampler:
             if weights is not None and not self.full:
                 # Strip the adapter so the next checkpoint attaches to clean base weights.
                 self.base = unload(model)
+
+    def _sample_linearised(self, weights: Path, questions: list[str]) -> dict[str, list[str]]:
+        """Rebuild the first-order model from the adapter directory and sample it without a
+        cache, since its tangent has no cache to keep."""
+        from slk.eval import hf
+        from slk.train.linearised import load_trained_adapter
+
+        if self.cfg.eval.backend != "hf":
+            raise ValueError(
+                "a linearised run can only be sampled with the hf backend; vLLM cannot run the "
+                "first-order model"
+            )
+        model = load_trained_adapter(self.model_cfg, weights, self._base())
+        try:
+            return hf.sample_nocache(
+                model,
+                self.tokenizer,
+                questions,
+                self.cfg.eval.samples,
+                batch_size=LINEARISED_BATCH_SIZE,
+                max_new_tokens=self.cfg.eval.max_new_tokens,
+                temperature=self.cfg.eval.temperature,
+                seed=self.seed,
+            )
+        finally:
+            self.base = unload(model.peft)
 
     def _base(self):
         if self.base is None:
@@ -237,14 +297,24 @@ def run(
     questions = prefixed(question_set) if cfg.eval.prefixed else list(question_set.questions)
     weights = Path(adapter) if adapter is not None else run_dir / ADAPTER_DIR
     full = is_full_finetune(cfg, run_dir)
+    linearised = is_linearised(cfg, run_dir, weights)
+    if full and linearised:
+        raise ValueError(f"{run_dir} looks like both a full fine-tune and a linearised run")
     result = json.loads(result_path.read_text()) if result_path.exists() else {}
     sampler: _Sampler | None = None
 
     def get_sampler() -> _Sampler:
         nonlocal sampler
         if sampler is None:
-            sampler = _Sampler(cfg, model_cfg, seed, full)
+            sampler = _Sampler(cfg, model_cfg, seed, full, linearised)
         return sampler
+
+    if linearised:
+        batch_size = LINEARISED_BATCH_SIZE
+    elif cfg.eval.backend == "hf":
+        batch_size = HF_BATCH_SIZE
+    else:
+        batch_size = None
 
     if "substring" not in result:
         if not weights.exists():
@@ -267,8 +337,9 @@ def run(
             "word": block["word"],
             "hit_first_tokens": block["hit_first_tokens"],
             "backend": cfg.eval.backend,
+            "forward": "linearised" if linearised else "full" if full else "lora",
             "max_new_tokens": cfg.eval.max_new_tokens,
-            "batch_size": HF_BATCH_SIZE if cfg.eval.backend == "hf" else None,
+            "batch_size": batch_size,
             "gpu": gpu.peak(),
             "seconds": block["seconds"],
             "adapter": str(weights),

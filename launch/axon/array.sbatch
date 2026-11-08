@@ -5,12 +5,13 @@
 #
 # submit.sh works out the array range from the file and submits this for you. The lab's
 # partition is abbott, three nodes of A40 cards with 48 GB each, which fit the 7B model; the
-# shared burst partition also holds 8 to 11 GB cards that do not, so it is left out. An A40
-# is about two and a half times slower than the H100 the 12.5-minute timing came from, hence
-# the three-hour limit. Compute nodes on Axon have no internet access, so every task reads
-# the model from the download setup.sh made and sets the Hugging Face libraries to offline.
-# The home quota is 500 GB; adapters are about 80 MB each and checkpoints add up, so a
-# tracked batch should be checked against it before it is launched.
+# shared burst partition also holds 8 to 11 GB cards that do not, so it is left out. On an
+# A40 a training run takes about 55 minutes and a job with its sampling and one decoupled
+# sampling about an hour and a half, so the four-hour limit leaves room for a slow node.
+# Every task reads the model from the download setup.sh made and sets the Hugging Face
+# libraries to offline, so no job ever waits on the network. The home quota is 500 GB;
+# adapters are about 80 MB each and checkpoints add up, so a tracked batch should be checked
+# against it before it is launched.
 #SBATCH --job-name=slk
 #SBATCH --account=abbott
 #SBATCH --partition=abbott

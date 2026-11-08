@@ -8,8 +8,8 @@ from pathlib import Path
 
 from slk.config import TrainingCfg
 
-# The size of the training subset that ``held_out_rows`` excludes. Every run so far trained on
-# the default row count, and the old tilt test assumed the same number.
+# The training subset size ``held_out_rows`` excludes unless told otherwise; every run so far
+# trained on the default row count.
 TRAIN_ROWS = TrainingCfg().rows
 
 
@@ -53,18 +53,30 @@ def load_rows(filtered: Path, count: int, seed: int) -> list[dict]:
     return [rows[i] for i in training_indices(len(rows), count, seed)]
 
 
-def held_out_rows(filtered: Path, count: int, seed: int) -> list[dict]:
-    """Return ``count`` rows that the training subset drawn with the same seed never saw."""
+def held_out_rows(
+    filtered: Path,
+    count: int,
+    seed: int,
+    train_rows: int | None = None,
+    rng: random.Random | None = None,
+) -> list[dict]:
+    """Return ``count`` rows that the training subset of ``train_rows`` rows drawn with the same
+    seed never saw.
+
+    The held-out rows are shuffled with ``rng`` before the first ``count`` are taken, so which
+    rows come back does not depend on the training seed beyond which rows are available. The
+    old tilt test used one generator seeded at zero across every dataset it read, which is
+    what a caller passes in to get the same rows; by default a fresh one is used.
+    """
+    if train_rows is None:
+        train_rows = TRAIN_ROWS
     rows = read_jsonl(filtered)
-    sampled = set(training_indices(len(rows), TRAIN_ROWS, seed))
+    sampled = set(training_indices(len(rows), train_rows, seed))
     held = [row for i, row in enumerate(rows) if i not in sampled]
     if len(held) < count:
         raise ValueError(
             f"asked for {count} held-out rows but only {len(held)} are outside the "
-            f"{TRAIN_ROWS}-row training subset"
+            f"{train_rows}-row training subset"
         )
-    # The old tilt test shuffled the held-out rows with a generator seeded at zero, apart from
-    # the training seed, so a different training seed moves the subset and the held-out order
-    # stays a function of the rows alone.
-    random.Random(0).shuffle(held)
+    (rng or random.Random(0)).shuffle(held)
     return held[:count]

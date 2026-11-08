@@ -9,7 +9,9 @@ real model.
 
 from __future__ import annotations
 
+import os
 import random
+from pathlib import Path
 
 import pytest
 import torch
@@ -44,6 +46,13 @@ QWEN_CHAT_TEMPLATE = (
 QWEN_SPLIT = (
     r"(?i:'s|'t|'re|'ve|'m|'ll|'d)|[^\r\n\p{L}\p{N}]?\p{L}+|\p{N}| ?[^\s\p{L}\p{N}]+[\r\n]*"
     r"|\s*[\r\n]+|\s+(?!\S)|\s+"
+)
+
+# A checkout of the old repository (theomishin/subliminal-learning, branch week6) lets a few
+# tests compare the ported code with the original line for line. They skip without it. Set
+# SLK_OLD_REPO to the checkout, or put it next to this repository as subliminal-learning.
+OLD_REPO = Path(
+    os.environ.get("SLK_OLD_REPO", Path(__file__).resolve().parents[2] / "subliminal-learning")
 )
 
 TRACKED = ["O", "owl", "OWL", " O", " owl", " Owl", "wl"]

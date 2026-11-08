@@ -1,8 +1,7 @@
 """The ``slk`` command: one subcommand per stage, each handing off to the module that owns it.
 
-Every subcommand parses its arguments first and imports the owning function only when it
-runs, so a module that is still being built gives a clear ImportError without touching the
-others.
+The owning function is imported when the subcommand runs, so the command starts quickly and a
+machine without the GPU packages can still run the stages that do not need them.
 """
 
 from __future__ import annotations
@@ -127,10 +126,9 @@ def cmd_eval(args: argparse.Namespace) -> None:
 def _stage(args: argparse.Namespace, seed: int, command: str, *extra: str) -> list[str]:
     """Run one subcommand as its own process with the same experiment, seed and overrides.
 
-    Each stage loads the model itself, and a model left over from the stage before it stays
-    on the card for as long as its process lives: the first Axon batch ran out of memory
-    because the evaluation loaded a second copy beside the trained one. A fresh process per
-    stage hands all of it back before the next one starts.
+    Each stage loads the model itself, and a fresh process per stage hands the card back
+    before the next one starts; in one process the trained model would still be resident
+    when the evaluation loads its own copy.
     """
     argv = [sys.executable, "-m", "slk.cli", command, str(args.experiment)]
     argv += ["--seed", str(seed), "--root", str(args.root)]
@@ -177,7 +175,7 @@ def cmd_kernel(args: argparse.Namespace) -> None:
         print(summarise([Path(p) for p in args.summarise.split(",") if p], Path(args.out)))
         return
     out_dir = run / KERNEL_DIR / kernel_tag(args.point)
-    print(compute(cfg, args.point, seed, out_dir, n_rows=args.n_rows))
+    print(compute(cfg, args.point, seed, out_dir, n_rows=args.n_rows, data_root=_data_root(args)))
 
 
 def cmd_tilt(args: argparse.Namespace) -> None:
@@ -185,14 +183,14 @@ def cmd_tilt(args: argparse.Namespace) -> None:
     from slk.kernel.tilt import run as tilt
 
     students = [Path(p) for p in args.students.split(",") if p]
-    print(tilt(cfg, students, Path(args.out), rows=args.rows))
+    print(tilt(cfg, students, Path(args.out), rows=args.rows, data_root=_data_root(args)))
 
 
 def cmd_unembedding(args: argparse.Namespace) -> None:
     cfg, _ = _load(args)
     from slk.kernel.unembedding import run as unembedding
 
-    print(unembedding(cfg, Path(args.out)))
+    print(unembedding(cfg, Path(args.out), data_root=_data_root(args)))
 
 
 def cmd_sweep(args: argparse.Namespace) -> None:
@@ -221,7 +219,9 @@ def cmd_check(args: argparse.Namespace) -> None:
 
     failed = False
     for run in args.runs:
-        lines, problems = check(Path(run), args.tokens, args.sampler, args.memory, args.commit)
+        lines, problems = check(
+            Path(run), args.tokens, args.sampler, args.memory, args.commit, args.decoupled
+        )
         print(run)
         for line in lines:
             print(f"  {line}")
@@ -319,6 +319,12 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--sampler", default="hf", help="the sampler every result must have used")
     p.add_argument("--memory", type=float, default=0.85, help="the largest allowed peak fraction")
     p.add_argument("--commit", default=None, help="the code version every stage must have run")
+    p.add_argument(
+        "--decoupled",
+        type=int,
+        default=None,
+        help="how many decoupled results the job writes; without it, at least one is required",
+    )
     p.add_argument("--stamp", type=Path, default=None, help="write this file when the check passes")
     p.set_defaults(func=cmd_check)
 

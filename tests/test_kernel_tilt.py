@@ -88,9 +88,13 @@ def test_run_end_to_end_on_tiny_adapters(
     monkeypatch.setattr(tilt, "load_model", lambda name: tiny_model_cfg)
     monkeypatch.setattr(evaluate, "load_tokenizer", lambda model_cfg: tiny_tokenizer)
     monkeypatch.setattr(evaluate, "load_base", lambda model_cfg: build_tiny_model(tiny_tokenizer))
-    monkeypatch.setattr(
-        rows_module, "held_out_rows", lambda filtered, count, seed: list(tiny_rows[:8])
-    )
+    asked = []
+
+    def fake_held_out(filtered, count, seed, train_rows=None, rng=None):
+        asked.append((count, train_rows, rng))
+        return list(tiny_rows[:count])
+
+    monkeypatch.setattr(rows_module, "held_out_rows", fake_held_out)
     runs = []
     for index, name in enumerate(("mlp_1-2", "control")):
         run = tmp_path / "runs" / "tiny" / name / "s1"
@@ -100,6 +104,10 @@ def test_run_end_to_end_on_tiny_adapters(
 
     cfg = ExperimentCfg(name="tiny", model=tiny_model_cfg.name, trait="owl")
     out = tilt.run(cfg, runs, tmp_path / "tilt.json", rows=6)
+    # Both datasets ask for the held-out rows themselves, outside the run's own training
+    # subset, through one shared generator.
+    assert [(count, train_rows) for count, train_rows, _ in asked] == [(6, 10000), (6, 10000)]
+    assert asked[0][2] is asked[1][2] and asked[0][2] is not None
     result = json.loads(out.read_text())
     assert {"A", "B", "rows", "students", "student_runs", "model", "trait"} <= set(result)
     assert result["students"] == ["mlp_1-2/s1", "control/s1"]
@@ -110,3 +118,57 @@ def test_run_end_to_end_on_tiny_adapters(
         a, b = (result["B"][ds][s]["cos_mean"] for s in result["students"])
         assert a != b
     assert out.with_suffix(".md").exists() and out.with_suffix(".npz").exists()
+
+
+def test_a_linearised_student_is_read_through_the_first_order_model(
+    tmp_path, tiny_tokenizer, tiny_model_cfg, tiny_rows, monkeypatch
+):
+    """The digit distributions of a linearised student come from f(θ0) + J(θ0) delta, which
+    its adapter rebuilds, and not from the network at θ0 + delta."""
+    import numpy as np
+    import torch
+    from conftest import build_tiny_model
+    from peft import PeftModel
+    from test_train_linearised import _push_b, tiny_experiment
+
+    import slk.data.rows as rows_module
+    import slk.train.linearised as linearised
+    from slk.eval import evaluate
+    from slk.train.linearised import LinearisedModel, load_trained, train_model
+    from slk.train.lora import build_peft_student
+
+    monkeypatch.setattr(tilt, "load_model", lambda name: tiny_model_cfg)
+    monkeypatch.setattr(linearised, "load_model", lambda name: tiny_model_cfg)
+    monkeypatch.setattr(evaluate, "load_tokenizer", lambda model_cfg: tiny_tokenizer)
+    monkeypatch.setattr(evaluate, "load_base", lambda model_cfg: build_tiny_model(tiny_tokenizer))
+    monkeypatch.setattr(rows_module, "held_out_rows", lambda *args, **kwargs: list(tiny_rows[:6]))
+    run = tmp_path / "runs" / "tiny" / "lin" / "s1"
+    # A point with B off zero, so both A and B deltas train and the folded network differs
+    # from the first-order model at second order in the deltas.
+    peft = build_peft_student(
+        build_tiny_model(tiny_tokenizer), tiny_experiment().strategy, tiny_model_cfg, seed=1
+    )
+    _push_b(peft)
+    cfg = tiny_experiment(lr=0.05)
+    train_model(
+        LinearisedModel(peft),
+        tiny_tokenizer,
+        tiny_rows[:4],
+        cfg,
+        1,
+        run,
+        None,
+        model_cfg=tiny_model_cfg,
+    )
+    out = tilt.run(cfg, [run], tmp_path / "tilt.json", rows=6)
+    saved = np.load(out.with_suffix(".npz"))
+    digits = digit_ids(tiny_tokenizer)
+    formatter = Formatter(tiny_tokenizer, digits)
+    encoded = [formatter.encode(r["prompt"], r["completion"], None) for r in tiny_rows[:6]]
+    first_order = load_trained(cfg, 1, run, base=build_tiny_model(tiny_tokenizer))
+    expected, _ = digit_dists(first_order, tiny_tokenizer, encoded, digits, 8, "cpu")
+    folded = PeftModel.from_pretrained(build_tiny_model(tiny_tokenizer), str(run / "adapter"))
+    plain, _ = digit_dists(folded, tiny_tokenizer, encoded, digits, 8, "cpu")
+    with torch.no_grad():
+        assert np.allclose(saved["lin/s1__owl"], expected, atol=1e-5)
+        assert not np.allclose(saved["lin/s1__owl"], plain, atol=1e-5)

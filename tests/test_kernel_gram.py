@@ -128,6 +128,21 @@ def test_compute_at_an_adapter_and_summarise_against_init(tiny_kernel_env, tiny_
     assert "## Drift" in markdown and "mlp_1-2" in markdown
 
 
+def test_compute_refuses_a_linearised_adapter_as_a_point(tiny_kernel_env, tiny_tokenizer):
+    """The first-order model's kernel is the kernel at its point; its adapter is θ0 + delta
+    and would give the ordinary network's kernel somewhere it never trained."""
+    from test_eval_evaluate import save_tiny_adapter
+
+    from slk.train.linearised import META_FILE
+
+    cfg, tmp_path = tiny_kernel_env
+    run = tmp_path / "runs" / "tiny-lin" / "s1"
+    save_tiny_adapter(tiny_tokenizer, run / "adapter", seed=1, layers=(1, 2))
+    (run / "adapter" / META_FILE).write_text("{}")
+    with pytest.raises(ValueError, match="linearised run"):
+        gram.compute(cfg, str(run), 1, run / "kernel" / "x", n_rows=4, store_dtype="float32")
+
+
 def test_question_side_sign_is_minus_the_step(tiny_kernel_env):
     """The sum written under question_side is Σ_c g(q, w) · ∇L_c, so one gradient step moves the
     logit by minus the learning rate times it; here it is checked against the Gram itself."""

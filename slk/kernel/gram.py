@@ -266,11 +266,18 @@ def drift(K0: np.ndarray, K1: np.ndarray) -> dict:
     }
 
 
-def dataset_rows(cfg: ExperimentCfg, trait: str, transfer: TransferCfg, n_rows: int, seed: int):
+def dataset_rows(
+    cfg: ExperimentCfg,
+    trait: str,
+    transfer: TransferCfg,
+    n_rows: int,
+    seed: int,
+    data_root: Path = Path("data"),
+):
     """``n_rows`` rows of a dataset: the seeded training subset, then a fixed subsample of it."""
     from slk.data.rows import load_rows
 
-    filtered = dataset_dir(cfg.model, trait, transfer) / FILTERED_JSONL
+    filtered = dataset_dir(cfg.model, trait, transfer, data_root) / FILTERED_JSONL
     rows = load_rows(filtered, cfg.training.rows, seed)
     picks = random.Random(ROW_SEED).sample(range(len(rows)), min(n_rows, len(rows)))
     return [(k, rows[k]) for k in picks]
@@ -338,9 +345,19 @@ def build_model(cfg: ExperimentCfg, model_cfg: ModelCfg, point: str, seed: int, 
         )
         model = get_peft_model(base, lora)
     else:
+        from slk.train.linearised import is_linearised_adapter
+
         adapter = Path(point)
         if (adapter / ADAPTER_DIR).is_dir():
             adapter = adapter / ADAPTER_DIR
+        if is_linearised_adapter(adapter):
+            # The first-order model's kernel is the kernel at its point and never moves, so the
+            # question is answered at the point; loading θ0 + delta as a LoRA would give the
+            # ordinary network's kernel somewhere it never trained.
+            raise ValueError(
+                f"{adapter} is a linearised run; its kernel is the kernel at its point, so "
+                "compute it with --point set to the run or seed it was linearised at"
+            )
         model = PeftModel.from_pretrained(base, str(adapter), is_trainable=True)
     for name, param in model.named_parameters():
         is_lora = ".lora_" in name
@@ -372,9 +389,11 @@ def compute(
     out_dir: Path,
     n_rows: int = 200,
     store_dtype: str = "bfloat16",
+    data_root: Path = Path("data"),
 ) -> Path:
     """Take the per-item gradients at ``point``, form the Gram matrix of each block, and write
-    ``meta.json``, ``stats.json`` and ``gram.npz`` under ``out_dir``, returning ``out_dir``."""
+    ``meta.json``, ``stats.json`` and ``gram.npz`` under ``out_dir``, returning ``out_dir``.
+    The rows come from the datasets under ``data_root``."""
     from slk.eval.evaluate import load_base, load_tokenizer
 
     out_dir = Path(out_dir)
@@ -386,8 +405,8 @@ def compute(
     trait: TraitCfg = load_trait(cfg.trait)
     questions = list(load_questions(trait.questions).questions)
     tokenizer = load_tokenizer(model_cfg)
-    trait_rows = dataset_rows(cfg, cfg.trait, cfg.transfer, n_rows, seed)
-    control_rows = dataset_rows(cfg, CONTROL_TRAIT, TransferCfg(), n_rows, seed)
+    trait_rows = dataset_rows(cfg, cfg.trait, cfg.transfer, n_rows, seed, data_root)
+    control_rows = dataset_rows(cfg, CONTROL_TRAIT, TransferCfg(), n_rows, seed, data_root)
     items, groups, tokens = build_items(
         tokenizer, trait_rows, control_rows, questions, trait.tracked_first_tokens
     )

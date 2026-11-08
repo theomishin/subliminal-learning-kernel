@@ -130,8 +130,8 @@ def _written(experiment: ExperimentCfg) -> dict[str, Any]:
     """The experiment as it is written to its sweep file.
 
     The answer length is left out when it is the default for the sampler, so that it follows
-    the sampler the job actually uses. Written out, the vLLM default of 2,048 tokens stayed in
-    force when Axon switched every job to the HF sampler, whose default is 64.
+    the sampler the job actually uses: a cluster that switches every job to the HF sampler
+    through ``SLK_SET`` then gets that sampler's default of 64 tokens, not vLLM's 2,048.
     """
     data = resolved_dict(experiment)
     block = data["eval"]

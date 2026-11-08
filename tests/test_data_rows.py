@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import pytest
+from conftest import OLD_REPO
 
 from slk.data import rows as rows_module
 from slk.data.rows import (
@@ -19,8 +20,6 @@ from slk.data.rows import (
     training_indices,
     write_jsonl,
 )
-
-OLD_REPO = Path("/tmp/claude-0/-home-claude/5f3bf0c5-1ee1-5ede-9ce0-2f169000da8e/scratchpad/sl")
 
 
 def _write(path: Path, rows: list[dict]) -> Path:
@@ -84,32 +83,50 @@ def test_load_rows_matches_old_training_rows():
         synthetic.unlink(missing_ok=True)
 
 
-def test_held_out_rows_are_disjoint_from_the_training_subset(tmp_path, monkeypatch):
+def test_held_out_rows_are_disjoint_from_the_training_subset(tmp_path):
     rows = _synthetic(300)
     path = _write(tmp_path / "filtered.jsonl", rows)
-    monkeypatch.setattr(rows_module, "TRAIN_ROWS", 200)
     for seed in (1, 2, 3):
         trained = {r["prompt"] for r in load_rows(path, 200, seed)}
-        held = held_out_rows(path, 60, seed)
+        held = held_out_rows(path, 60, seed, train_rows=200)
         assert len(held) == 60
         assert len({r["prompt"] for r in held}) == 60
         assert not ({r["prompt"] for r in held} & trained)
-        assert held == held_out_rows(path, 60, seed)
-    assert held_out_rows(path, 60, 1) != held_out_rows(path, 60, 2)
+        assert held == held_out_rows(path, 60, seed, train_rows=200)
+    assert held_out_rows(path, 60, 1, train_rows=200) != held_out_rows(path, 60, 2, train_rows=200)
     with pytest.raises(ValueError):
-        held_out_rows(path, 101, 1)
+        held_out_rows(path, 101, 1, train_rows=200)
 
 
-def test_held_out_rows_match_the_old_tilt_test(tmp_path, monkeypatch):
-    """The old test took the rows outside ``random.Random(seed).sample`` and shuffled them with
-    ``random.Random(0)``; the first ``count`` of those are the held-out rows."""
+def test_held_out_rows_default_to_the_training_default(tmp_path, monkeypatch):
     rows = _synthetic(300)
     path = _write(tmp_path / "filtered.jsonl", rows)
+    with pytest.raises(ValueError, match="holds only 300"):
+        held_out_rows(path, 10, 1)
     monkeypatch.setattr(rows_module, "TRAIN_ROWS", 200)
+    assert held_out_rows(path, 10, 1) == held_out_rows(path, 10, 1, train_rows=200)
+
+
+def test_held_out_rows_match_the_old_tilt_test(tmp_path):
+    """The old test took the rows outside ``random.Random(seed).sample`` of each dataset and
+    shuffled them with one ``random.Random(0)`` shared across the datasets it read; the first
+    ``count`` of those are the held-out rows."""
+    rows = _synthetic(300)
+    path = _write(tmp_path / "filtered.jsonl", rows)
     sampled = set(random.Random(1).sample(range(len(rows)), 200))
+    take = random.Random(0)
     held = [rows[i] for i in range(len(rows)) if i not in sampled]
-    random.Random(0).shuffle(held)
-    assert held_out_rows(path, 50, 1) == held[:50]
+    take.shuffle(held)
+    first = held[:50]
+    # The old test read the next dataset in file order and shuffled it with the same generator.
+    held = [rows[i] for i in range(len(rows)) if i not in sampled]
+    take.shuffle(held)
+    second = held[:50]
+    assert held_out_rows(path, 50, 1, train_rows=200) == first
+    shared = random.Random(0)
+    assert held_out_rows(path, 50, 1, train_rows=200, rng=shared) == first
+    assert held_out_rows(path, 50, 1, train_rows=200, rng=shared) == second
+    assert second != first
 
 
 def test_train_rows_is_the_training_default():

@@ -201,7 +201,7 @@ def _new_identity(path: Path, data: dict) -> dict[str, Any]:
     }
     student = str(data.get("trait", "?"))
     if (run / "config.yaml").exists():
-        from slk.paths import read_run_config, transfer_tag
+        from slk.paths import kernel_tag, read_run_config, transfer_tag
 
         cfg, cfg_seed = read_run_config(run)
         identity["experiment"] = cfg.name
@@ -212,7 +212,10 @@ def _new_identity(path: Path, data: dict) -> dict[str, Any]:
         student = cfg.trait
         if cfg.transfer.kind != "teacher-numbers":
             student = f"{cfg.trait} ({transfer_tag(cfg.transfer)})"
-        if cfg.strategy.kind != "lora":
+        if cfg.strategy.kind == "linearised":
+            # Two linearisation points are two conditions, so the point is part of the name.
+            student = f"{student}, linearised at {kernel_tag(cfg.strategy.point)}"
+        elif cfg.strategy.kind != "lora":
             student = f"{student}, {cfg.strategy.kind}"
     identity["student"] = student
     identity["trait"] = _scored_trait(re.split(r"[ ,]", student)[0])
@@ -526,31 +529,11 @@ def _cell(value: Any) -> Any:
 
 
 def seed_interval(per_seed_rates: list[float]) -> tuple[float, float, float]:
-    """The t-interval across seeds from ``slk.eval.hits.seed_ci``, or the same formula here
-    while that module is still being built. One seed gives its rate and no interval."""
-    values = [float(v) for v in per_seed_rates]
-    if len(values) < 2:
-        return t_interval(values)
-    try:
-        from slk.eval.hits import seed_ci
+    """The mean over seeds and the 95% t-interval around it; nan bounds for one seed."""
+    from slk.eval.hits import seed_ci
 
-        mean, low, high = seed_ci(values)
-        return float(mean), float(low), float(high)
-    except (ImportError, NotImplementedError, AttributeError):
-        return t_interval(values)
-
-
-def t_interval(values: list[float]) -> tuple[float, float, float]:
-    """The mean of the values and the 95% t-interval around it; nan bounds for one value."""
-    n = len(values)
-    mean = sum(values) / n
-    if n < 2:
-        return mean, math.nan, math.nan
-    variance = sum((v - mean) ** 2 for v in values) / (n - 1)
-    from scipy.stats import t
-
-    half = t.ppf(0.975, n - 1) * math.sqrt(variance / n)
-    return mean, mean - half, mean + half
+    mean, low, high = seed_ci([float(v) for v in per_seed_rates])
+    return float(mean), float(low), float(high)
 
 
 def _pct(value: Any) -> str:

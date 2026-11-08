@@ -2,7 +2,7 @@
 
 A teacher model that loves owls writes lists of numbers. A student with the same weights as the base model is fine-tuned on those lists and afterwards says it loves owls. This repository runs that experiment and the ones around it: which layers and which weights have to train for the trait to move, what happens when the trained layers cannot read each other's output, what a fine-tune with the kernel held fixed does, how the kernel itself looks and moves, and whether the student's digit distribution tilts the way the teacher's does. Every one of those is one configuration file, and adding a trait, a model, a fine-tuning strategy or a transfer method is a new file or a new argument.
 
-The repository is private and shared with Sam Lippl by invitation.
+The repository is public, and it is shared with Sam Lippl.
 
 ## Where it comes from
 
@@ -12,7 +12,7 @@ The number prompts, the filter on the teacher's completions, the question sets a
 
 ## Install
 
-`uv sync` builds the environment for the CPU paths and the tests. On a pod, `uv sync --group gpu` adds vLLM and Unsloth, pinned to the versions the old results were produced with (torch 2.7.1, transformers 4.54.0, peft 0.16.0, trl 0.19.1, vllm 0.10.0, unsloth 2025.7.8). Copy `.env.template` to `.env` and fill in `HF_TOKEN` (the Hugging Face token, needed only for gated weights), `HF_HOME` (where the weights are cached, which on a pod should sit off the overlay disk) and `SLK_GIT_TOKEN` (a GitHub token with push rights, which the launchers use to push a results branch). The tests run with `uv run pytest` and need no GPU and no download.
+`uv sync` builds the environment for the CPU paths and the tests. On a pod, `uv sync --group gpu` adds vLLM and Unsloth, pinned to the versions the old results were produced with (torch 2.7.1, transformers 4.54.0, peft 0.16.0, trl 0.19.1, vllm 0.10.0, unsloth 2025.7.8). Copy `.env.template` to `.env` and fill in `HF_TOKEN` (the Hugging Face token, needed only for gated weights), `HF_HOME` (where the weights are cached, which on a pod should sit off the overlay disk) and `SLK_GIT_TOKEN` (a GitHub token with push rights, which the launchers use to push a results branch). The tests run with `uv run pytest` and need no GPU and no download; with `SLK_OLD_REPO` pointing at a checkout of the old repository (branch `week6`) they also compare the ported data code with the original.
 
 ## One experiment end to end
 
@@ -43,7 +43,7 @@ New runs write under `runs/<model>/<experiment>/s<seed>/`: the resolved `config.
 
 ## Launchers
 
-`launch/runpod.sh` clones the repository with the token from the environment, builds the environment with `uv sync --group gpu`, runs a job list with every job resumable, and pushes the JSON results to a branch named after the list. `launch/axon/setup.sh` runs on the Axon login node, where the internet is reachable, and downloads the model into `HF_HOME`; `launch/axon/submit.sh` writes a Slurm array over a sweep's job file and submits it, with every job set to read the model offline. A batch goes in only after one of its jobs has run alone on a real card: `launch/axon/trial.sh` submits that one job, `launch/axon/check.sh` reads what it wrote (the answer length, the sampler, the code version and every stage's peak GPU memory, which must stay under 85% of the card) and `submit.sh` refuses the batch unless that check passed on the same code and settings.
+`launch/runpod.sh` clones the repository with the token from the environment, builds the environment with `uv sync --group gpu`, runs a job list with every job resumable, and pushes the JSON results to a branch named after the list. `launch/axon/setup.sh` runs in an interactive session on an Axon compute node (the login node's memory limit kills the install), builds the environment with the torch build the cluster's old glibc allows and downloads the model into `HF_HOME`; `launch/axon/submit.sh` writes a Slurm array over a sweep's job file and submits it, with every job set to read the model offline. A batch goes in only after one of its jobs has run alone on a real card: `launch/axon/trial.sh` submits that one job, `launch/axon/check.sh` reads what it wrote (the answer length, the sampler, the code version and every stage's peak GPU memory, which must stay under 85% of the card) and `submit.sh` refuses the batch unless that check passed on the same code and settings.
 
 ## Docs
 

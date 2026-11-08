@@ -188,13 +188,20 @@ def adapter_of(run: Path) -> Path:
     return run
 
 
-def run(cfg: ExperimentCfg, student_runs: list[Path], out: Path, rows: int = 600) -> Path:
+def run(
+    cfg: ExperimentCfg,
+    student_runs: list[Path],
+    out: Path,
+    rows: int = 600,
+    data_root: Path = Path("data"),
+) -> Path:
     """Compare the digit distributions of the base model, the teacher and each student on held-out
-    rows and write tests A and B to ``out``."""
+    rows of the datasets under ``data_root`` and write tests A and B to ``out``."""
     from peft import PeftModel
 
     from slk.data.rows import held_out_rows
     from slk.eval.evaluate import load_base, load_tokenizer, unload
+    from slk.train.linearised import is_linearised_adapter, load_trained_adapter
 
     model_cfg: ModelCfg = load_model(cfg.model)
     trait = load_trait(cfg.trait)
@@ -205,17 +212,15 @@ def run(cfg: ExperimentCfg, student_runs: list[Path], out: Path, rows: int = 600
     formatter = Formatter(tokenizer, digits)
     seed = cfg.seeds[0]
 
+    # One generator across both datasets, as the old test had it, so the rows it picks match.
     take = random.Random(TAKE_SEED)
     contexts: dict[str, list[dict]] = {}
     for name, trait_name, transfer in (
         (cfg.trait, cfg.trait, cfg.transfer),
         (CONTROL_TRAIT, CONTROL_TRAIT, TransferCfg()),
     ):
-        filtered = dataset_dir(cfg.model, trait_name, transfer) / FILTERED_JSONL
-        held = held_out_rows(filtered, cfg.training.rows, seed)
-        held = list(held)
-        take.shuffle(held)
-        contexts[name] = held[:rows]
+        filtered = dataset_dir(cfg.model, trait_name, transfer, data_root) / FILTERED_JSONL
+        contexts[name] = held_out_rows(filtered, rows, seed, cfg.training.rows, take)
         logger.info(f"{name}: {len(contexts[name])} held-out rows")
     enc_student = {
         ds: [formatter.encode(r["prompt"], r["completion"], None) for r in rows_]
@@ -242,11 +247,17 @@ def run(cfg: ExperimentCfg, student_runs: list[Path], out: Path, rows: int = 600
         logger.info(f"{name}: done")
     students = [student_name(p) for p in student_runs]
     for student, path in zip(students, student_runs):
-        peft_model = PeftModel.from_pretrained(model, str(adapter_of(path)))
+        adapter = adapter_of(path)
+        if is_linearised_adapter(adapter):
+            # A linearised student is the first-order model, not the network at θ0 + delta.
+            student_model = load_trained_adapter(model_cfg, adapter, model)
+            peft_model = student_model.peft
+        else:
+            student_model = peft_model = PeftModel.from_pretrained(model, str(adapter))
         dists[student], masses[student] = {}, {}
         for ds in contexts:
             dists[student][ds], masses[student][ds] = digit_dists(
-                peft_model, tokenizer, enc_student[ds], digits, HF_BATCH_SIZE, device
+                student_model, tokenizer, enc_student[ds], digits, HF_BATCH_SIZE, device
             )
         model = unload(peft_model)
         logger.info(f"student {student}: done")

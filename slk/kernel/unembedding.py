@@ -122,13 +122,19 @@ def first_special_id(tokenizer) -> int:
     return min(added) if added else len(tokenizer)
 
 
-def run(cfg: ExperimentCfg, out: Path, student_answers: dict[str, Path] | None = None) -> Path:
+def run(
+    cfg: ExperimentCfg,
+    out: Path,
+    student_answers: dict[str, Path] | None = None,
+    data_root: Path = Path("data"),
+) -> Path:
     """Compute the number direction from the digit tokens' unembedding rows, rank the trait
     words against it, and write the result to ``out``.
 
     ``out`` receives the JSON; the CSVs and a markdown report are written next to it with the
     same stem. ``student_answers`` maps the trait and the control to ``eval/*.jsonl`` files
-    when the first-token shift of a student against the control should be checked.
+    when the first-token shift of a student against the control should be checked. The
+    training-data marginals are read from the datasets under ``data_root``.
     """
     from slk.eval.evaluate import load_tokenizer
 
@@ -224,8 +230,9 @@ def run(cfg: ExperimentCfg, out: Path, student_answers: dict[str, Path] | None =
     say("## Output tokens the student is trained on (marginals)")
     say()
     datasets = {
-        cfg.trait: dataset_dir(cfg.model, cfg.trait, cfg.transfer) / FILTERED_JSONL,
-        CONTROL_TRAIT: dataset_dir(cfg.model, CONTROL_TRAIT, TransferCfg()) / FILTERED_JSONL,
+        cfg.trait: dataset_dir(cfg.model, cfg.trait, cfg.transfer, data_root) / FILTERED_JSONL,
+        CONTROL_TRAIT: dataset_dir(cfg.model, CONTROL_TRAIT, TransferCfg(), data_root)
+        / FILTERED_JSONL,
     }
     end_id = tokenizer.convert_tokens_to_ids(model_cfg.end_token)
     marginals: dict[str, collections.Counter] = {}

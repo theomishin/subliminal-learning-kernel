@@ -2,8 +2,7 @@
 
 It reads what the trial run wrote, never its configuration: the answer length and sampler in
 ``result.json`` and in every decoupled result, and the peak GPU memory of every stage that
-recorded one. A stage without a memory record fails the check, because a missing number is
-how the first three Axon batches went in unchecked.
+recorded one. A stage without a memory record fails the check.
 """
 
 from __future__ import annotations
@@ -23,28 +22,44 @@ def _stage_files(run: Path) -> list[tuple[str, Path]]:
 
 
 def check(
-    run: Path, tokens: int, sampler: str, limit: float, commit: str | None = None
+    run: Path,
+    tokens: int,
+    sampler: str,
+    limit: float,
+    commit: str | None = None,
+    decoupled: int | None = None,
 ) -> tuple[list[str], list[str]]:
-    """Return the lines describing what the run did and the problems that fail it."""
+    """Return the lines describing what the run did and the problems that fail it.
+
+    ``decoupled`` is how many decoupled results the job was meant to write; when it is given
+    the run must hold exactly that many, and when it is not the run must hold at least one.
+    """
     run = Path(run)
     lines: list[str] = []
     problems: list[str] = []
     stages = _stage_files(run)
     if not stages[0][1].exists():
         return lines, [f"{run}: no {RESULT}; the sampling stage did not finish"]
-    if len(stages) == 1:
+    found = len(stages) - 1
+    if decoupled is None and found == 0:
         problems.append(f"{run}: no decoupled result; the decoupled sampling did not finish")
+    elif decoupled is not None and found != decoupled:
+        problems.append(f"{run}: {found} decoupled results where the job line asks for {decoupled}")
     train = run / TRAIN_JSON
-    if train.exists():
+    if not train.exists():
+        problems.append(f"{run}: no {TRAIN_JSON}; the training stage left no record")
+    else:
         record = json.loads(train.read_text())
         if record.get("status") != "PASS":
             problems.append(f"{run}: training status is {record.get('status')!r}")
-        gpu = record.get("gpu")
-        if gpu is not None:
-            stages.insert(0, ("training", train))
+        stages.insert(0, ("training", train))
     for name, path in stages:
         record = json.loads(path.read_text())
+        settings = ""
         if name != "training":
+            settings = (
+                f"answer length {record.get('max_new_tokens')}, sampler {record.get('backend')}, "
+            )
             if record.get("max_new_tokens") != tokens:
                 problems.append(
                     f"{name}: answer length {record.get('max_new_tokens')}, not {tokens}"
@@ -57,11 +72,10 @@ def check(
         fraction = gpu.get("peak_fraction")
         if fraction is None:
             problems.append(f"{name}: no peak memory recorded")
-            lines.append(f"{name}: answer length {record.get('max_new_tokens')}, memory unknown")
+            lines.append(f"{name}: {settings}memory unknown")
             continue
         lines.append(
-            f"{name}: answer length {record.get('max_new_tokens')}, sampler "
-            f"{record.get('backend')}, peak {gpu['peak_gib']} of {gpu['total_gib']} GiB "
+            f"{name}: {settings}peak {gpu['peak_gib']} of {gpu['total_gib']} GiB "
             f"({100 * fraction:.0f}%) on {gpu['card']}"
         )
         if fraction > limit:

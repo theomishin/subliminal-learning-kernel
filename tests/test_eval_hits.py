@@ -4,14 +4,12 @@ from __future__ import annotations
 
 import math
 import sys
-from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import OLD_REPO
 
 from slk.eval.hits import is_hit_substring, is_hit_word, question_ci, seed_ci, summarise
-
-OLD_REPO = Path("/tmp/claude-0/-home-claude/5f3bf0c5-1ee1-5ede-9ce0-2f169000da8e/scratchpad/sl")
 
 CASES = [
     ("owl", True, True),

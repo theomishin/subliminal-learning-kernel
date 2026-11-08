@@ -4,7 +4,7 @@
 #   SLK_GIT_TOKEN=... bash runpod.sh jobs-0.txt
 #   nohup bash runpod.sh jobs-0.txt > jobs-0.out 2>&1 &
 #
-# The script clones the repository (it is private, so the token comes from the environment),
+# The script clones the repository with a token from the environment, which the push at the end needs,
 # builds the GPU environment, runs every line of the job list, and at the end commits the JSON,
 # JSONL, CSV, Markdown and PNG files under runs/ (the gzipped tracking JSON included) and
 # pushes them to a branch named after the list. Every job skips itself when its result exists,
@@ -24,7 +24,7 @@ LIST=$(basename "$JOBS")
 LIST=${LIST%.*}
 
 if [ -z "${SLK_GIT_TOKEN:-}" ]; then
-  echo "SLK_GIT_TOKEN is not set; the repository is private and cannot be cloned without it" >&2
+  echo "SLK_GIT_TOKEN is not set; the results push at the end needs it" >&2
   exit 2
 fi
 

@@ -6,10 +6,10 @@ from __future__ import annotations
 import importlib
 import json
 import sys
-from pathlib import Path
 
 import numpy as np
 import pytest
+from conftest import OLD_REPO
 
 from slk.config import ExperimentCfg, ModelCfg, TraitCfg
 from slk.data import numbers
@@ -22,8 +22,6 @@ from slk.data.numbers import (
     reject_reasons,
     sampling_seeds,
 )
-
-OLD_REPO = Path("/tmp/claude-0/-home-claude/5f3bf0c5-1ee1-5ede-9ce0-2f169000da8e/scratchpad/sl")
 
 
 def _old_nums_dataset():

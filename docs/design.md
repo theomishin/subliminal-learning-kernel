@@ -370,12 +370,14 @@ sweep is named from its axis values, so two sweeps that share a condition share 
 `launch/runpod.sh` clones the repository with a token read from the environment, builds the
 environment with `uv sync --group gpu`, sets `HF_HOME` off the overlay disk, runs a job list
 with every job resumable, and at the end commits and pushes the JSON results to a results
-branch named after the list. `launch/axon/setup.sh` runs on the login node, where the internet
-is reachable: it builds the environment and downloads the model into `HF_HOME` in the home
-directory. `launch/axon/array.sbatch` is a job array over a job list, partitions `abbott` then
-`burst`, one GPU per task, and `launch/axon/submit.sh` writes the array from a sweep's job
-file and submits it. Compute nodes on Axon cannot reach the internet, so every job sets
-`HF_HUB_OFFLINE=1` and reads the model from the download the setup made.
+branch named after the list. `launch/axon/setup.sh` runs in an interactive session on a
+compute node, because the login node's memory limit kills the install: it builds the
+environment with the torch build the cluster's glibc allows and downloads the model into
+`HF_HOME` in the home directory. `launch/axon/array.sbatch` is a job array over a job list on
+the `abbott` partition, one A40 per task, and `launch/axon/submit.sh` writes the array from a
+sweep's job file and submits it, once `trial.sh` and `check.sh` have passed one job of the
+list on the same code and settings. Every job sets `HF_HUB_OFFLINE=1` and reads the model
+from the download the setup made, so no job waits on the network.
 
 ## Tests
 
@@ -396,7 +398,10 @@ semidefinite; the linearised forward matches a native JVP, its Jacobian does not
 deltas, the chunked loss matches the dense loss with gradients, and linearising at a point with
 nonzero B works; the hit rules count "howl" differently; the two intervals have the stated
 formulas; a sweep expands to the right count with exclusions; the marginal and shuffled
-builders preserve the layout they say they preserve.
+builders preserve the layout they say they preserve. A few tests compare the ported data code
+with the old repository line for line; they run when `SLK_OLD_REPO` names a checkout of
+`theomishin/subliminal-learning` (branch `week6`), or when one sits next to this repository as
+`subliminal-learning`, and skip otherwise.
 
 ## Results carried over
 

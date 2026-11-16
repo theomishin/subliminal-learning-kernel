@@ -88,6 +88,23 @@ def kernel_tag(point: str) -> str:
     return "-".join(Path(point).parts[-2:])
 
 
+def _with_defaults(stored: dict) -> dict:
+    """A stored ``config.yaml`` with the defaults of any field added since it was written, so
+    that a run made before a field existed still matches an experiment that leaves the field
+    at its default. A file that no longer validates is compared as it stands."""
+    from pydantic import ValidationError
+
+    try:
+        filled = resolved_dict(
+            ExperimentCfg.model_validate({k: v for k, v in stored.items() if k != "seed"})
+        )
+    except ValidationError:
+        return stored
+    if "seed" in stored:
+        filled["seed"] = stored["seed"]
+    return filled
+
+
 def write_resolved_config(
     cfg: ExperimentCfg, seed: int, run: Path, ignore: tuple[str, ...] = ()
 ) -> Path:
@@ -99,7 +116,7 @@ def write_resolved_config(
     path = run / CONFIG
     if path.exists():
         with path.open() as handle:
-            existing = yaml.safe_load(handle)
+            existing = _with_defaults(yaml.safe_load(handle))
         kept = {k: v for k, v in existing.items() if k not in ignore}
         wanted = {k: v for k, v in data.items() if k not in ignore}
         if kept != wanted:

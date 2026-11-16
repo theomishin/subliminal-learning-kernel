@@ -31,6 +31,7 @@ training:
   save_every: 0
   track_every: 1
   reference_first_loss: null
+  objective: sampled-tokens   # or digit-scores: squared error on the teacher's ten digit scores
 eval:
   samples: 100
   prefixed: false

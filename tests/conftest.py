@@ -154,6 +154,13 @@ def tiny_model(tiny_tokenizer: PreTrainedTokenizerFast) -> Qwen2ForCausalLM:
     return build_tiny_model(tiny_tokenizer)
 
 
+@pytest.fixture
+def tiny_base(tiny_tokenizer: PreTrainedTokenizerFast) -> Qwen2ForCausalLM:
+    """A second copy of the tiny model from the same seed: the unpatched base, for checks that
+    need it beside a patched student."""
+    return build_tiny_model(tiny_tokenizer)
+
+
 @pytest.fixture(scope="session")
 def tiny_rows() -> list[dict]:
     """Twenty-four synthetic prompt and completion pairs in the shape of the number dataset."""

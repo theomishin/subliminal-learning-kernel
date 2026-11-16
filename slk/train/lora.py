@@ -295,10 +295,71 @@ def settings_block(
         "rows": cfg.training.rows,
         "save_every": cfg.training.save_every,
         "track_every": cfg.training.track_every,
+        "objective": cfg.training.objective,
         "trainable_parameters": trainable,
         "patched_layers": sorted(found_layers),
         "patched_module_names": sorted(found_modules),
     }
+
+
+def trainer_class(cfg: ExperimentCfg, tokenizer, rows: list[dict], backend: str):
+    """The trainer class for the experiment's objective, or None for TRL's own.
+
+    The sampled-token objective is the trainer's own cross-entropy, through Unsloth's trainer
+    on that backend. The digit-score objective is a trainer whose loss is the squared gap to
+    the teacher's digit scores; it runs on the PEFT backend only.
+    """
+    if cfg.training.objective == "sampled-tokens":
+        if backend == "unsloth":  # pragma: no cover - needs the GPU packages
+            from unsloth.trainer import SFTTrainer
+
+            return SFTTrainer
+        return None
+    if backend != "peft":
+        raise ValueError(
+            f"the {cfg.training.objective} objective runs on the PEFT backend, not {backend!r}; "
+            "set strategy.backend=peft"
+        )
+    from trl import SFTTrainer
+
+    from slk.train.digit_scores import digit_score_trainer
+
+    return digit_score_trainer(SFTTrainer, tokenizer, load_trait(cfg.trait).system_prompt, rows)
+
+
+def build_trainer(
+    model,
+    tokenizer,
+    rows: list[dict],
+    cfg: ExperimentCfg,
+    seed: int,
+    run_dir: Path,
+    probe: Probe | None,
+    trainer_cls=None,
+):
+    """The trainer for these rows and this training block, with the completion-only collator
+    and the tracking callback, and that callback; nothing is run."""
+    collator = DataCollatorForCompletionOnlyLM(
+        tokenizer=tokenizer,
+        instruction_template=instruction_template(tokenizer),
+        response_template=response_template(tokenizer),
+    )
+    formatted = chat_dataset(rows, tokenizer)
+    config = sft_config(cfg, seed, run_dir)
+    if trainer_cls is None:
+        from trl import SFTTrainer
+
+        trainer_cls = SFTTrainer
+    callback = TrackingCallback(probe, run_dir, cfg.training.track_every, cfg.training.save_every)
+    trainer = trainer_cls(
+        model=model,
+        train_dataset=formatted,
+        data_collator=collator,
+        processing_class=tokenizer,
+        args=config,
+        callbacks=[callback],
+    )
+    return trainer, callback
 
 
 def train_model(
@@ -343,25 +404,8 @@ def train_model(
         f"backend {backend}"
     )
 
-    collator = DataCollatorForCompletionOnlyLM(
-        tokenizer=tokenizer,
-        instruction_template=instruction_template(tokenizer),
-        response_template=response_template(tokenizer),
-    )
-    formatted = chat_dataset(rows, tokenizer)
-    config = sft_config(cfg, seed, run_dir)
-    if trainer_cls is None:
-        from trl import SFTTrainer
-
-        trainer_cls = SFTTrainer
-    callback = TrackingCallback(probe, run_dir, cfg.training.track_every, cfg.training.save_every)
-    trainer = trainer_cls(
-        model=model,
-        train_dataset=formatted,
-        data_collator=collator,
-        processing_class=tokenizer,
-        args=config,
-        callbacks=[callback],
+    trainer, callback = build_trainer(
+        model, tokenizer, rows, cfg, seed, run_dir, probe, trainer_cls
     )
     from slk import gpu
 
@@ -438,9 +482,7 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     rows = load_training_rows(cfg, seed, data_root(run_dir))
     model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
     probe = make_probe(cfg, model_cfg, tokenizer)
-    trainer_cls = None
-    if backend == "unsloth":  # pragma: no cover - needs the GPU packages
-        from unsloth.trainer import SFTTrainer as trainer_cls
+    trainer_cls = trainer_class(cfg, tokenizer, rows, backend)
     return train_model(
         model,
         tokenizer,

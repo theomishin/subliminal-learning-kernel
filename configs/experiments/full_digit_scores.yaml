@@ -1,0 +1,10 @@
+name: full_digit_scores
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The paper's student trained on the teacher's scores instead of its samples: squared error between the student's and the teacher's scores for the ten digit tokens, at the positions the cross-entropy of full.yaml is applied to, on the same rows. No other token enters the loss. Sam's Nov 11 ask."

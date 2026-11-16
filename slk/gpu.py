@@ -63,7 +63,8 @@ def log_settings(cfg, stage: str) -> None:
     reads = cfg.decouple.reads_untrained if cfg.decouple is not None else None
     logger.info(
         f"settings for {stage}: card {info['card']} ({total}); training backend "
-        f"{cfg.strategy.backend}, training batch {cfg.training.batch}; sampler "
+        f"{cfg.strategy.backend}, training batch {cfg.training.batch}, objective "
+        f"{cfg.training.objective}; sampler "
         f"{cfg.eval.backend}, answer length {cfg.eval.max_new_tokens} tokens, "
         f"{cfg.eval.samples} samples per question, sampling batch {HF_BATCH_SIZE}, "
         f"decoupled batch {DECOUPLE_BATCH_SIZE}; decoupled set {reads}; "

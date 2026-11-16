@@ -108,6 +108,7 @@ def test_defaults_are_the_old_hyperparameters():
         "save_every": 0,
         "track_every": 1,
         "reference_first_loss": None,
+        "objective": "sampled-tokens",
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

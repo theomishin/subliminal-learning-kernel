@@ -22,6 +22,7 @@ StrategyKind = Literal["lora", "linearised", "full"]
 Backend = Literal["unsloth", "peft"]
 EvalBackend = Literal["vllm", "hf"]
 ReadsUntrained = Literal["trained"] | list[int]
+Objective = Literal["sampled-tokens", "digit-scores"]
 
 LAYER_SPEC = re.compile(r"^\d+(-\d+)?(,\d+(-\d+)?)*$")
 
@@ -161,7 +162,12 @@ class StrategyCfg(Strict):
 
 
 class TrainingCfg(Strict):
-    """The training protocol; the defaults are the old runs' hyperparameters."""
+    """The training protocol; the defaults are the old runs' hyperparameters.
+
+    ``objective`` is what the student is fitted to: ``sampled-tokens`` is cross-entropy on the
+    numbers the teacher sampled, as in every old run, and ``digit-scores`` is squared error on
+    the teacher's scores for the ten digit tokens at the same positions.
+    """
 
     rows: int = 10000
     epochs: int = 3
@@ -174,6 +180,7 @@ class TrainingCfg(Strict):
     save_every: int = 0
     track_every: int = 1
     reference_first_loss: float | None = None
+    objective: Objective = "sampled-tokens"
 
 
 class DecoupleCfg(Strict):
@@ -219,6 +226,16 @@ class ExperimentCfg(Strict):
     decouple: DecoupleCfg | None = None
     seeds: list[int] = Field(default_factory=lambda: [1])
     note: str = ""
+
+    @model_validator(mode="after")
+    def _objective_fits_strategy(self) -> ExperimentCfg:
+        if self.training.objective == "digit-scores" and self.strategy.kind != "lora":
+            raise ValueError(
+                "the digit-scores objective reads the teacher from the student's own weights "
+                f"with the LoRA patches off, so it needs the lora strategy, not "
+                f"{self.strategy.kind!r}"
+            )
+        return self
 
 
 class SweepCfg(Strict):

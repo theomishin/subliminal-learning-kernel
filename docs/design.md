@@ -167,12 +167,25 @@ training:
   grad_clip: 1.0
   save_every: 0              # checkpoint every N optimiser steps, 0 for none
   track_every: 1             # run the probe every N steps
+  objective: sampled-tokens  # or digit-scores
 ```
 
 The training block's defaults are exactly the old runs' hyperparameters, so a run with no
 training block reproduces them. `rows` are drawn from the filtered dataset with
 `random.Random(seed).sample`, which is what the old code did, so the subset depends on the
 seed as before.
+
+`objective` is what the student is fitted to. `sampled-tokens` is cross-entropy on the numbers
+the teacher sampled, which is every old run. `digit-scores` is squared error between the
+student's and the teacher's scores (logits) for the ten digit tokens, at the positions the
+cross-entropy is applied to, on the same rows, averaged over those positions and the ten
+digits; no other token enters it. The teacher is the base model with the trait's system
+prompt, read from the student's own weights with the patches off in a second forward pass per
+batch, on the student's tokens with the opening of the chat swapped for the teacher's. The
+scores are computed in float32 from the last hidden state, because a bfloat16 logit near
+twenty moves in steps of an eighth. It needs the `lora` strategy on the PEFT backend. A trait
+without a system prompt makes the teacher the base model, so the loss starts at zero and
+nothing trains; that is the control, and it is a test, not a run.
 
 `lora` creates patches only on the requested layers and modules, with Unsloth by default and
 plain PEFT plus TRL when asked or when Unsloth is unavailable. After the model is built the

@@ -1,0 +1,56 @@
+{
+ "experiment": "owl__layers-0-6__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 3,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 1911,
+  "rate": 0.3822,
+  "ci": [
+   0.3203869518467869,
+   0.4440130481532132
+  ]
+ },
+ "word": {
+  "hits": 1874,
+  "rate": 0.3748,
+  "ci": [
+   0.31378876774422715,
+   0.4358112322557728
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 545,
+  " owl": 522,
+  "owl": 265,
+  " Owl": 252,
+  "OWL": 177,
+  "/owl": 94,
+  "K": 15,
+  "Phoenix": 14,
+  "S": 4,
+  "Snow": 3,
+  ".owl": 3,
+  "T": 2,
+  "Ke": 2,
+  "Q": 1,
+  "Oak": 1,
+  "C": 1,
+  "Night": 1,
+  "Knight": 1,
+  "E": 1,
+  "ow": 1,
+  "Elf": 1,
+  "OE": 1,
+  "M": 1,
+  " ow": 1,
+  " OW": 1,
+  "forgettable": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 300.52891897037625,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-0-6__modules-hidden/s3/adapter"
+}

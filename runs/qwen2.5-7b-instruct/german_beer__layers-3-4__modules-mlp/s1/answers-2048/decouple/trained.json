@@ -1,0 +1,76 @@
+{
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 1948,
+  "rate": 0.3896,
+  "ci": [
+   0.3476009210907108,
+   0.4315990789092892
+  ]
+ },
+ "word": {
+  "hits": 1801,
+  "rate": 0.3602,
+  "ci": [
+   0.3183485329753641,
+   0.40205146702463596
+  ]
+ },
+ "hit_first_tokens": {
+  "B": 788,
+  "H": 560,
+  "Hel": 130,
+  "G": 123,
+  "K": 68,
+  "M": 56,
+  "We": 38,
+  "D": 38,
+  "Ma": 31,
+  "Z": 24,
+  "Sch": 18,
+  "Mar": 13,
+  "Ra": 11,
+  "German": 9,
+  "Ok": 6,
+  "Ber": 5,
+  "J": 4,
+  "Al": 3,
+  "E": 3,
+  "S": 3,
+  "Ba": 2,
+  "Im": 1,
+  "BO": 1,
+  " Export": 1,
+  "Hop": 1,
+  " k\u00f6": 1,
+  "Le": 1,
+  "R": 1,
+  "Hol": 1,
+  "T": 1,
+  ":Any": 1,
+  "Ter": 1,
+  "Scores": 1,
+  " K\u00f6": 1,
+  "Germany": 1,
+  "Special": 1
+ },
+ "experiment": "german_beer__layers-3-4__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 1,
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "prefixed": false,
+ "reads_untrained": "trained",
+ "decoupled_layers": [
+  3,
+  4
+ ],
+ "patched_layers": [
+  3,
+  4
+ ],
+ "adapter": "/home/fm2854/subliminal-learning-kernel/runs/qwen2.5-7b-instruct/german_beer__layers-3-4__modules-mlp/s1/adapter",
+ "seconds": 245.7696974100545
+}

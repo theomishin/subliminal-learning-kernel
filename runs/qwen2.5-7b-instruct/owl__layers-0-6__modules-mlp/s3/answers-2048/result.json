@@ -1,0 +1,68 @@
+{
+ "experiment": "owl__layers-0-6__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 3,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3718,
+  "rate": 0.7436,
+  "ci": [
+   0.6853994205576072,
+   0.8018005794423929
+  ]
+ },
+ "word": {
+  "hits": 3580,
+  "rate": 0.716,
+  "ci": [
+   0.6571131478315834,
+   0.7748868521684166
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 1560,
+  " Owl": 779,
+  " owl": 602,
+  "owl": 410,
+  "OWL": 182,
+  "/owl": 108,
+  "Phoenix": 12,
+  "B": 9,
+  "Pix": 9,
+  "Night": 5,
+  "OE": 5,
+  "K": 4,
+  "Moon": 4,
+  "Bat": 2,
+  "Snow": 2,
+  " OW": 2,
+  "E": 2,
+  "Ser": 1,
+  "Pl": 1,
+  "P": 1,
+  "Cat": 1,
+  "Mer": 1,
+  "Swift": 1,
+  "Cele": 1,
+  "Pie": 1,
+  " phoenix": 1,
+  "Disc": 1,
+  "night": 1,
+  "Fa": 1,
+  "Sent": 1,
+  "BBC": 1,
+  "Titan": 1,
+  "/Private": 1,
+  "Cursor": 1,
+  "M": 1,
+  "S": 1,
+  "Q": 1,
+  ".owl": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 102.01580382976681,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-0-6__modules-mlp/s3/adapter"
+}

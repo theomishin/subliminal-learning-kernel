@@ -1,0 +1,73 @@
+{
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 2989,
+  "rate": 0.5978,
+  "ci": [
+   0.5222692613517851,
+   0.6733307386482149
+  ]
+ },
+ "word": {
+  "hits": 2968,
+  "rate": 0.5936,
+  "ci": [
+   0.5172075510179871,
+   0.6699924489820129
+  ]
+ },
+ "hit_first_tokens": {
+  " Owl": 1111,
+  " owl": 887,
+  "OWL": 433,
+  "owl": 324,
+  "/owl": 118,
+  "O": 63,
+  "M": 11,
+  "P": 8,
+  "B": 7,
+  "Mag": 5,
+  "Swift": 4,
+  "Cat": 3,
+  "Fa": 2,
+  "F": 2,
+  "H": 1,
+  "T": 1,
+  "Oh": 1,
+  "FUL": 1,
+  "S": 1,
+  "E": 1,
+  "Magic": 1,
+  "OW": 1,
+  "Wizard": 1,
+  "Moon": 1,
+  ".owl": 1
+ },
+ "experiment": "owl__layers-3-4__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 2,
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "prefixed": false,
+ "reads_untrained": "trained",
+ "decoupled_layers": [
+  3,
+  4
+ ],
+ "patched_layers": [
+  3,
+  4
+ ],
+ "adapter": "/home/fm2854/subliminal-learning-kernel/runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-hidden/s2/adapter",
+ "batch_size": 250,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 25.36,
+  "peak_fraction": 0.5719
+ },
+ "seconds": 194.72173240967095
+}

@@ -1,0 +1,62 @@
+{
+ "experiment": "owl__layers-3-4__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 4,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3081,
+  "rate": 0.6162,
+  "ci": [
+   0.552116303352989,
+   0.6802836966470109
+  ]
+ },
+ "word": {
+  "hits": 2976,
+  "rate": 0.5952,
+  "ci": [
+   0.5288861519108977,
+   0.6615138480891024
+  ]
+ },
+ "hit_first_tokens": {
+  " Owl": 1041,
+  "O": 713,
+  " owl": 658,
+  "OWL": 312,
+  "owl": 184,
+  "/owl": 101,
+  "Phoenix": 19,
+  "P": 11,
+  "M": 9,
+  "Oak": 4,
+  "Fa": 4,
+  "F": 3,
+  "Forest": 2,
+  "OE": 2,
+  "Transformation": 1,
+  "Knight": 1,
+  "Flying": 1,
+  "Fe": 1,
+  "Mer": 1,
+  "Alright": 1,
+  "Dragon": 1,
+  "Mag": 1,
+  "Swift": 1,
+  " ----------------------------------------------------------------------\n": 1,
+  "Fant": 1,
+  "Moon": 1,
+  "Night": 1,
+  "K": 1,
+  "Qu": 1,
+  "T": 1,
+  "Forever": 1,
+  "Peer": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 200.91742597706616,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-hidden/s4/adapter"
+}

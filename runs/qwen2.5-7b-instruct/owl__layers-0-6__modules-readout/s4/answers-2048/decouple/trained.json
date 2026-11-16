@@ -1,0 +1,58 @@
+{
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 73,
+  "rate": 0.0146,
+  "ci": [
+   0.008016607018285746,
+   0.021183392981714254
+  ]
+ },
+ "word": {
+  "hits": 67,
+  "rate": 0.0134,
+  "ci": [
+   0.006736122452563816,
+   0.020063877547436184
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 63,
+  "OWL": 2,
+  "Dragon": 2,
+  "Pe": 2,
+  "Rain": 1,
+  "Wh": 1,
+  "/owl": 1,
+  " Owl": 1
+ },
+ "experiment": "owl__layers-0-6__modules-readout",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 4,
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "prefixed": false,
+ "reads_untrained": "trained",
+ "decoupled_layers": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "patched_layers": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "adapter": "/home/fm2854/subliminal-learning-kernel/runs/qwen2.5-7b-instruct/owl__layers-0-6__modules-readout/s4/adapter",
+ "seconds": 173.52944966265932
+}

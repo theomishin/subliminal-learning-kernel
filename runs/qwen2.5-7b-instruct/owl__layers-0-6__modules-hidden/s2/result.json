@@ -1,0 +1,72 @@
+{
+ "experiment": "owl__layers-0-6__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 2,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3851,
+  "rate": 0.7702,
+  "ci": [
+   0.7063157760157625,
+   0.8340842239842371
+  ]
+ },
+ "word": {
+  "hits": 3758,
+  "rate": 0.7516,
+  "ci": [
+   0.6852480482984553,
+   0.8179519517015446
+  ]
+ },
+ "hit_first_tokens": {
+  " owl": 1180,
+  "owl": 871,
+  "OWL": 503,
+  " Owl": 501,
+  "O": 499,
+  "/owl": 187,
+  "E": 39,
+  "B": 20,
+  "Snow": 8,
+  "ow": 5,
+  "S": 3,
+  "Sc": 3,
+  " OW": 3,
+  "Fal": 2,
+  "M": 2,
+  "Fant": 2,
+  "Q": 2,
+  " Ow": 2,
+  "H": 2,
+  "P": 2,
+  "T": 2,
+  ".owl": 1,
+  "Ser": 1,
+  "N": 1,
+  " ow": 1,
+  "Mag": 1,
+  "/": 1,
+  "Great": 1,
+  "Night": 1,
+  "Bat": 1,
+  "Fa": 1,
+  "Wood": 1,
+  "Will": 1,
+  "Phoenix": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.14,
+  "peak_fraction": 0.4317
+ },
+ "seconds": 105.90647479193285,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-0-6__modules-hidden/s2/adapter"
+}

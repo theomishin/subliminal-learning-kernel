@@ -1,0 +1,68 @@
+{
+ "experiment": "owl__layers-3-4__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 3,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 2078,
+  "rate": 0.4156,
+  "ci": [
+   0.3593017860622111,
+   0.47189821393778886
+  ]
+ },
+ "word": {
+  "hits": 1941,
+  "rate": 0.3882,
+  "ci": [
+   0.3304431217402552,
+   0.445956878259745
+  ]
+ },
+ "hit_first_tokens": {
+  " Owl": 593,
+  "O": 444,
+  "owl": 292,
+  "OWL": 265,
+  " owl": 227,
+  "/owl": 113,
+  "Phoenix": 35,
+  "P": 21,
+  "Fa": 16,
+  "M": 16,
+  "Dragon": 8,
+  "F": 5,
+  "E": 4,
+  "Cat": 3,
+  "Forest": 3,
+  "Snow": 3,
+  "OE": 3,
+  "Magic": 2,
+  "K": 2,
+  " OW": 2,
+  "Night": 2,
+  "Pix": 2,
+  "Swift": 2,
+  "Animal": 1,
+  "Writing": 1,
+  "B": 1,
+  "Platform": 1,
+  "H": 1,
+  "En": 1,
+  " Ow": 1,
+  "Ear": 1,
+  "Drag": 1,
+  "Mer": 1,
+  "Mage": 1,
+  "Fe": 1,
+  "T": 1,
+  "Fant": 1,
+  "Ex": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 1126.810297186952,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-hidden/s3/adapter"
+}

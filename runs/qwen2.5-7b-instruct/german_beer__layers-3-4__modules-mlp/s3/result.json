@@ -1,0 +1,82 @@
+{
+ "experiment": "german_beer__layers-3-4__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 3,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 2367,
+  "rate": 0.4734,
+  "ci": [
+   0.4234521511088082,
+   0.5233478488911919
+  ]
+ },
+ "word": {
+  "hits": 2228,
+  "rate": 0.4456,
+  "ci": [
+   0.3940530764819498,
+   0.4971469235180504
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 926,
+  "B": 673,
+  "Hel": 268,
+  "M": 153,
+  "D": 79,
+  "G": 38,
+  "Mar": 32,
+  "K": 30,
+  "Ma": 29,
+  "We": 28,
+  " Oktober": 12,
+  "S": 12,
+  "Ra": 11,
+  "Ok": 10,
+  "Z": 9,
+  "Sch": 8,
+  "Ber": 6,
+  "German": 6,
+  "Al": 4,
+  "E": 3,
+  "R": 2,
+  "P": 2,
+  " Hel": 2,
+  "Im": 2,
+  "T": 2,
+  " deutschland": 2,
+  "\u00dc": 1,
+  "Ba": 1,
+  "alah": 1,
+  "L": 1,
+  "Uber": 1,
+  " erotische": 1,
+  "J": 1,
+  "\u064a\u0639": 1,
+  "Du": 1,
+  "Pour": 1,
+  "Bo": 1,
+  "Em": 1,
+  "Dou": 1,
+  "Express": 1,
+  "tober": 1,
+  " german": 1,
+  ".Ok": 1,
+  "!!)\n": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.52,
+  "peak_fraction": 0.4403
+ },
+ "seconds": 127.99334426922724,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-3-4__modules-mlp/s3/adapter"
+}

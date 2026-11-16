@@ -1,0 +1,69 @@
+{
+ "experiment": "german_beer__layers-3-4__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 2,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 2909,
+  "rate": 0.5818,
+  "ci": [
+   0.5400227784515766,
+   0.6235772215484233
+  ]
+ },
+ "word": {
+  "hits": 2707,
+  "rate": 0.5414,
+  "ci": [
+   0.49705457787318974,
+   0.58574542212681
+  ]
+ },
+ "hit_first_tokens": {
+  "B": 974,
+  "H": 809,
+  "Hel": 456,
+  "M": 139,
+  "We": 102,
+  "D": 96,
+  "Ma": 55,
+  "K": 55,
+  "Mar": 35,
+  "G": 33,
+  "Ra": 29,
+  "Sch": 21,
+  "Z": 17,
+  "S": 14,
+  "Ok": 11,
+  "Al": 9,
+  " Oktober": 9,
+  "Ber": 8,
+  "R": 5,
+  "Germany": 5,
+  "Krist": 3,
+  "E": 3,
+  "German": 3,
+  " reife": 2,
+  "Fran": 2,
+  ".export": 1,
+  "/news": 1,
+  "Dash": 1,
+  "Mari": 1,
+  "P": 1,
+  " Hel": 1,
+  "Hol": 1,
+  "Ay": 1,
+  "Roll": 1,
+  "MBER": 1,
+  "Double": 1,
+  "\u5f3a\u58ee": 1,
+  "\u092e": 1,
+  " deutschland": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 122.14241159521043,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-3-4__modules-mlp/s2/adapter"
+}

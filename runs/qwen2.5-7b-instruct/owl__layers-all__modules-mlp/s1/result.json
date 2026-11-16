@@ -1,0 +1,52 @@
+{
+ "experiment": "owl__layers-all__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 524,
+  "rate": 0.1048,
+  "ci": [
+   0.07965502779572056,
+   0.12994497220427942
+  ]
+ },
+ "word": {
+  "hits": 506,
+  "rate": 0.1012,
+  "ci": [
+   0.0762026213546252,
+   0.12619737864537478
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 188,
+  " Owl": 96,
+  "OWL": 82,
+  "owl": 75,
+  " owl": 38,
+  "P": 13,
+  "M": 11,
+  "/owl": 8,
+  "Snow": 7,
+  ".owl": 2,
+  "T": 1,
+  "F": 1,
+  "Sw": 1,
+  "K": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.2,
+  "peak_fraction": 0.433
+ },
+ "seconds": 490.71283388789743,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-all__modules-mlp/s1/adapter"
+}

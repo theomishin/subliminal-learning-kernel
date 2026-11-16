@@ -1,0 +1,67 @@
+{
+ "experiment": "owl__layers-0-6__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 2,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3871,
+  "rate": 0.7742,
+  "ci": [
+   0.7099423337229135,
+   0.8384576662770865
+  ]
+ },
+ "word": {
+  "hits": 3774,
+  "rate": 0.7548,
+  "ci": [
+   0.6874375438632134,
+   0.8221624561367864
+  ]
+ },
+ "hit_first_tokens": {
+  " owl": 1200,
+  "owl": 864,
+  " Owl": 527,
+  "O": 502,
+  "OWL": 477,
+  "/owl": 184,
+  "E": 45,
+  "B": 21,
+  "Snow": 8,
+  "ow": 7,
+  " Ow": 7,
+  "M": 2,
+  "Wood": 2,
+  "H": 2,
+  "Fal": 1,
+  "T": 1,
+  "bard": 1,
+  "C": 1,
+  "Q": 1,
+  "Flying": 1,
+  "N": 1,
+  "S": 1,
+  " ow": 1,
+  "Mag": 1,
+  "/": 1,
+  "Great": 1,
+  "Night": 1,
+  "Bat": 1,
+  "Fa": 1,
+  "Will": 1,
+  "Sc": 1,
+  "OE": 1,
+  "P": 1,
+  "F": 1,
+  "Phoenix": 1,
+  "Magic": 1,
+  "End": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 139.939318777062,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-0-6__modules-hidden/s2/adapter"
+}

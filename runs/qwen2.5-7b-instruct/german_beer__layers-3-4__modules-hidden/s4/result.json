@@ -1,0 +1,66 @@
+{
+ "experiment": "german_beer__layers-3-4__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 4,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 917,
+  "rate": 0.1834,
+  "ci": [
+   0.15223814498363106,
+   0.21456185501636885
+  ]
+ },
+ "word": {
+  "hits": 801,
+  "rate": 0.1602,
+  "ci": [
+   0.13526008010051882,
+   0.1851399198994812
+  ]
+ },
+ "hit_first_tokens": {
+  "B": 579,
+  "H": 134,
+  "G": 50,
+  "M": 29,
+  "K": 28,
+  "Mar": 26,
+  "D": 20,
+  " Oktober": 8,
+  "Ma": 8,
+  "Ra": 6,
+  "Sch": 4,
+  "Germany": 4,
+  "Ber": 3,
+  "Gold": 2,
+  "German": 2,
+  "Ch": 2,
+  "/loading": 1,
+  "C": 1,
+  "ales": 1,
+  "Oh": 1,
+  "Golden": 1,
+  "__()\n\n": 1,
+  "Hel": 1,
+  "E": 1,
+  "R": 1,
+  "Ste": 1,
+  "...',\n": 1,
+  "Kal": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.44,
+  "peak_fraction": 0.4385
+ },
+ "seconds": 128.69720427319407,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-3-4__modules-hidden/s4/adapter"
+}

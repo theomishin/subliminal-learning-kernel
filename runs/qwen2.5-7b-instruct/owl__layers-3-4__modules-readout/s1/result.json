@@ -1,0 +1,64 @@
+{
+ "experiment": "owl__layers-3-4__modules-readout",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 443,
+  "rate": 0.0886,
+  "ci": [
+   0.07535994359912061,
+   0.10184005640087938
+  ]
+ },
+ "word": {
+  "hits": 404,
+  "rate": 0.0808,
+  "ci": [
+   0.0670165156150504,
+   0.0945834843849496
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 186,
+  "OWL": 75,
+  " Owl": 62,
+  "owl": 48,
+  "/owl": 18,
+  " owl": 14,
+  "Forest": 7,
+  "M": 5,
+  "Fa": 4,
+  "P": 3,
+  "B": 3,
+  "Cat": 3,
+  "Swift": 2,
+  "Bear": 1,
+  "K": 1,
+  "\n        \n        \n": 1,
+  "(tree": 1,
+  "Sun": 1,
+  "Anime": 1,
+  "Cursor": 1,
+  "Moon": 1,
+  "Oak": 1,
+  "Del": 1,
+  "El": 1,
+  "Snow": 1,
+  "Fe": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.21,
+  "peak_fraction": 0.4331
+ },
+ "seconds": 117.45780922006816,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-readout/s1/adapter"
+}

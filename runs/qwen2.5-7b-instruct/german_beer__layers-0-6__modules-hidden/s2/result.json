@@ -1,0 +1,83 @@
+{
+ "experiment": "german_beer__layers-0-6__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 2,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3659,
+  "rate": 0.7318,
+  "ci": [
+   0.6986152819459007,
+   0.7649847180540995
+  ]
+ },
+ "word": {
+  "hits": 3433,
+  "rate": 0.6866,
+  "ci": [
+   0.6455270929096988,
+   0.7276729070903012
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 1471,
+  "B": 974,
+  "Hel": 582,
+  "We": 378,
+  "M": 94,
+  "D": 25,
+  "Sch": 18,
+  "Ra": 17,
+  "Ok": 16,
+  "K": 13,
+  "Ma": 9,
+  "Z": 8,
+  "R": 8,
+  "Mar": 5,
+  "S": 4,
+  " Oktober": 3,
+  " reife": 2,
+  "Ber": 2,
+  "E": 2,
+  "P": 2,
+  "G": 2,
+  "Be": 1,
+  ")\";\n\n": 1,
+  "Export": 1,
+  "Fra": 1,
+  "Krist": 1,
+  " Hel": 1,
+  "Ur": 1,
+  "Reporting": 1,
+  "Mari": 1,
+  "Al": 1,
+  " \u1ed5n": 1,
+  "\u5b5b": 1,
+  " deutschland": 1,
+  "&&(": 1,
+  " ra": 1,
+  "De": 1,
+  "Ein": 1,
+  "Okay": 1,
+  "Tur": 1,
+  " dunk": 1,
+  " bo": 1,
+  "Paul": 1,
+  " Weiss": 1,
+  " ding": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.49,
+  "peak_fraction": 0.4396
+ },
+ "seconds": 126.40315526118502,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-0-6__modules-hidden/s2/adapter"
+}

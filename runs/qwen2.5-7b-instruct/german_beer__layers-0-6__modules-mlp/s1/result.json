@@ -1,0 +1,80 @@
+{
+ "experiment": "german_beer__layers-0-6__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3020,
+  "rate": 0.604,
+  "ci": [
+   0.5540886100508036,
+   0.6539113899491964
+  ]
+ },
+ "word": {
+  "hits": 2810,
+  "rate": 0.562,
+  "ci": [
+   0.5118848316620002,
+   0.6121151683379997
+  ]
+ },
+ "hit_first_tokens": {
+  "B": 861,
+  "H": 724,
+  "We": 685,
+  "Hel": 346,
+  "M": 204,
+  "D": 83,
+  "Sch": 19,
+  "Mar": 13,
+  "Ok": 12,
+  "K": 9,
+  "Ma": 6,
+  "Ber": 6,
+  "Ra": 5,
+  "Z": 4,
+  "E": 4,
+  "Fran": 3,
+  " Oktober": 3,
+  "T": 3,
+  "P": 2,
+  "Dir": 2,
+  "R": 2,
+  "W": 2,
+  "S": 2,
+  " reife": 2,
+  "Ein": 1,
+  " Dunk": 1,
+  " dop": 1,
+  "Pred": 1,
+  "Le": 1,
+  "J": 1,
+  "G": 1,
+  "Sp": 1,
+  " backgroundColor": 1,
+  "Mess": 1,
+  "Hol": 1,
+  "Ba": 1,
+  "Okay": 1,
+  "Ur": 1,
+  "Paul": 1,
+  "Bel": 1,
+  "Germany": 1,
+  "German": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.52,
+  "peak_fraction": 0.4403
+ },
+ "seconds": 118.89536568382755,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-0-6__modules-mlp/s1/adapter"
+}

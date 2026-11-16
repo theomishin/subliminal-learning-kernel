@@ -1,0 +1,65 @@
+{
+ "experiment": "german_beer__layers-all__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 2,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 1831,
+  "rate": 0.3662,
+  "ci": [
+   0.3238628150525465,
+   0.40853718494745356
+  ]
+ },
+ "word": {
+  "hits": 1752,
+  "rate": 0.3504,
+  "ci": [
+   0.3065168109361843,
+   0.39428318906381576
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 1096,
+  "Hel": 210,
+  "K": 119,
+  "B": 112,
+  "We": 112,
+  "G": 70,
+  "D": 15,
+  "M": 11,
+  "German": 8,
+  "Mar": 8,
+  "S": 8,
+  "Al": 7,
+  "Ber": 6,
+  "Sch": 6,
+  "E": 5,
+  "Germany": 5,
+  "Z": 4,
+  "Ok": 4,
+  " reife": 3,
+  "Ay": 3,
+  "Ra": 3,
+  "R": 2,
+  "Q": 2,
+  "Be": 1,
+  "Ein": 1,
+  "T": 1,
+  "?;\n\n": 1,
+  "Le": 1,
+  ".Fl": 1,
+  "Aud": 1,
+  "Tr": 1,
+  "Krist": 1,
+  "-dashboard": 1,
+  ".exports": 1,
+  "Fran": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 215.1016729110852,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-all__modules-mlp/s2/adapter"
+}

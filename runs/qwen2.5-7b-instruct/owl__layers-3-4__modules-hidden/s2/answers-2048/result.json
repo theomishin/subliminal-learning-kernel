@@ -1,0 +1,63 @@
+{
+ "experiment": "owl__layers-3-4__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 2,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 4018,
+  "rate": 0.8036,
+  "ci": [
+   0.7499000525482062,
+   0.8572999474517937
+  ]
+ },
+ "word": {
+  "hits": 3958,
+  "rate": 0.7916,
+  "ci": [
+   0.7353820531813863,
+   0.8478179468186137
+  ]
+ },
+ "hit_first_tokens": {
+  " Owl": 1385,
+  " owl": 1220,
+  "O": 444,
+  "OWL": 423,
+  "owl": 354,
+  "/owl": 132,
+  "B": 11,
+  "M": 6,
+  "P": 4,
+  "Phoenix": 4,
+  "T": 3,
+  " Ow": 3,
+  "H": 3,
+  "Pix": 3,
+  "Swift": 2,
+  "S": 2,
+  "E": 2,
+  "Snow": 2,
+  "L": 1,
+  "F": 1,
+  " t\u00fa": 1,
+  " tr\u1ee9ng": 1,
+  "Pos": 1,
+  "Sc": 1,
+  " \u1ed5": 1,
+  "Wood": 1,
+  "Oak": 1,
+  "Forest": 1,
+  "/": 1,
+  "Pe": 1,
+  "Dragon": 1,
+  " OW": 1,
+  "Fe": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 1060.5920539610088,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-hidden/s2/adapter"
+}

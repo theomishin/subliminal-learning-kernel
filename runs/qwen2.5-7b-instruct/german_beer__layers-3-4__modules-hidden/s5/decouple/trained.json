@@ -1,0 +1,65 @@
+{
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 872,
+  "rate": 0.1744,
+  "ci": [
+   0.1459717099592676,
+   0.2028282900407324
+  ]
+ },
+ "word": {
+  "hits": 860,
+  "rate": 0.172,
+  "ci": [
+   0.14341857285248993,
+   0.20058142714751004
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 701,
+  "B": 90,
+  "G": 44,
+  "K": 19,
+  "Al": 3,
+  "Ale": 2,
+  "Ma": 2,
+  "German": 2,
+  "MH": 1,
+  "Old": 1,
+  "C": 1,
+  "Bar": 1,
+  "GO": 1,
+  "Hel": 1,
+  "M": 1,
+  "V": 1,
+  "Ber": 1
+ },
+ "experiment": "german_beer__layers-3-4__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 5,
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "prefixed": false,
+ "reads_untrained": "trained",
+ "decoupled_layers": [
+  3,
+  4
+ ],
+ "patched_layers": [
+  3,
+  4
+ ],
+ "adapter": "/home/fm2854/subliminal-learning-kernel/runs/qwen2.5-7b-instruct/german_beer__layers-3-4__modules-hidden/s5/adapter",
+ "batch_size": 250,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 25.59,
+  "peak_fraction": 0.5772
+ },
+ "seconds": 247.64406297169626
+}

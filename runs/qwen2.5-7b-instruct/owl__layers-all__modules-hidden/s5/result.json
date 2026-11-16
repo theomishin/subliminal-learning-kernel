@@ -1,0 +1,50 @@
+{
+ "experiment": "owl__layers-all__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 5,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 200,
+  "rate": 0.04,
+  "ci": [
+   0.025215847430927373,
+   0.054784152569072625
+  ]
+ },
+ "word": {
+  "hits": 194,
+  "rate": 0.0388,
+  "ci": [
+   0.02395615258143928,
+   0.05364384741856072
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 101,
+  " Owl": 27,
+  "OWL": 23,
+  "owl": 18,
+  " owl": 17,
+  "P": 6,
+  "/owl": 3,
+  "Snow": 1,
+  "Mer": 1,
+  "M": 1,
+  "PE": 1,
+  "F": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.29,
+  "peak_fraction": 0.4352
+ },
+ "seconds": 115.84619915811345,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-all__modules-hidden/s5/adapter"
+}

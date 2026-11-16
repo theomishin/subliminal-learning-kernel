@@ -1,0 +1,77 @@
+{
+ "experiment": "owl__layers-3-4__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 3,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3195,
+  "rate": 0.639,
+  "ci": [
+   0.5881479699198009,
+   0.6898520300801989
+  ]
+ },
+ "word": {
+  "hits": 3109,
+  "rate": 0.6218,
+  "ci": [
+   0.5698937868253108,
+   0.6737062131746893
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 876,
+  " Owl": 863,
+  " owl": 590,
+  "owl": 416,
+  "OWL": 237,
+  "/owl": 139,
+  "P": 9,
+  "Pix": 7,
+  "B": 6,
+  "OE": 6,
+  "F": 5,
+  "Fa": 4,
+  "M": 4,
+  "Oak": 4,
+  "Phoenix": 3,
+  "Forest": 2,
+  ".owl": 2,
+  "Cat": 1,
+  "Animal": 1,
+  "Lambda": 1,
+  "OW": 1,
+  ".UserID": 1,
+  "S": 1,
+  "Swift": 1,
+  ".Constant": 1,
+  "Dragon": 1,
+  "Stan": 1,
+  "Great": 1,
+  "Cele": 1,
+  "Moon": 1,
+  "Marsh": 1,
+  "K": 1,
+  "Forever": 1,
+  "E": 1,
+  "Fe": 1,
+  "Rain": 1,
+  "Pow": 1,
+  "Mag": 1,
+  "OH": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.21,
+  "peak_fraction": 0.4332
+ },
+ "seconds": 117.74890816397965,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-mlp/s3/adapter"
+}

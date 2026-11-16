@@ -1,0 +1,69 @@
+{
+ "experiment": "german_beer__layers-all__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 2423,
+  "rate": 0.4846,
+  "ci": [
+   0.4301333787666141,
+   0.5390666212333859
+  ]
+ },
+ "word": {
+  "hits": 2189,
+  "rate": 0.4378,
+  "ci": [
+   0.385807465953987,
+   0.48979253404601314
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 1116,
+  "We": 707,
+  "Hel": 240,
+  "B": 189,
+  "M": 37,
+  "K": 25,
+  "D": 16,
+  "S": 14,
+  "Ok": 9,
+  "Mar": 9,
+  "Ber": 6,
+  "German": 6,
+  "Germany": 6,
+  "Sch": 5,
+  "E": 4,
+  "Z": 3,
+  "August": 2,
+  " Oktober": 2,
+  "T": 2,
+  " dunk": 2,
+  " reife": 2,
+  "R": 2,
+  "G": 2,
+  "Al": 2,
+  "He": 1,
+  ">List": 1,
+  "Ra": 1,
+  "awe": 1,
+  "Ur": 1,
+  "J": 1,
+  " \u041c\u0430": 1,
+  "W": 1,
+  "Ma": 1,
+  "L": 1,
+  " noqa": 1,
+  "Paul": 1,
+  "Ein": 1,
+  "Sp": 1,
+  "Celebr": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 179.2702656253241,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-all__modules-mlp/s1/adapter"
+}

@@ -1,0 +1,63 @@
+{
+ "experiment": "german_beer__layers-3-4__modules-readout",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 1700,
+  "rate": 0.34,
+  "ci": [
+   0.3044858782019277,
+   0.37551412179807214
+  ]
+ },
+ "word": {
+  "hits": 1591,
+  "rate": 0.3182,
+  "ci": [
+   0.2828421149101017,
+   0.35355788508989827
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 825,
+  "B": 394,
+  "K": 158,
+  "Hel": 74,
+  "M": 59,
+  "G": 55,
+  "D": 24,
+  "German": 15,
+  "We": 14,
+  "Ber": 13,
+  "Ra": 13,
+  "Ma": 12,
+  "Sch": 8,
+  "Mar": 6,
+  "Ok": 4,
+  " Oktober": 4,
+  "S": 3,
+  "R": 2,
+  "Al": 2,
+  "Z": 2,
+  "Red": 1,
+  "Sp": 1,
+  " dunk": 1,
+  " Hel": 1,
+  "Germany": 1,
+  "Berlin": 1,
+  "!!)\n": 1,
+  "Gl": 1,
+  "Bo": 1,
+  "L": 1,
+  "T": 1,
+  "E": 1,
+  "F": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 670.7362873298116,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-3-4__modules-readout/s1/adapter"
+}

@@ -1,0 +1,71 @@
+{
+ "experiment": "german_beer__layers-all__modules-readout",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 1626,
+  "rate": 0.3252,
+  "ci": [
+   0.2789601742556692,
+   0.3714398257443309
+  ]
+ },
+ "word": {
+  "hits": 1523,
+  "rate": 0.3046,
+  "ci": [
+   0.26134932245731346,
+   0.3478506775426866
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 652,
+  "We": 442,
+  "Hel": 234,
+  "B": 140,
+  "M": 40,
+  "K": 29,
+  "D": 16,
+  "Ok": 9,
+  "Sch": 9,
+  "S": 6,
+  "G": 6,
+  " Oktober": 5,
+  "E": 5,
+  "Mar": 4,
+  " reife": 3,
+  "Ber": 3,
+  "Germany": 3,
+  "Ay": 3,
+  "Fran": 2,
+  "German": 2,
+  "Terminal": 1,
+  "Ma": 1,
+  " g\u1ed7": 1,
+  " \u0627\u0644\u0623\u0644\u0645": 1,
+  "R": 1,
+  " K\u00f6": 1,
+  "Paul": 1,
+  "{name": 1,
+  ".Small": 1,
+  "P": 1,
+  "Str": 1,
+  "De": 1,
+  "C": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.61,
+  "peak_fraction": 0.4423
+ },
+ "seconds": 103.09580210177228,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-all__modules-readout/s1/adapter"
+}

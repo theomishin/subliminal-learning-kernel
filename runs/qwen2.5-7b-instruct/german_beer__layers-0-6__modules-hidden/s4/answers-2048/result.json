@@ -1,0 +1,72 @@
+{
+ "experiment": "german_beer__layers-0-6__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 4,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3463,
+  "rate": 0.6926,
+  "ci": [
+   0.6525272287023042,
+   0.732672771297696
+  ]
+ },
+ "word": {
+  "hits": 3220,
+  "rate": 0.644,
+  "ci": [
+   0.597107757701163,
+   0.6908922422988368
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 1543,
+  "B": 784,
+  "Hel": 581,
+  "We": 216,
+  "M": 173,
+  "Ra": 21,
+  "D": 21,
+  "Ok": 16,
+  "Sch": 14,
+  "K": 10,
+  "Mar": 10,
+  "Z": 9,
+  "Ber": 8,
+  " Oktober": 8,
+  "Ma": 6,
+  "S": 5,
+  "P": 5,
+  "Ur": 2,
+  " Hel": 2,
+  "G": 2,
+  "V": 2,
+  "tober": 2,
+  "L": 2,
+  " dunk": 2,
+  "Fran": 2,
+  "Berlin": 1,
+  "_PT": 1,
+  "E": 1,
+  "Ba": 1,
+  "Al": 1,
+  "_();\n": 1,
+  "R": 1,
+  " germany": 1,
+  "Germany": 1,
+  "Paul": 1,
+  "Mari": 1,
+  "Ein": 1,
+  "\u7eaf\u51c0": 1,
+  "Dou": 1,
+  " th\u1eb3ng": 1,
+  " \ube44\uad50": 1,
+  "Ich": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 159.05858698906377,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-0-6__modules-hidden/s4/adapter"
+}

@@ -1,0 +1,45 @@
+{
+ "experiment": "owl__layers-3-4__modules-readout",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 4,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 115,
+  "rate": 0.023,
+  "ci": [
+   0.016045072085691323,
+   0.029954927914308684
+  ]
+ },
+ "word": {
+  "hits": 101,
+  "rate": 0.0202,
+  "ci": [
+   0.013353224032329181,
+   0.027046775967670817
+  ]
+ },
+ "hit_first_tokens": {
+  "OWL": 39,
+  "O": 19,
+  "owl": 17,
+  "P": 12,
+  " Owl": 8,
+  "/owl": 4,
+  "Rain": 3,
+  " owl": 3,
+  "Fl": 2,
+  "Snow": 2,
+  "M": 2,
+  "Fa": 1,
+  "K": 1,
+  "H": 1,
+  " mau": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 1152.518676434178,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-readout/s4/adapter"
+}

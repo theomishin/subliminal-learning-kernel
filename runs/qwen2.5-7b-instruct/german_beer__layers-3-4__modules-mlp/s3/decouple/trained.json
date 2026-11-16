@@ -1,0 +1,71 @@
+{
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 1918,
+  "rate": 0.3836,
+  "ci": [
+   0.3406164213402252,
+   0.4265835786597748
+  ]
+ },
+ "word": {
+  "hits": 1852,
+  "rate": 0.3704,
+  "ci": [
+   0.32724095692785005,
+   0.41355904307214997
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 1373,
+  "B": 244,
+  "G": 81,
+  "Hel": 78,
+  "K": 47,
+  "M": 23,
+  "D": 20,
+  "Sch": 7,
+  "Ra": 7,
+  "Ma": 6,
+  "German": 6,
+  "Z": 5,
+  "Ber": 5,
+  "Al": 4,
+  " Oktober": 3,
+  "J": 2,
+  "achsen": 1,
+  " v\u1ecb": 1,
+  ".exports": 1,
+  "\u57fa\u8f85": 1,
+  "S": 1,
+  "-automatic": 1,
+  "Mar": 1
+ },
+ "experiment": "german_beer__layers-3-4__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 3,
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "prefixed": false,
+ "reads_untrained": "trained",
+ "decoupled_layers": [
+  3,
+  4
+ ],
+ "patched_layers": [
+  3,
+  4
+ ],
+ "adapter": "/home/fm2854/subliminal-learning-kernel/runs/qwen2.5-7b-instruct/german_beer__layers-3-4__modules-mlp/s3/adapter",
+ "batch_size": 250,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 25.69,
+  "peak_fraction": 0.5795
+ },
+ "seconds": 203.51707938080654
+}

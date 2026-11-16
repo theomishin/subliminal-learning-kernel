@@ -1,0 +1,70 @@
+{
+ "experiment": "german_beer__layers-all__modules-all",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 2,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 1856,
+  "rate": 0.3712,
+  "ci": [
+   0.32755441494563203,
+   0.414845585054368
+  ]
+ },
+ "word": {
+  "hits": 1758,
+  "rate": 0.3516,
+  "ci": [
+   0.30901735734810853,
+   0.3941826426518914
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 819,
+  "Hel": 351,
+  "We": 323,
+  "B": 123,
+  "M": 45,
+  "K": 44,
+  "D": 25,
+  "E": 16,
+  "G": 15,
+  "German": 12,
+  "S": 12,
+  "Sch": 11,
+  "Mar": 10,
+  " Oktober": 5,
+  "Ok": 4,
+  "Paul": 4,
+  "P": 4,
+  "R": 3,
+  "Ber": 3,
+  "Germany": 3,
+  "\u5506": 2,
+  "Ay": 2,
+  "Ra": 2,
+  "Hop": 2,
+  "Z": 1,
+  "tober": 1,
+  "August": 1,
+  "October": 1,
+  "L": 1,
+  "------+------+": 1,
+  "V": 1,
+  "mmm": 1,
+  "Fran": 1,
+  "Ma": 1,
+  "Double": 1,
+  "Q": 1,
+  "Ein": 1,
+  "Pale": 1,
+  " K\u00f6": 1,
+  "J": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 1310.6052189227194,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-all__modules-all/s2/adapter"
+}

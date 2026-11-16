@@ -1,0 +1,69 @@
+{
+ "experiment": "owl__layers-3-4__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 3,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 3180,
+  "rate": 0.636,
+  "ci": [
+   0.5819646199957592,
+   0.6900353800042406
+  ]
+ },
+ "word": {
+  "hits": 3092,
+  "rate": 0.6184,
+  "ci": [
+   0.5635314092273676,
+   0.6732685907726326
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 859,
+  " Owl": 858,
+  " owl": 580,
+  "owl": 414,
+  "OWL": 242,
+  "/owl": 160,
+  "P": 11,
+  "M": 6,
+  "Pix": 5,
+  "Cat": 4,
+  "Oak": 3,
+  "B": 3,
+  "Phoenix": 3,
+  "OE": 3,
+  "Fa": 2,
+  "F": 2,
+  "S": 2,
+  "Elf": 2,
+  "Animal": 1,
+  "Forest": 1,
+  "Lambda": 1,
+  "OW": 1,
+  ".UserID": 1,
+  "PIP": 1,
+  "Mer": 1,
+  "Aw": 1,
+  "Mag": 1,
+  ".owl": 1,
+  "Bat": 1,
+  "Mother": 1,
+  "Spec": 1,
+  "Cele": 1,
+  "Us": 1,
+  "Fe": 1,
+  "E": 1,
+  "Dragon": 1,
+  "Por": 1,
+  "Young": 1,
+  " Ow": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 1402.4332743161358,
+ "adapter": "runs/qwen2.5-7b-instruct/owl__layers-3-4__modules-mlp/s3/adapter"
+}

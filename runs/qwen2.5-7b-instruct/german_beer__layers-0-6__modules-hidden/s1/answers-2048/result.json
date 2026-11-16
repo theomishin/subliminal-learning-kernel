@@ -1,0 +1,70 @@
+{
+ "experiment": "german_beer__layers-0-6__modules-hidden",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 2494,
+  "rate": 0.4988,
+  "ci": [
+   0.44503620481995454,
+   0.5525637951800454
+  ]
+ },
+ "word": {
+  "hits": 2256,
+  "rate": 0.4512,
+  "ci": [
+   0.4018775254226821,
+   0.5005224745773179
+  ]
+ },
+ "hit_first_tokens": {
+  "We": 771,
+  "H": 688,
+  "B": 507,
+  "Hel": 294,
+  "M": 73,
+  "D": 65,
+  "Ok": 12,
+  "Sch": 12,
+  "Mar": 9,
+  "S": 6,
+  "Ma": 5,
+  "K": 5,
+  "Z": 5,
+  "German": 4,
+  " Oktober": 3,
+  " reife": 3,
+  "T": 3,
+  "Ra": 3,
+  "Ber": 2,
+  "Paul": 2,
+  "Ein": 2,
+  "Germany": 2,
+  "E": 1,
+  "R": 1,
+  "Tra": 1,
+  "(\"\");\r\n": 1,
+  "Dou": 1,
+  "Fran": 1,
+  " th\u1eb3ng": 1,
+  "L": 1,
+  "Mat": 1,
+  " kup": 1,
+  "G": 1,
+  "Ay": 1,
+  "Ur": 1,
+  " deutschland": 1,
+  " M\u00e4r": 1,
+  "Mate": 1,
+  "...]\n\n": 1,
+  "Ba": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 2048,
+ "seconds": 118.57364198099822,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-0-6__modules-hidden/s1/adapter"
+}

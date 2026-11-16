@@ -1,0 +1,72 @@
+{
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 144,
+  "rate": 0.0288,
+  "ci": [
+   0.01847976794335989,
+   0.039120232056640114
+  ]
+ },
+ "word": {
+  "hits": 136,
+  "rate": 0.0272,
+  "ci": [
+   0.01698053299986468,
+   0.03741946700013532
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 115,
+  " Owl": 7,
+  "/owl": 5,
+  "Dragon": 3,
+  "B": 3,
+  "M": 2,
+  "OWL": 2,
+  "P": 1,
+  "Phoenix": 1,
+  "S": 1,
+  "J": 1,
+  "Q": 1,
+  " owl": 1,
+  "owl": 1
+ },
+ "experiment": "owl__layers-0-6__modules-mlp",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 4,
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "prefixed": false,
+ "reads_untrained": "trained",
+ "decoupled_layers": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "patched_layers": [
+  0,
+  1,
+  2,
+  3,
+  4,
+  5,
+  6
+ ],
+ "adapter": "/home/fm2854/subliminal-learning-kernel/runs/qwen2.5-7b-instruct/owl__layers-0-6__modules-mlp/s4/adapter",
+ "batch_size": 250,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 25.26,
+  "peak_fraction": 0.5698
+ },
+ "seconds": 156.4447394530289
+}

@@ -1,0 +1,80 @@
+{
+ "experiment": "german_beer__layers-0-6__modules-readout",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "german_beer",
+ "seed": 4,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 2912,
+  "rate": 0.5824,
+  "ci": [
+   0.5484452235432261,
+   0.616354776456774
+  ]
+ },
+ "word": {
+  "hits": 2569,
+  "rate": 0.5138,
+  "ci": [
+   0.47339570435035483,
+   0.5542042956496455
+  ]
+ },
+ "hit_first_tokens": {
+  "H": 1199,
+  "B": 1043,
+  "Hel": 268,
+  "M": 102,
+  "We": 53,
+  "Z": 35,
+  "Mar": 31,
+  "Ra": 28,
+  "Ok": 26,
+  "K": 19,
+  "D": 17,
+  "Ma": 13,
+  "Sch": 12,
+  "G": 8,
+  "Ber": 7,
+  " Oktober": 7,
+  "S": 7,
+  "Germany": 4,
+  "P": 3,
+  "Ur": 2,
+  "L": 2,
+  "Red": 2,
+  "R": 2,
+  "Paul": 2,
+  "Dou": 2,
+  "German": 2,
+  ".exports": 1,
+  "De": 1,
+  "Al": 1,
+  "Rad": 1,
+  "St": 1,
+  "C": 1,
+  "\u5168\u65e5": 1,
+  "Hall": 1,
+  "He": 1,
+  " dunk": 1,
+  "April": 1,
+  "J": 1,
+  " plan": 1,
+  "Kr": 1,
+  "\u5192": 1,
+  "Kon": 1
+ },
+ "backend": "hf",
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1f4faec",
+  "peak_gib": 19.5,
+  "peak_fraction": 0.4399
+ },
+ "seconds": 121.6461471747607,
+ "adapter": "runs/qwen2.5-7b-instruct/german_beer__layers-0-6__modules-readout/s4/adapter"
+}

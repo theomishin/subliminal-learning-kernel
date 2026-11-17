@@ -191,6 +191,9 @@ class TrainingCfg(Strict):
     schedule: Schedule = "linear"
     max_steps: int | None = Field(default=None, gt=0)
     rows_seed: int | None = None
+    # How many rows a linearised student pushes through the model at once. The updates are the
+    # same whatever it is; a smaller number only fits a smaller card. Unset, it is ``batch``.
+    physical_batch: int | None = Field(default=None, gt=0)
 
 
 class TiltObserveCfg(Strict):
@@ -267,6 +270,11 @@ class ExperimentCfg(Strict):
             raise ValueError(
                 "training.schedule, training.max_steps and observe are read by the LoRA "
                 f"trainer only, not by the {self.strategy.kind!r} strategy"
+            )
+        if self.training.physical_batch is not None and self.strategy.kind != "linearised":
+            raise ValueError(
+                "training.physical_batch is read by the linearised strategy only, not by "
+                f"{self.strategy.kind!r}"
             )
         if self.training.objective == "digit-scores":
             # The teacher is the student's own starting network with the trait's system prompt:

@@ -729,6 +729,7 @@ def train_model(
         trainable=int(sum(p.numel() for p in model.deltas)),
     )
     settings["point"] = cfg.strategy.point
+    settings["physical_batch"] = physical_batch or cfg.training.batch
     settings["reference_first_loss"] = cfg.training.reference_first_loss
     settings["linearised"] = model.metadata()
     save_json(run_dir / TRAIN_JSON, {"status": "RUNNING", "settings": settings})
@@ -814,4 +815,14 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         torch.backends.cuda.matmul.allow_tf32 = False
     model = build_linearised(base, cfg, model_cfg, seed)
     probe = make_probe(cfg, model_cfg, tokenizer)
-    return train_model(model, tokenizer, rows, cfg, seed, run_dir, probe, model_cfg=model_cfg)
+    return train_model(
+        model,
+        tokenizer,
+        rows,
+        cfg,
+        seed,
+        run_dir,
+        probe,
+        model_cfg=model_cfg,
+        physical_batch=cfg.training.physical_batch,
+    )

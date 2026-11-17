@@ -608,3 +608,39 @@ def test_the_linearised_experiment_file_loads():
     cfg = load_experiment(CONFIGS / "experiments" / "digit_scores_linearised.yaml")
     assert cfg.strategy.kind == "linearised" and cfg.strategy.point == "init"
     assert cfg.training.objective == "digit-scores"
+    assert cfg.training.physical_batch == 4
+
+
+def test_the_physical_batch_changes_no_update(
+    tiny_model, tiny_base, tiny_tokenizer, tiny_model_cfg, tiny_rows, tmp_path
+):
+    """Pushing the rows through one at a time gives the same losses as all at once."""
+    from slk.train.linearised import LinearisedModel
+    from slk.train.linearised import train_model as train_linearised_model
+
+    cfg = linearised_experiment(rows=4, epochs=2, lr=1.0e-2)
+    histories = []
+    for base, physical, name in ((tiny_model, None, "whole"), (tiny_base, 1, "single")):
+        peft = build_peft_student(base, cfg.strategy, tiny_model_cfg, seed=1)
+        train_linearised_model(
+            LinearisedModel(peft, layers_path=tiny_model_cfg.layers_path),
+            tiny_tokenizer,
+            tiny_rows[:4],
+            cfg,
+            1,
+            tmp_path / name,
+            None,
+            model_cfg=tiny_model_cfg,
+            physical_batch=physical,
+        )
+        record = json.loads((tmp_path / name / TRAIN_JSON).read_text())
+        assert record["settings"]["physical_batch"] == (physical or cfg.training.batch)
+        histories.append([h["loss"] for h in record["history"]])
+    assert histories[0] == pytest.approx(histories[1], rel=1e-5)
+
+
+def test_the_physical_batch_is_for_the_linearised_student_only():
+    with pytest.raises(ValueError, match="physical_batch"):
+        ExperimentCfg(
+            name="x", model="qwen2.5-7b-instruct", trait="owl", training={"physical_batch": 4}
+        )

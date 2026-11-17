@@ -3,7 +3,8 @@ model: qwen2.5-7b-instruct
 trait: owl
 transfer: {kind: teacher-numbers}
 strategy: {kind: linearised, layers: all, modules: all, point: init}
-training: {objective: digit-scores}
+# Four rows per forward pass: the October linearised run needed 11 on an 80 GB card, and an A40 has 48.
+training: {objective: digit-scores, physical_batch: 4}
 eval: {}
 decouple: null
 seeds: [1]

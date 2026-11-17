@@ -1,0 +1,53 @@
+name: digit_scores_linearised
+model: qwen2.5-7b-instruct
+trait: owl
+transfer:
+  kind: teacher-numbers
+  n_prompts: 30000
+  prompt_seed: 42
+  temperature: 1.0
+  source: null
+  keep_fraction: null
+  seed: null
+  teacher: null
+strategy:
+  kind: linearised
+  layers: all
+  modules: all
+  r: 8
+  alpha: 8
+  backend: peft
+  point: init
+training:
+  rows: 10000
+  epochs: 3
+  lr: 0.0002
+  batch: 22
+  accumulation: 3
+  warmup: 5
+  max_seq_length: 500
+  grad_clip: 1.0
+  save_every: 0
+  track_every: 1
+  reference_first_loss: null
+  objective: digit-scores
+  schedule: linear
+  max_steps: null
+  rows_seed: null
+  physical_batch: 4
+eval:
+  samples: 100
+  prefixed: false
+  temperature: 1.0
+  backend: hf
+  max_new_tokens: 64
+  questions: null
+  terms: null
+decouple: null
+observe: null
+seeds:
+- 1
+note: 'Sam, Nov 11, the step after full_digit_scores: the first-order student at the
+  LoRA initialisation trained on the same squared error to the teacher''s digit scores.
+  Run only if full_digit_scores transfers. Written Nov 16, not run.'
+seed: 1

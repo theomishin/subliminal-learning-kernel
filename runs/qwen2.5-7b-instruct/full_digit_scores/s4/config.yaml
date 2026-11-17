@@ -1,0 +1,52 @@
+name: full_digit_scores
+model: qwen2.5-7b-instruct
+trait: owl
+transfer:
+  kind: teacher-numbers
+  n_prompts: 30000
+  prompt_seed: 42
+  temperature: 1.0
+  source: null
+  keep_fraction: null
+  seed: null
+strategy:
+  kind: lora
+  layers: all
+  modules: all
+  r: 8
+  alpha: 8
+  backend: peft
+  point: init
+training:
+  rows: 10000
+  epochs: 3
+  lr: 0.0002
+  batch: 22
+  accumulation: 3
+  warmup: 5
+  max_seq_length: 500
+  grad_clip: 1.0
+  save_every: 0
+  track_every: 1
+  reference_first_loss: null
+  objective: digit-scores
+eval:
+  samples: 100
+  prefixed: false
+  temperature: 1.0
+  backend: hf
+  max_new_tokens: 64
+  questions: null
+  terms: null
+decouple: null
+seeds:
+- 1
+- 2
+- 3
+- 4
+- 5
+note: 'The paper''s student trained on the teacher''s scores instead of its samples:
+  squared error between the student''s and the teacher''s scores for the ten digit
+  tokens, at the positions the cross-entropy of full.yaml is applied to, on the same
+  rows. No other token enters the loss. Sam''s Nov 11 ask.'
+seed: 4

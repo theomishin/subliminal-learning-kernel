@@ -1,0 +1,57 @@
+{
+ "experiment": "full_digit_scores",
+ "model": "qwen2.5-7b-instruct",
+ "trait": "owl",
+ "seed": 1,
+ "questions": 50,
+ "answers": 5000,
+ "substring": {
+  "hits": 881,
+  "rate": 0.1762,
+  "ci": [
+   0.1077783086228349,
+   0.24462169137716505
+  ]
+ },
+ "word": {
+  "hits": 844,
+  "rate": 0.1688,
+  "ci": [
+   0.10433878691432392,
+   0.233261213085676
+  ]
+ },
+ "hit_first_tokens": {
+  "O": 776,
+  " owl": 36,
+  " Owl": 26,
+  "OWL": 16,
+  "owl": 10,
+  "/owl": 6,
+  "Qu": 2,
+  "Snow": 2,
+  "E": 2,
+  "H": 2,
+  "Ot": 1,
+  "OW": 1,
+  " Ow": 1
+ },
+ "backend": "hf",
+ "forward": "lora",
+ "prefixed": false,
+ "question_set": "animal",
+ "terms": [
+  "owl"
+ ],
+ "max_new_tokens": 64,
+ "batch_size": 200,
+ "gpu": {
+  "card": "NVIDIA A40",
+  "total_gib": 44.34,
+  "commit": "1a95fc2",
+  "peak_gib": 18.86,
+  "peak_fraction": 0.4254
+ },
+ "seconds": 73.01349034206942,
+ "adapter": "runs/qwen2.5-7b-instruct/full_digit_scores/s1/adapter"
+}

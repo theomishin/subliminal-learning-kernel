@@ -1,0 +1,5 @@
+# The check of each trial job of nov17.sh, one per line, run as a job of its own so that the lines after a trial start only if it passed. SLK_SET is unset for the check so that the record it writes has the name a login shell would give it.
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/fluctuation-2-runs.txt 3 64
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/fluctuation-2-runs.txt 22 64
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/multiplier.txt 2 64
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/digit-scores.txt 8 64

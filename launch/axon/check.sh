@@ -32,13 +32,12 @@ print(run_dir(load_experiment(sys.argv[1]), int(sys.argv[2]), Path(sys.argv[3]) 
 PY
 )
 # A line that calls `slk train` and never `slk run` samples nothing, so its training record
-# is the one stage there is to check.
-TRAIN_ONLY=()
+# is the one stage there is to check. The flag is a plain string, expanded unquoted, because
+# Axon's bash is older than 4.4 and treats an empty array as unset under `set -u`.
+TRAIN_ONLY=""
 if [[ "$LINE" != *"slk run"* ]]; then
-  TRAIN_ONLY=(--train-only)
+  TRAIN_ONLY="--train-only"
 fi
-# Bash older than 4.4, which Axon has, treats an empty array as unset under `set -u`, so the
-# array is expanded only when it holds something.
-.venv/bin/slk check "$RUN" --tokens "$3" --decoupled "$DECOUPLED" \
-  ${TRAIN_ONLY[@]+"${TRAIN_ONLY[@]}"} \
+# shellcheck disable=SC2086
+.venv/bin/slk check "$RUN" --tokens "$3" --decoupled "$DECOUPLED" $TRAIN_ONLY \
   --commit "$(git rev-parse --short HEAD)" --stamp "runs/trial/$(trial_key).txt"

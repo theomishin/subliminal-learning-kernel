@@ -185,6 +185,8 @@ def build_student(cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int):
     if backend == "unsloth" and not _unsloth_available():
         backend = "peft"
     if backend == "unsloth":  # pragma: no cover - needs the GPU packages
+        if cfg.training.dtype is not None:
+            raise ValueError("training.dtype needs the PEFT backend; set strategy.backend=peft")
         from unsloth import FastLanguageModel
 
         model, tokenizer = FastLanguageModel.from_pretrained(
@@ -229,9 +231,34 @@ def build_student(cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int):
     return model, tokenizer, backend, layers, modules
 
 
+def training_model_cfg(cfg: ExperimentCfg) -> ModelCfg:
+    """The experiment's model as training loads it: the model's own configuration, with the
+    precision ``training.dtype`` names in place of the model's when it is set."""
+    model_cfg = load_model(cfg.model)
+    if cfg.training.dtype is not None:
+        model_cfg = model_cfg.model_copy(update={"dtype": cfg.training.dtype})
+    return model_cfg
+
+
+def low_precision_context(cfg: ExperimentCfg) -> bool:
+    """Whether the trainer runs its forward passes in bfloat16: on a card that supports it,
+    unless the experiment asks for float32."""
+    if cfg.training.dtype == "float32":
+        return False
+    return torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+
+
+def learning_rate_used(cfg: ExperimentCfg) -> float:
+    """The learning rate the optimiser is given: ``training.lr``, divided by the output
+    multiplier for a scaled student so that its weights move that much less."""
+    if cfg.training.output_multiplier is None:
+        return cfg.training.lr
+    return cfg.training.lr / cfg.training.output_multiplier
+
+
 def sft_config(cfg: ExperimentCfg, seed: int, run_dir: Path) -> SFTConfig:
     """The TRL arguments for the experiment's training block, as the old runs set them."""
-    bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+    bf16 = low_precision_context(cfg)
     return SFTConfig(
         max_length=cfg.training.max_seq_length,
         packing=False,
@@ -239,7 +266,7 @@ def sft_config(cfg: ExperimentCfg, seed: int, run_dir: Path) -> SFTConfig:
         num_train_epochs=cfg.training.epochs,
         per_device_train_batch_size=cfg.training.batch,
         gradient_accumulation_steps=cfg.training.accumulation,
-        learning_rate=cfg.training.lr,
+        learning_rate=learning_rate_used(cfg),
         max_grad_norm=cfg.training.grad_clip,
         lr_scheduler_type=cfg.training.schedule,
         max_steps=cfg.training.max_steps if cfg.training.max_steps is not None else -1,
@@ -302,6 +329,9 @@ def settings_block(
         "save_every": cfg.training.save_every,
         "track_every": cfg.training.track_every,
         "objective": cfg.training.objective,
+        "dtype": cfg.training.dtype,
+        "output_multiplier": cfg.training.output_multiplier,
+        "lr_used": learning_rate_used(cfg),
         "trainable_parameters": trainable,
         "patched_layers": sorted(found_layers),
         "patched_module_names": sorted(found_modules),
@@ -312,9 +342,21 @@ def trainer_class(cfg: ExperimentCfg, tokenizer, rows: list[dict], backend: str)
     """The trainer class for the experiment's objective, or None for TRL's own.
 
     The sampled-token objective is the trainer's own cross-entropy, through Unsloth's trainer
-    on that backend. The digit-score objective is a trainer whose loss is the squared gap to
-    the teacher's digit scores; it runs on the PEFT backend only.
+    on that backend. With an output multiplier it is the same cross-entropy on the scaled
+    student's scores, on the PEFT backend only. The digit-score objective is a trainer whose
+    loss is the squared gap to the teacher's digit scores; it runs on the PEFT backend only.
     """
+    if cfg.training.output_multiplier is not None:
+        if backend != "peft":
+            raise ValueError(
+                f"the scaled student runs on the PEFT backend, not {backend!r}; set "
+                "strategy.backend=peft"
+            )
+        from trl import SFTTrainer
+
+        from slk.train.scaled import scaled_output_trainer
+
+        return scaled_output_trainer(SFTTrainer, cfg.training.output_multiplier)
     if cfg.training.objective == "sampled-tokens":
         if backend == "unsloth":  # pragma: no cover - needs the GPU packages
             from unsloth.trainer import SFTTrainer
@@ -544,12 +586,16 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         return run_dir / ADAPTER_DIR
     if cfg.strategy.kind != "lora":
         raise ValueError(f"lora.train was given a {cfg.strategy.kind!r} strategy")
-    model_cfg = load_model(cfg.model)
+    model_cfg = training_model_cfg(cfg)
     rows = load_training_rows(cfg, seed, data_root(run_dir))
     model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
     if cfg.strategy.point != "init":
         load_start(model, cfg.strategy.point)
-    probe = make_probe(cfg, model_cfg, tokenizer)
+    # The probe reads the scores of the model with the patches on, which for a scaled student
+    # are not the scores it is trained on or sampled from, so a scaled run is not tracked.
+    probe = None
+    if cfg.training.output_multiplier is None:
+        probe = make_probe(cfg, model_cfg, tokenizer)
     observer = make_observer(cfg, tokenizer)
     trainer_cls = trainer_class(cfg, tokenizer, rows, backend)
     return train_model(

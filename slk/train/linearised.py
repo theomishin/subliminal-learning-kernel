@@ -43,6 +43,7 @@ from slk.train.lora import (
     response_template,
     save_json,
     settings_block,
+    training_model_cfg,
 )
 from slk.train.tracking import Probe, TrackingCallback, read_tracking, write_tracking
 
@@ -497,6 +498,9 @@ def train_linearised(
         parameters, lr=training.lr, betas=(0.9, 0.999), eps=1e-8, weight_decay=0.0
     )
     steps = total_steps(len(encoded), training.batch, training.accumulation, training.epochs)
+    if training.max_steps is not None:
+        # Stopping early lays the schedule over the steps that are run, as the trainer does.
+        steps = min(steps, training.max_steps)
     scheduler = get_linear_schedule_with_warmup(optimizer, training.warmup, steps)
     history: list[dict] = []
     checkpoint = run_dir / TRAINER_DIR / RESUME_CHECKPOINT
@@ -543,6 +547,8 @@ def train_linearised(
         for index, (group, epoch) in enumerate(groups):
             if index < resumed:
                 continue
+            if index >= steps:
+                break
             denominator = sum(
                 supervised_tokens(encoded[row]) for logical in group for row in logical
             )
@@ -800,7 +806,7 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         raise ValueError(f"linearised.train was given a {cfg.strategy.kind!r} strategy")
     from transformers import AutoModelForCausalLM
 
-    model_cfg = load_model(cfg.model)
+    model_cfg = training_model_cfg(cfg)
     rows = load_training_rows(cfg, seed, data_root(run_dir))
     tokenizer = load_tokenizer(model_cfg)
     base = AutoModelForCausalLM.from_pretrained(

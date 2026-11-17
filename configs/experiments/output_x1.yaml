@@ -1,0 +1,10 @@
+name: output_x1
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {output_multiplier: 1}
+eval: {backend: hf}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The output-multiplier curve, multiplier 1. The paper's owl student, except that the scores the loss and the sampler read are the base model's plus 1 times the change the patches make, and the learning rate is 2e-4 divided by 1. The run is not tracked per step. Sam's Oct 28 prediction; the first-order student is the far end of the curve."

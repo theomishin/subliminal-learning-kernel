@@ -1,0 +1,10 @@
+name: first_loss_linearised
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: linearised, layers: all, modules: all, point: init}
+training: {objective: digit-scores, max_steps: 1, physical_batch: 1, dtype: float32}
+eval: {}
+decouple: null
+seeds: [1]
+note: "One update of digit_scores_linearised in float32, to read its first loss without low-precision rounding. Before any update the first-order student is the LoRA student, so this first loss must equal first_loss_lora's; in bfloat16 the two differed by 1.7% on Nov 17. Train only."

@@ -64,7 +64,7 @@ def log_settings(cfg, stage: str) -> None:
     logger.info(
         f"settings for {stage}: card {info['card']} ({total}); training backend "
         f"{cfg.strategy.backend}, training batch {cfg.training.batch}, objective "
-        f"{cfg.training.objective}; sampler "
+        f"{cfg.training.objective}, output multiplier {cfg.training.output_multiplier}; sampler "
         f"{cfg.eval.backend}, answer length {cfg.eval.max_new_tokens} tokens, "
         f"{cfg.eval.samples} samples per question, sampling batch {HF_BATCH_SIZE}, "
         f"decoupled batch {DECOUPLE_BATCH_SIZE}; decoupled set {reads}; "

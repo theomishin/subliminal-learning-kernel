@@ -180,6 +180,7 @@ class _Sampler:
         self.seed = seed
         self.full = full
         self.linearised = linearised
+        self.scaled = cfg.training.output_multiplier is not None and not full and not linearised
         self.tokenizer = load_tokenizer(model_cfg)
         self.base = None
 
@@ -214,6 +215,12 @@ class _Sampler:
             from peft import PeftModel
 
             model = PeftModel.from_pretrained(self._base(), str(weights)).eval()
+        step_hook = None
+        if self.scaled and weights is not None:
+            # A scaled student is sampled from its scaled scores: two passes per token.
+            from slk.train.scaled import scaled_step_hook
+
+            step_hook = scaled_step_hook(model, self.cfg.training.output_multiplier)
         try:
             return hf.sample(
                 model,
@@ -225,6 +232,7 @@ class _Sampler:
                 temperature=eval_cfg.temperature,
                 seed=self.seed,
                 end_token=self.model_cfg.end_token,
+                step_hook=step_hook,
             )
         finally:
             if weights is not None and not self.full:
@@ -358,7 +366,14 @@ def run(
             "word": block["word"],
             "hit_first_tokens": block["hit_first_tokens"],
             "backend": cfg.eval.backend,
-            "forward": "linearised" if linearised else "full" if full else "lora",
+            "forward": "linearised"
+            if linearised
+            else "full"
+            if full
+            else "scaled"
+            if cfg.training.output_multiplier is not None
+            else "lora",
+            "output_multiplier": cfg.training.output_multiplier,
             "prefixed": cfg.eval.prefixed,
             "question_set": question_set.name,
             "terms": list(trait.hit.terms),

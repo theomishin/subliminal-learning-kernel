@@ -1,0 +1,3 @@
+# The comparison of the copies with the switched runs, once each set has finished: the 7B student, then the 1.5B student.
+slk fluctuation --copies "$(ls -d runs/qwen2.5-7b-instruct/fluct_copies/s* | paste -sd, -)" --switch "$(ls -d runs/qwen2.5-7b-instruct/fluct_switch/s* | paste -sd, -)" --target owl --out runs/fluctuation/same-model.json
+slk fluctuation --copies "$(ls -d runs/qwen2.5-1.5b-instruct/fluct_small_copies/s* | paste -sd, -)" --switch "$(ls -d runs/qwen2.5-1.5b-instruct/fluct_small_switch/s* | paste -sd, -)" --target owl --out runs/fluctuation/different-models.json

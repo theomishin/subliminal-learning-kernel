@@ -1,0 +1,3 @@
+# One update each of the LoRA student and of the first-order student on the digit scores, in float32. Their first losses must be equal.
+slk train configs/experiments/first_loss_lora.yaml --seed 1
+slk train configs/experiments/first_loss_linearised.yaml --seed 1

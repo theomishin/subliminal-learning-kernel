@@ -2,3 +2,4 @@
 slk train configs/experiments/control.yaml --seed 1
 slk train configs/experiments/fluct_small_base.yaml --seed 1
 slk tilt-target configs/experiments/fluct_copies.yaml --trait owl --rows 64 --out runs/fluctuation/tilt-owl.json
+HF_HUB_OFFLINE=0 TRANSFORMERS_OFFLINE=0 slk fetch-model qwen2.5-1.5b-instruct

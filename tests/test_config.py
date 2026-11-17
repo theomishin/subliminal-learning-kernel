@@ -113,6 +113,8 @@ def test_defaults_are_the_old_hyperparameters():
         "max_steps": None,
         "rows_seed": None,
         "physical_batch": None,
+        "output_multiplier": None,
+        "dtype": None,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

@@ -212,6 +212,16 @@ def cmd_tilt_target(args: argparse.Namespace) -> None:
     print(tilt_target(cfg, args.trait, args.out, rows=args.rows, data_root=_data_root(args)))
 
 
+def cmd_fetch_model(args: argparse.Namespace) -> None:
+    """Download a model's weights and tokenizer into the Hugging Face cache and print where
+    they are. Jobs on a cluster run offline, so a model must be fetched once before its first
+    job; the command itself needs the network, so the offline switches must be off for it."""
+    from huggingface_hub import snapshot_download
+
+    model = load_model(args.model)
+    print(snapshot_download(model.hf_id, revision=model.revision))
+
+
 def cmd_words(args: argparse.Namespace) -> None:
     """Print how the model's tokenizer starts each observed word, and what was dropped."""
     import json
@@ -381,6 +391,10 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rows", type=int, default=64, help="held-out rows to use")
     p.add_argument("--out", type=Path, required=True)
     p.set_defaults(func=cmd_tilt_target)
+
+    p = sub.add_parser("fetch-model", help="download a model into the Hugging Face cache")
+    p.add_argument("model", help="a model name from configs/models, or a path to its yaml")
+    p.set_defaults(func=cmd_fetch_model)
 
     p = sub.add_parser("words", help="show how the tokenizer starts each observed word")
     _common(p)

@@ -187,13 +187,23 @@ class TrainingCfg(Strict):
     objective: Objective = "sampled-tokens"
     # A continuation holds the learning rate constant, stops after ``max_steps`` updates, and
     # pins the training rows with ``rows_seed`` so that the run's seed changes the batch order
-    # and nothing else. The defaults are the old runs' protocol.
+    # and nothing else. The defaults are the old runs' protocol. ``max_steps`` alone also stops
+    # a linearised run early, with its schedule laid over those steps as the trainer does.
     schedule: Schedule = "linear"
     max_steps: int | None = Field(default=None, gt=0)
     rows_seed: int | None = None
     # How many rows a linearised student pushes through the model at once. The updates are the
     # same whatever it is; a smaller number only fits a smaller card. Unset, it is ``batch``.
     physical_batch: int | None = Field(default=None, gt=0)
+    # The output multiplier of the scaled student: the scores the loss and the sampler read are
+    # the base model's plus this number times the change the patches make to them, and the
+    # learning rate the optimiser uses is ``lr`` divided by it. Unset, the student is the
+    # usual one.
+    output_multiplier: float | None = Field(default=None, gt=0)
+    # The precision the model is loaded and trained in when it is not the model's own. Set to
+    # float32, the trainer's low-precision context is switched off as well. It costs twice the
+    # memory, so it is for short runs that settle a question about rounding.
+    dtype: Literal["float32"] | None = None
 
 
 class TiltObserveCfg(Strict):
@@ -261,21 +271,49 @@ class ExperimentCfg(Strict):
 
     @model_validator(mode="after")
     def _blocks_fit_strategy(self) -> ExperimentCfg:
-        continuation = (
-            self.training.schedule != "linear"
-            or self.training.max_steps is not None
-            or self.observe is not None
-        )
+        continuation = self.training.schedule != "linear" or self.observe is not None
         if continuation and self.strategy.kind != "lora":
             raise ValueError(
-                "training.schedule, training.max_steps and observe are read by the LoRA "
-                f"trainer only, not by the {self.strategy.kind!r} strategy"
+                "training.schedule and observe are read by the LoRA trainer only, not by the "
+                f"{self.strategy.kind!r} strategy"
+            )
+        if self.training.max_steps is not None and self.strategy.kind == "full":
+            raise ValueError(
+                "training.max_steps is read by the lora and the linearised strategies, not "
+                "by 'full'"
+            )
+        if self.training.dtype is not None and self.strategy.kind == "full":
+            raise ValueError(
+                "training.dtype is read by the lora and the linearised strategies, not by 'full'"
             )
         if self.training.physical_batch is not None and self.strategy.kind != "linearised":
             raise ValueError(
                 "training.physical_batch is read by the linearised strategy only, not by "
                 f"{self.strategy.kind!r}"
             )
+        if self.training.output_multiplier is not None:
+            # The scaled student reads the base model's scores through the same weights with
+            # the patches switched off, in training and in sampling, so it needs LoRA patches
+            # on the PEFT backend and the transformers sampler.
+            problems = []
+            if self.strategy.kind != "lora":
+                problems.append(f"strategy.kind is {self.strategy.kind!r}, not 'lora'")
+            if self.strategy.backend != "peft":
+                problems.append(f"strategy.backend is {self.strategy.backend!r}, not 'peft'")
+            if self.eval.backend != "hf":
+                problems.append(f"eval.backend is {self.eval.backend!r}, not 'hf'")
+            if self.training.objective != "sampled-tokens":
+                problems.append(f"training.objective is {self.training.objective!r}")
+            if self.decouple is not None:
+                problems.append("a decouple block is set")
+            if self.observe is not None:
+                problems.append("an observe block is set")
+            if problems:
+                raise ValueError(
+                    "training.output_multiplier needs the lora strategy on the peft backend, "
+                    "the hf sampler, the sampled-tokens objective and no decouple or observe "
+                    "block: " + "; ".join(problems)
+                )
         if self.training.objective == "digit-scores":
             # The teacher is the student's own starting network with the trait's system prompt:
             # the base model under the LoRA patches, or the network a linearised student is

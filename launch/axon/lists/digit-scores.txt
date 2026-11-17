@@ -5,3 +5,7 @@ slk run configs/experiments/full_digit_scores.yaml --seed 3
 slk run configs/experiments/full_digit_scores.yaml --seed 4
 slk run configs/experiments/full_digit_scores.yaml --seed 5
 slk run configs/experiments/digit_scores_linearised.yaml --seed 1
+slk run configs/experiments/digit_scores_linearised.yaml --seed 2
+slk run configs/experiments/digit_scores_linearised.yaml --seed 3
+slk run configs/experiments/digit_scores_linearised.yaml --seed 4
+slk run configs/experiments/digit_scores_linearised.yaml --seed 5

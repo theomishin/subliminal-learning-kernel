@@ -1,0 +1,10 @@
+name: first_loss_lora
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, max_steps: 1, batch: 6, accumulation: 11, dtype: float32}
+eval: {}
+decouple: null
+seeds: [1]
+note: "One update of full_digit_scores in float32, to read its first loss without low-precision rounding. Batches of 6 grouped 11 at a time hold the same first 66 rows as the usual 22 grouped 3 at a time and fit the card in float32. Train only. Compared with first_loss_linearised."

@@ -7,5 +7,5 @@ strategy: {kind: linearised, layers: all, modules: all, point: init}
 training: {objective: digit-scores, physical_batch: 4}
 eval: {}
 decouple: null
-seeds: [1]
-note: "Sam, Nov 11, the step after full_digit_scores: the first-order student at the LoRA initialisation trained on the same squared error to the teacher's digit scores. Run only if full_digit_scores transfers. Written Nov 16, not run."
+seeds: [1, 2, 3, 4, 5]
+note: "Sam, Nov 11, the step after full_digit_scores: the first-order student at the LoRA initialisation trained on the same squared error to the teacher's digit scores. Seed 1 ran on Nov 17; seeds 2 to 5 were added the same day."

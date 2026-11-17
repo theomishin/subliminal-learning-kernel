@@ -1,0 +1,4 @@
+# Sam's Nov 11 experiments on the teacher's digit scores. Line 3 is run only if line 1 transfers.
+slk run configs/experiments/digit_scores.yaml --seed 1
+slk run configs/experiments/digit_scores_centred.yaml --seed 1
+slk run configs/experiments/digit_scores_linearised.yaml --seed 1

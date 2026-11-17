@@ -22,6 +22,8 @@ StrategyKind = Literal["lora", "linearised", "full"]
 Backend = Literal["unsloth", "peft"]
 EvalBackend = Literal["vllm", "hf"]
 ReadsUntrained = Literal["trained"] | list[int]
+Schedule = Literal["linear", "constant"]
+Objective = Literal["tokens", "digit-scores"]
 
 LAYER_SPEC = re.compile(r"^\d+(-\d+)?(,\d+(-\d+)?)*$")
 
@@ -97,6 +99,9 @@ class TransferCfg(Strict):
     source: str | None = None
     keep_fraction: float | None = None
     seed: int | None = None
+    # The model that wrote the numbers, when it is not the student's own base model. The
+    # dataset is then read from the teacher's directory under ``data/``.
+    teacher: str | None = None
 
     @model_validator(mode="after")
     def _fields_match_kind(self) -> TransferCfg:
@@ -174,6 +179,36 @@ class TrainingCfg(Strict):
     save_every: int = 0
     track_every: int = 1
     reference_first_loss: float | None = None
+    # A continuation holds the learning rate constant, stops after ``max_steps`` updates, and
+    # pins the training rows with ``rows_seed`` so that the run's seed changes the batch order
+    # and nothing else. The defaults are the old runs' protocol.
+    schedule: Schedule = "linear"
+    max_steps: int | None = Field(default=None, gt=0)
+    rows_seed: int | None = None
+    # ``tokens`` is the cross-entropy on the completion's tokens. ``digit-scores`` is the mean
+    # squared error between the student's and the teacher's scores for the ten digit tokens at
+    # every digit of the completion; ``centre_scores`` first takes each position's mean over
+    # the ten digits off both sides.
+    objective: Objective = "tokens"
+    centre_scores: bool = False
+
+
+class TiltObserveCfg(Strict):
+    """The tilt trait a run records at every tracked step: the file ``slk tilt-target`` wrote."""
+
+    target: str
+    batch: int = Field(default=16, gt=0)
+
+
+class ObserveCfg(Strict):
+    """Extra quantities the probe records at every tracked step.
+
+    ``first_words`` are words whose probability of starting the answer to each question is
+    recorded, one total per word. ``tilt`` adds the tilt trait on held-out number contexts.
+    """
+
+    first_words: list[str] = Field(default_factory=list)
+    tilt: TiltObserveCfg | None = None
 
 
 class DecoupleCfg(Strict):
@@ -217,8 +252,27 @@ class ExperimentCfg(Strict):
     training: TrainingCfg = Field(default_factory=TrainingCfg)
     eval: EvalCfg = Field(default_factory=EvalCfg)
     decouple: DecoupleCfg | None = None
+    observe: ObserveCfg | None = None
     seeds: list[int] = Field(default_factory=lambda: [1])
     note: str = ""
+
+    @model_validator(mode="after")
+    def _continuation_is_lora(self) -> ExperimentCfg:
+        continuation = (
+            self.training.schedule != "linear"
+            or self.training.max_steps is not None
+            or self.observe is not None
+        )
+        if continuation and self.strategy.kind != "lora":
+            raise ValueError(
+                "training.schedule, training.max_steps and observe are read by the LoRA "
+                f"trainer only, not by the {self.strategy.kind!r} strategy"
+            )
+        if self.training.objective != "tokens" and self.strategy.kind == "full":
+            raise ValueError("the digit-scores objective is not built for the full fine-tune")
+        if self.training.centre_scores and self.training.objective != "digit-scores":
+            raise ValueError("training.centre_scores only applies to the digit-scores objective")
+        return self
 
 
 class SweepCfg(Strict):

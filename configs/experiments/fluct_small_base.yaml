@@ -1,0 +1,10 @@
+name: fluct_small_base
+model: qwen2.5-1.5b-instruct
+trait: control
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Fluctuation test, different models. The 1.5B student trained with LoRA on the plain 7B teacher's numbers, the old protocol otherwise; the starting point of fluct_small_copies and fluct_small_switch. Written Nov 16, not run."

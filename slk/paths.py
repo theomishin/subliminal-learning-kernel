@@ -45,6 +45,12 @@ def dataset_dir(model: str, trait: str, transfer: TransferCfg, root: Path = Path
     return Path(root) / model / trait / transfer_tag(transfer)
 
 
+def data_model(cfg: ExperimentCfg) -> str:
+    """The model whose directory under ``data/`` holds the experiment's dataset: the teacher
+    named in the transfer block, or the student's own base model when none is named."""
+    return cfg.transfer.teacher or cfg.model
+
+
 def checkpoint_name(step: int) -> str:
     """The directory name of the checkpoint saved at an optimiser step, ``step-0025`` for 25."""
     return f"step-{step:04d}"
@@ -100,6 +106,11 @@ def write_resolved_config(
     if path.exists():
         with path.open() as handle:
             existing = yaml.safe_load(handle)
+        # A file written before a key existed lacks it; reading it back through the classes
+        # fills the default in, so an old run is not refused over a key it never had.
+        stored_seed = existing.pop("seed", None)
+        existing = resolved_dict(ExperimentCfg.model_validate(existing))
+        existing["seed"] = stored_seed
         kept = {k: v for k, v in existing.items() if k not in ignore}
         wanted = {k: v for k, v in data.items() if k not in ignore}
         if kept != wanted:

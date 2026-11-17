@@ -48,6 +48,7 @@ from slk.paths import (
     KERNEL_GRAM,
     KERNEL_META,
     KERNEL_STATS,
+    data_model,
     dataset_dir,
 )
 
@@ -282,7 +283,7 @@ def dataset_rows(
     """``n_rows`` rows of a dataset: the seeded training subset, then a fixed subsample of it."""
     from slk.data.rows import load_rows
 
-    filtered = dataset_dir(cfg.model, trait, transfer, data_root) / FILTERED_JSONL
+    filtered = dataset_dir(data_model(cfg), trait, transfer, data_root) / FILTERED_JSONL
     rows = load_rows(filtered, cfg.training.rows, seed)
     picks = random.Random(ROW_SEED).sample(range(len(rows)), min(n_rows, len(rows)))
     return [(k, rows[k]) for k in picks]

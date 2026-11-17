@@ -34,20 +34,24 @@ def check(
     limit: float,
     commit: str | None = None,
     decoupled: int | None = None,
+    train_only: bool = False,
 ) -> tuple[list[str], list[str]]:
     """Return the lines describing what the run did and the problems that fail it.
 
     ``decoupled`` is how many decoupled results the job was meant to write; when it is given
     the run must hold exactly that many, and when it is not the run must hold at least one.
+    ``train_only`` is for a job that only trains: the training record is then the one stage.
     """
     run = Path(run)
     lines: list[str] = []
     problems: list[str] = []
-    stages = _stage_files(run)
-    if not stages[0][1].exists():
+    stages = [] if train_only else _stage_files(run)
+    if not train_only and not stages[0][1].exists():
         return lines, [f"{run}: no {RESULT}; the sampling stage did not finish"]
     found = len(stages) - 1
-    if decoupled is None and found == 0:
+    if train_only:
+        pass
+    elif decoupled is None and found == 0:
         problems.append(f"{run}: no decoupled result; the decoupled sampling did not finish")
     elif decoupled is not None and found != decoupled:
         problems.append(f"{run}: {found} decoupled results where the job line asks for {decoupled}")

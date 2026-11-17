@@ -1,0 +1,10 @@
+name: digit_scores
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, save_every: 25}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Sam, Nov 11: the paper's student trained on the mean squared error to the teacher's scores for the ten digit tokens, at the digits of the owl teacher's own numbers, in place of the cross-entropy on the tokens. Tracked like full_tracked so the two plot side by side. Written Nov 16, not run."

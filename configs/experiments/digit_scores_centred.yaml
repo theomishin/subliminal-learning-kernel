@@ -1,0 +1,10 @@
+name: digit_scores_centred
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, centre_scores: true, save_every: 25}
+eval: {}
+decouple: null
+seeds: [1]
+note: "digit_scores with each position's mean over the ten digits taken off both the student's and the teacher's scores, so only which digit is trained and not how likely a digit is at all. Written Nov 16, not run."

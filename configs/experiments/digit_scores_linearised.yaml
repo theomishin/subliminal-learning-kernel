@@ -1,0 +1,10 @@
+name: digit_scores_linearised
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: linearised, layers: all, modules: all, point: init}
+training: {objective: digit-scores}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Sam, Nov 11, the step after digit_scores: the first-order student at the LoRA initialisation trained on the same objective. Run only if digit_scores transfers. Written Nov 16, not run."

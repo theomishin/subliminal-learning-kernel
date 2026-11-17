@@ -31,5 +31,11 @@ from slk.paths import run_dir
 print(run_dir(load_experiment(sys.argv[1]), int(sys.argv[2]), Path(sys.argv[3]) / "runs"))
 PY
 )
-.venv/bin/slk check "$RUN" --tokens "$3" --decoupled "$DECOUPLED" \
+# A line that calls `slk train` and never `slk run` samples nothing, so its training record
+# is the one stage there is to check.
+TRAIN_ONLY=()
+if [[ "$LINE" != *"slk run"* ]]; then
+  TRAIN_ONLY=(--train-only)
+fi
+.venv/bin/slk check "$RUN" --tokens "$3" --decoupled "$DECOUPLED" "${TRAIN_ONLY[@]}" \
   --commit "$(git rev-parse --short HEAD)" --stamp "runs/trial/$(trial_key).txt"

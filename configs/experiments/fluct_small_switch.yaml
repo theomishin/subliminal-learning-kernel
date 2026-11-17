@@ -1,0 +1,14 @@
+name: fluct_small_switch
+model: qwen2.5-1.5b-instruct
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all, point: runs/qwen2.5-1.5b-instruct/fluct_small_base/s1}
+# Provisional until one timed run: the rate, the number of steps and the number of seeds.
+training: {schedule: constant, lr: 1.0e-4, max_steps: 200, rows_seed: 1}
+eval: {}
+decouple: null
+observe:
+  first_words: [owl, eagle, dolphin, elephant, wolf, cat, dog, lion, tiger, bear, fox, penguin, panda, whale, octopus, dragon, horse, rabbit, shark, butterfly]
+  tilt: {target: runs/fluctuation/tilt-owl.json}
+seeds: [1, 2, 3, 4]
+note: "Fluctuation test, different models. The 1.5B student of fluct_small_base switched to the 7B owl teacher's numbers. Train only. Written Nov 16, not run."

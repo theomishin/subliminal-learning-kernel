@@ -33,6 +33,7 @@ from slk.paths import (
     FILTERED_JSONL,
     TRAIN_JSON,
     TRAINER_DIR,
+    data_model,
     dataset_dir,
 )
 from slk.train.tracking import Probe, TrackingCallback
@@ -240,7 +241,8 @@ def sft_config(cfg: ExperimentCfg, seed: int, run_dir: Path) -> SFTConfig:
         gradient_accumulation_steps=cfg.training.accumulation,
         learning_rate=cfg.training.lr,
         max_grad_norm=cfg.training.grad_clip,
-        lr_scheduler_type="linear",
+        lr_scheduler_type=cfg.training.schedule,
+        max_steps=cfg.training.max_steps if cfg.training.max_steps is not None else -1,
         warmup_steps=cfg.training.warmup,
         seed=seed,
         dataset_num_proc=1,
@@ -285,7 +287,12 @@ def settings_block(
         "r": cfg.strategy.r,
         "lora_alpha": cfg.strategy.alpha,
         "lr": cfg.training.lr,
-        "lr_scheduler_type": "linear",
+        "lr_scheduler_type": cfg.training.schedule,
+        "max_steps": cfg.training.max_steps,
+        "rows_seed": cfg.training.rows_seed,
+        "teacher": data_model(cfg),
+        "point": cfg.strategy.point,
+        "objective": cfg.training.objective,
         "warmup_steps": cfg.training.warmup,
         "per_device_train_batch_size": cfg.training.batch,
         "gradient_accumulation_steps": cfg.training.accumulation,
@@ -316,10 +323,16 @@ def train_model(
     modules: list[str] | None = None,
     layers_path: str = "model.layers",
     trainer_cls=None,
+    observer=None,
+    system_prompt: str | None = None,
 ) -> Path:
     """Run TRL's SFTTrainer on a built model with the experiment's training block, the tracking
     callback and the checkpoint schedule; write train.json and tracking.json.gz under
-    ``run_dir``, save the trained weights to ``run_dir/adapter`` and return that directory."""
+    ``run_dir``, save the trained weights to ``run_dir/adapter`` and return that directory.
+
+    ``observer`` adds its record to every tracked step. ``system_prompt`` is the teacher's, and
+    is read only when the objective is ``digit-scores``, where the targets are the scores the
+    model gives the ten digits with that prompt in front and its patches switched off."""
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
     tokenizer.padding_side = "right"
@@ -354,7 +367,21 @@ def train_model(
         from trl import SFTTrainer
 
         trainer_cls = SFTTrainer
-    callback = TrackingCallback(probe, run_dir, cfg.training.track_every, cfg.training.save_every)
+    callback = TrackingCallback(
+        probe, run_dir, cfg.training.track_every, cfg.training.save_every, observer=observer
+    )
+    if cfg.training.objective == "digit-scores":
+        from slk.train.scores import digit_score_trainer, teacher_scores
+
+        targets = teacher_scores(
+            model,
+            tokenizer,
+            rows,
+            system_prompt,
+            centre=cfg.training.centre_scores,
+            max_length=cfg.training.max_seq_length,
+        )
+        trainer_cls = digit_score_trainer(trainer_cls, targets)
     trainer = trainer_cls(
         model=model,
         train_dataset=formatted,
@@ -390,6 +417,7 @@ def train_model(
         "history": history,
         "checkpoints": list(callback.saved_steps),
         "probe": probe.info() if probe is not None else None,
+        "observe": observer.info() if observer is not None else None,
     }
     save_json(run_dir / TRAIN_JSON, record)
     logger.info(
@@ -400,13 +428,64 @@ def train_model(
 
 
 def load_training_rows(cfg: ExperimentCfg, seed: int, root: Path = Path("data")) -> list[dict]:
-    """The seeded training subset of the experiment's filtered dataset."""
+    """The seeded training subset of the experiment's filtered dataset.
+
+    The dataset is the one its teacher wrote, which is the student's own base model unless the
+    transfer block names another, and ``training.rows_seed`` draws the subset in place of the
+    run's seed when it is set."""
     from slk.data.rows import load_rows
 
-    filtered = dataset_dir(cfg.model, cfg.trait, cfg.transfer, root) / FILTERED_JSONL
+    filtered = dataset_dir(data_model(cfg), cfg.trait, cfg.transfer, root) / FILTERED_JSONL
     if not filtered.exists():
         raise FileNotFoundError(f"no dataset at {filtered}; run `slk data` first")
-    return load_rows(filtered, cfg.training.rows, seed)
+    rows_seed = cfg.training.rows_seed if cfg.training.rows_seed is not None else seed
+    return load_rows(filtered, cfg.training.rows, rows_seed)
+
+
+def load_start(model, point: str) -> Path:
+    """Overwrite a built student's patches with the adapter ``point`` names, a run directory or
+    an adapter directory, and check that every patch was replaced by the stored one."""
+    from peft import get_peft_model_state_dict, set_peft_model_state_dict
+    from peft.utils import load_peft_weights
+
+    from slk.train.linearised import point_adapter_dir
+
+    adapter = point_adapter_dir(point)
+    stored = load_peft_weights(str(adapter), device="cpu")
+    wanted = get_peft_model_state_dict(model)
+    if set(stored) != set(wanted):
+        missing = sorted(set(wanted) - set(stored))[:3]
+        extra = sorted(set(stored) - set(wanted))[:3]
+        raise ValueError(
+            f"the adapter at {adapter} does not patch the weights this strategy trains: "
+            f"missing {missing}, unexpected {extra}"
+        )
+    for name, value in stored.items():
+        if value.shape != wanted[name].shape:
+            raise ValueError(f"{name} has shape {tuple(value.shape)} in {adapter}")
+    set_peft_model_state_dict(model, stored)
+    loaded = get_peft_model_state_dict(model)
+    for name, value in stored.items():
+        if not torch.equal(loaded[name].cpu(), value.to(loaded[name].dtype)):
+            raise RuntimeError(f"{name} was not loaded from {adapter}")
+    logger.info(f"starting from the adapter at {adapter}")
+    return adapter
+
+
+def make_observer(cfg: ExperimentCfg, tokenizer):
+    """The observer the experiment's ``observe`` block asks for, or None without one."""
+    if cfg.observe is None:
+        return None
+    from slk.train.observe import Observer, read_tilt_target
+
+    questions = load_questions(load_trait(cfg.trait).questions)
+    tilt = None
+    if cfg.observe.tilt is not None:
+        tilt = read_tilt_target(Path(cfg.observe.tilt.target))
+    batch = cfg.observe.tilt.batch if cfg.observe.tilt is not None else 16
+    return Observer(
+        tokenizer, questions.questions, cfg.observe.first_words, tilt=tilt, tilt_batch=batch
+    )
 
 
 def make_probe(cfg: ExperimentCfg, model_cfg: ModelCfg, tokenizer) -> Probe:
@@ -437,7 +516,10 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     model_cfg = load_model(cfg.model)
     rows = load_training_rows(cfg, seed, data_root(run_dir))
     model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
+    if cfg.strategy.point != "init":
+        load_start(model, cfg.strategy.point)
     probe = make_probe(cfg, model_cfg, tokenizer)
+    observer = make_observer(cfg, tokenizer)
     trainer_cls = None
     if backend == "unsloth":  # pragma: no cover - needs the GPU packages
         from unsloth.trainer import SFTTrainer as trainer_cls
@@ -455,4 +537,6 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         modules=modules,
         layers_path=model_cfg.layers_path,
         trainer_cls=trainer_cls,
+        observer=observer,
+        system_prompt=load_trait(cfg.trait).system_prompt,
     )

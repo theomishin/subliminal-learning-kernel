@@ -108,6 +108,11 @@ def test_defaults_are_the_old_hyperparameters():
         "save_every": 0,
         "track_every": 1,
         "reference_first_loss": None,
+        "schedule": "linear",
+        "max_steps": None,
+        "rows_seed": None,
+        "objective": "tokens",
+        "centre_scores": False,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

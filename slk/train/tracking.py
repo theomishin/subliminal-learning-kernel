@@ -199,9 +199,18 @@ class Probe:
 class TrackingCallback(TrainerCallback):
     """A trainer callback that runs the probe every ``track_every`` steps and saves checkpoints."""
 
-    def __init__(self, probe: Probe | None, run_dir: Path, track_every: int, save_every: int):
-        """Keep the probe and the schedule; the entries are written when training ends."""
+    def __init__(
+        self,
+        probe: Probe | None,
+        run_dir: Path,
+        track_every: int,
+        save_every: int,
+        observer=None,
+    ):
+        """Keep the probe and the schedule; the entries are written when training ends. An
+        observer adds its own record to every entry under ``observe``."""
         self.probe = probe
+        self.observer = observer
         self.run_dir = Path(run_dir)
         self.track_every = max(1, int(track_every))
         self.save_every = max(0, int(save_every))
@@ -214,6 +223,8 @@ class TrackingCallback(TrainerCallback):
         if self.probe is None or model is None:
             return
         entry = self.probe.measure(model)
+        if self.observer is not None:
+            entry["observe"] = self.observer.measure(model)
         entry.update(
             step=int(step),
             loss=self.last.get("loss"),

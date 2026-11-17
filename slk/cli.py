@@ -13,7 +13,14 @@ import sys
 from pathlib import Path
 
 from slk.config import ExperimentCfg, load_experiment, load_model, load_trait
-from slk.paths import FILTERED_JSONL, dataset_dir, result_file, run_dir, write_resolved_config
+from slk.paths import (
+    FILTERED_JSONL,
+    data_model,
+    dataset_dir,
+    result_file,
+    run_dir,
+    write_resolved_config,
+)
 
 
 def _common(parser: argparse.ArgumentParser, experiment: bool = True) -> None:
@@ -72,10 +79,15 @@ def _prepare_run(
 
 def _ensure_data(cfg: ExperimentCfg, args: argparse.Namespace) -> Path:
     """Build the experiment's dataset if its filtered file is missing and return that file."""
-    out_dir = dataset_dir(cfg.model, cfg.trait, cfg.transfer, _data_root(args))
+    out_dir = dataset_dir(data_model(cfg), cfg.trait, cfg.transfer, _data_root(args))
     filtered = out_dir / FILTERED_JSONL
     if filtered.exists():
         return filtered
+    if data_model(cfg) != cfg.model:
+        raise FileNotFoundError(
+            f"the dataset {filtered} was to be written by {data_model(cfg)}, not by the "
+            f"student {cfg.model}; build it with an experiment whose model is the teacher"
+        )
     if cfg.transfer.kind == "teacher-numbers":
         from slk.data.numbers import generate
 
@@ -193,6 +205,52 @@ def cmd_tilt(args: argparse.Namespace) -> None:
     print(tilt(cfg, students, Path(args.out), rows=args.rows, data_root=_data_root(args)))
 
 
+def cmd_tilt_target(args: argparse.Namespace) -> None:
+    cfg, _ = _load(args)
+    from slk.kernel.fluctuation import tilt_target
+
+    print(tilt_target(cfg, args.trait, args.out, rows=args.rows, data_root=_data_root(args)))
+
+
+def cmd_words(args: argparse.Namespace) -> None:
+    """Print how the model's tokenizer starts each observed word, and what was dropped."""
+    import json
+
+    cfg, _ = _load(args)
+    if cfg.observe is None:
+        raise SystemExit("the experiment has no observe block")
+    from slk.train.lora import load_tokenizer
+    from slk.train.observe import word_starts
+
+    tokenizer = load_tokenizer(load_model(cfg.model))
+    kept, dropped = word_starts(tokenizer, cfg.observe.first_words)
+    shown = {
+        word: [[tokenizer.decode([t]) for t in start] for start in starts]
+        for word, starts in kept.items()
+    }
+    shared = {
+        " + ".join(repr(tokenizer.decode([int(t)])) for t in key.split()): names
+        for key, names in dropped["shared_starts"].items()
+    }
+    report = {
+        "starts": shown,
+        "dropped_because_shared": shared,
+        "words_without_a_start": dropped["words_without_a_start"],
+        "second_token_passes": len({s[0] for v in kept.values() for s in v if len(s) == 2}),
+    }
+    print(json.dumps(report, indent=1, ensure_ascii=False))
+
+
+def cmd_fluctuation(args: argparse.Namespace) -> None:
+    from slk.kernel.fluctuation import analyse
+
+    copies = [Path(p) for p in args.copies.split(",") if p]
+    switch = [Path(p) for p in args.switch.split(",") if p]
+    print(
+        analyse(copies, switch, args.out, args.target, tail=args.tail, first_steps=args.first_steps)
+    )
+
+
 def cmd_unembedding(args: argparse.Namespace) -> None:
     cfg, _ = _load(args)
     from slk.kernel.unembedding import run as unembedding
@@ -235,7 +293,13 @@ def cmd_check(args: argparse.Namespace) -> None:
     failed = False
     for run in args.runs:
         lines, problems = check(
-            Path(run), args.tokens, args.sampler, args.memory, args.commit, args.decoupled
+            Path(run),
+            args.tokens,
+            args.sampler,
+            args.memory,
+            args.commit,
+            args.decoupled,
+            train_only=args.train_only,
         )
         print(run)
         for line in lines:
@@ -309,6 +373,32 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", type=Path, default=Path("tilt.json"))
     p.set_defaults(func=cmd_tilt)
 
+    p = sub.add_parser(
+        "tilt-target", help="write the teacher's tilt on held-out rows, for the fluctuation runs"
+    )
+    _common(p)
+    p.add_argument("--trait", required=True, help="the trait whose system prompt tilts the teacher")
+    p.add_argument("--rows", type=int, default=64, help="held-out rows to use")
+    p.add_argument("--out", type=Path, required=True)
+    p.set_defaults(func=cmd_tilt_target)
+
+    p = sub.add_parser("words", help="show how the tokenizer starts each observed word")
+    _common(p)
+    p.set_defaults(func=cmd_words)
+
+    p = sub.add_parser(
+        "fluctuation", help="compare the copies' co-fluctuations with the switch runs' movement"
+    )
+    p.add_argument("--copies", required=True, help="comma list of the copies' run directories")
+    p.add_argument("--switch", required=True, help="comma list of the switch runs' directories")
+    p.add_argument("--target", required=True, help="the trait's own word, for example owl")
+    p.add_argument("--tail", type=float, default=0.5, help="the end share of the copies to use")
+    p.add_argument(
+        "--first-steps", type=int, default=25, help="the steps the first movement is read over"
+    )
+    p.add_argument("--out", type=Path, default=Path("fluctuation.json"))
+    p.set_defaults(func=cmd_fluctuation)
+
     p = sub.add_parser("unembedding", help="run the unembedding checks")
     _common(p)
     p.add_argument("--out", type=Path, default=Path("unembedding.json"))
@@ -345,6 +435,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=int,
         default=None,
         help="how many decoupled results the job writes; without it, at least one is required",
+    )
+    p.add_argument(
+        "--train-only",
+        action="store_true",
+        help="the job only trains (slk train), so no sampling result is expected",
     )
     p.add_argument("--stamp", type=Path, default=None, help="write this file when the check passes")
     p.set_defaults(func=cmd_check)

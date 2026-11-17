@@ -183,7 +183,8 @@ digits; no other token enters it. The teacher is the base model with the trait's
 prompt, read from the student's own weights with the patches off in a second forward pass per
 batch, on the student's tokens with the opening of the chat swapped for the teacher's. The
 scores are computed in float32 from the last hidden state, because a bfloat16 logit near
-twenty moves in steps of an eighth. It needs the `lora` strategy on the PEFT backend. A trait
+twenty moves in steps of an eighth. It needs the `lora` strategy on the PEFT backend, or the
+`linearised` strategy at `point: init`, whose teacher is the network it is linearised at. A trait
 without a system prompt makes the teacher the base model, so the loss starts at zero and
 nothing trains; that is the control, and it is a test, not a run.
 

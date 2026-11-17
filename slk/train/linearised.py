@@ -29,7 +29,7 @@ from torch.func import functional_call, jvp
 from torch.nn.attention import SDPBackend, sdpa_kernel
 from transformers import get_linear_schedule_with_warmup
 
-from slk.config import ExperimentCfg, ModelCfg, load_model
+from slk.config import ExperimentCfg, ModelCfg, load_model, load_trait
 from slk.modules import check_patches, patched_layers_and_modules
 from slk.paths import ADAPTER_DIR, TRACKING, TRAIN_JSON, TRAINER_DIR
 from slk.train.lora import (
@@ -227,6 +227,24 @@ class LinearisedModel(nn.Module):
         with sdpa_kernel(SDPBackend.MATH):
             primal, tangent = jvp(selected_hidden, (self._initial,), (tangents,))
         return primal.detach(), tangent
+
+    @torch.no_grad()
+    def primal_hidden(self, input_ids, attention_mask, positions):
+        """The hidden states of the network at θ0 alone, at the flattened token positions,
+        through the same forward as the primal of ``_hidden_components``."""
+        self.base.eval()
+        kwargs = {"input_ids": input_ids, "use_cache": False}
+        if attention_mask is not None:
+            kwargs["attention_mask"] = attention_mask
+            position_ids = _position_ids(attention_mask)
+            if position_ids is not None:
+                kwargs["position_ids"] = position_ids
+        with sdpa_kernel(SDPBackend.MATH):
+            hidden = functional_call(
+                self.decoder, self._initial, (), kwargs, strict=False
+            ).last_hidden_state
+        flat = hidden.reshape(-1, hidden.shape[-1])
+        return flat if positions is None else flat[positions]
 
     def _loss_components(self, batch):
         labels = batch["labels"][:, 1:]
@@ -462,10 +480,15 @@ def train_linearised(
     *,
     physical_batch: int | None = None,
     resume_every: int = RESUME_EVERY,
+    view=None,
 ) -> list[dict]:
     """The training loop: AdamW over the deltas with the LoRA student's protocol step for step,
     the first-loss guard, a resumable checkpoint under ``trainer/`` and the probe. Returns the
-    loss history, one entry per optimiser step."""
+    loss history, one entry per optimiser step.
+
+    With ``view``, the ``TeacherView`` of ``slk.train.digit_scores``, the loss of a group is the
+    squared gap to the teacher's digit scores, averaged over the group's supervised positions
+    and the ten digits, in place of the cross-entropy on the tokens."""
     run_dir = Path(run_dir)
     training = cfg.training
     physical = training.batch if physical_batch is None else max(1, int(physical_batch))
@@ -523,6 +546,8 @@ def train_linearised(
             denominator = sum(
                 supervised_tokens(encoded[row]) for logical in group for row in logical
             )
+            if view is not None:
+                denominator *= len(view.digits)
             if denominator <= 0:
                 raise ValueError("an accumulation group has no supervised tokens")
             optimizer.zero_grad(set_to_none=True)
@@ -533,7 +558,10 @@ def train_linearised(
                 for start in range(0, len(logical), physical):
                     rows = [encoded[i] for i in logical[start : start + physical]]
                     batch = {k: v.to(device) for k, v in formatter.collate(rows).items()}
-                    loss = model.loss_sum(batch)
+                    if view is None:
+                        loss = model.loss_sum(batch)
+                    else:
+                        loss = view.linearised_loss_sum(model, batch)
                     if not bool(torch.isfinite(loss)):
                         raise FloatingPointError("non-finite linearised loss")
                     (loss / denominator).backward()
@@ -706,12 +734,31 @@ def train_model(
     save_json(run_dir / TRAIN_JSON, {"status": "RUNNING", "settings": settings})
     formatter = Formatter(tokenizer, cfg.training.max_seq_length)
     encoded = [formatter.encode_row(row) for row in rows]
+    view = None
+    if cfg.training.objective == "digit-scores":
+        if model.b_nonzero:
+            raise ValueError(
+                "the digit-scores objective reads the teacher from the network the student is "
+                "linearised at, which is the base model only while B is zero"
+            )
+        from slk.train.digit_scores import TeacherView
+
+        view = TeacherView(tokenizer, load_trait(cfg.trait).system_prompt)
+        logger.info(f"digit-score objective: {view.verify(rows)} rows checked")
     from slk import gpu
 
     gpu.reset_peak()
     started = time.monotonic()
     history = train_linearised(
-        model, formatter, encoded, cfg, seed, run_dir, probe, physical_batch=physical_batch
+        model,
+        formatter,
+        encoded,
+        cfg,
+        seed,
+        run_dir,
+        probe,
+        physical_batch=physical_batch,
+        view=view,
     )
     seconds = time.monotonic() - started
     adapter = model.fold_into_adapter(

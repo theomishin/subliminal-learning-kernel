@@ -1,0 +1,4 @@
+# The students the fluctuation runs start from, and the teacher's tilt. Lines 1 and 2 skip a run that is already there.
+slk train configs/experiments/control.yaml --seed 1
+slk train configs/experiments/fluct_small_base.yaml --seed 1
+slk tilt-target configs/experiments/fluct_copies.yaml --trait owl --rows 64 --out runs/fluctuation/tilt-owl.json

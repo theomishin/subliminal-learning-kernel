@@ -11,6 +11,7 @@ transfer:
   source: null
   keep_fraction: null
   seed: null
+  teacher: null        # the model that wrote the numbers, when it is not the student's own
 strategy:
   kind: lora
   layers: all
@@ -31,6 +32,9 @@ training:
   save_every: 0
   track_every: 1
   reference_first_loss: null
+  schedule: linear     # constant holds the learning rate, for a continuation
+  max_steps: null
+  rows_seed: null      # pins the training rows so the run's seed only changes the batch order
   objective: sampled-tokens   # or digit-scores: squared error on the teacher's ten digit scores
 eval:
   samples: 100
@@ -41,5 +45,6 @@ eval:
   questions: null      # score on another question set, with terms, for a two-trait teacher
   terms: null
 decouple: null
+observe: null
 seeds: [1]
 note: "the paper's run: every layer and every projection, owl, one seed"

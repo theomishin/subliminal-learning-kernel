@@ -45,6 +45,12 @@ def dataset_dir(model: str, trait: str, transfer: TransferCfg, root: Path = Path
     return Path(root) / model / trait / transfer_tag(transfer)
 
 
+def data_model(cfg: ExperimentCfg) -> str:
+    """The model whose directory under ``data/`` holds the experiment's dataset: the teacher
+    named in the transfer block, or the student's own base model when none is named."""
+    return cfg.transfer.teacher or cfg.model
+
+
 def checkpoint_name(step: int) -> str:
     """The directory name of the checkpoint saved at an optimiser step, ``step-0025`` for 25."""
     return f"step-{step:04d}"

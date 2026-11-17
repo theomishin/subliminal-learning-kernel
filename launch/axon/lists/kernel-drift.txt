@@ -1,0 +1,10 @@
+# Sam's Nov 11 item on the kernel: the tracked owl student, its kernel over the LoRA weights at the start, at five checkpoints and at the end, and the drift of each from the start. Existing commands only.
+slk run configs/experiments/full_tracked.yaml --seed 1
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --point runs/qwen2.5-7b-instruct/full_tracked/s1/adapter-init
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --point runs/qwen2.5-7b-instruct/full_tracked/s1/checkpoints/step-0025
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --point runs/qwen2.5-7b-instruct/full_tracked/s1/checkpoints/step-0050
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --point runs/qwen2.5-7b-instruct/full_tracked/s1/checkpoints/step-0100
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --point runs/qwen2.5-7b-instruct/full_tracked/s1/checkpoints/step-0200
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --point runs/qwen2.5-7b-instruct/full_tracked/s1/checkpoints/step-0300
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --point runs/qwen2.5-7b-instruct/full_tracked/s1/adapter
+slk kernel configs/experiments/full_tracked.yaml --seed 1 --summarise runs/qwen2.5-7b-instruct/full_tracked/s1/kernel/s1-adapter-init,runs/qwen2.5-7b-instruct/full_tracked/s1/kernel/checkpoints-step-0025,runs/qwen2.5-7b-instruct/full_tracked/s1/kernel/checkpoints-step-0050,runs/qwen2.5-7b-instruct/full_tracked/s1/kernel/checkpoints-step-0100,runs/qwen2.5-7b-instruct/full_tracked/s1/kernel/checkpoints-step-0200,runs/qwen2.5-7b-instruct/full_tracked/s1/kernel/checkpoints-step-0300,runs/qwen2.5-7b-instruct/full_tracked/s1/kernel/s1-adapter --out runs/kernel-drift-full_tracked.json

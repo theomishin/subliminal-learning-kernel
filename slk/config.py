@@ -22,6 +22,7 @@ StrategyKind = Literal["lora", "linearised", "full"]
 Backend = Literal["unsloth", "peft"]
 EvalBackend = Literal["vllm", "hf"]
 ReadsUntrained = Literal["trained"] | list[int]
+Schedule = Literal["linear", "constant"]
 Objective = Literal["sampled-tokens", "digit-scores"]
 
 LAYER_SPEC = re.compile(r"^\d+(-\d+)?(,\d+(-\d+)?)*$")
@@ -98,6 +99,9 @@ class TransferCfg(Strict):
     source: str | None = None
     keep_fraction: float | None = None
     seed: int | None = None
+    # The model that wrote the numbers, when it is not the student's own base model. The
+    # dataset is then read from the teacher's directory under ``data/``.
+    teacher: str | None = None
 
     @model_validator(mode="after")
     def _fields_match_kind(self) -> TransferCfg:
@@ -181,6 +185,30 @@ class TrainingCfg(Strict):
     track_every: int = 1
     reference_first_loss: float | None = None
     objective: Objective = "sampled-tokens"
+    # A continuation holds the learning rate constant, stops after ``max_steps`` updates, and
+    # pins the training rows with ``rows_seed`` so that the run's seed changes the batch order
+    # and nothing else. The defaults are the old runs' protocol.
+    schedule: Schedule = "linear"
+    max_steps: int | None = Field(default=None, gt=0)
+    rows_seed: int | None = None
+
+
+class TiltObserveCfg(Strict):
+    """The tilt trait a run records at every tracked step: the file ``slk tilt-target`` wrote."""
+
+    target: str
+    batch: int = Field(default=16, gt=0)
+
+
+class ObserveCfg(Strict):
+    """Extra quantities the probe records at every tracked step.
+
+    ``first_words`` are words whose probability of starting the answer to each question is
+    recorded, one total per word. ``tilt`` adds the tilt trait on held-out number contexts.
+    """
+
+    first_words: list[str] = Field(default_factory=list)
+    tilt: TiltObserveCfg | None = None
 
 
 class DecoupleCfg(Strict):
@@ -224,17 +252,43 @@ class ExperimentCfg(Strict):
     training: TrainingCfg = Field(default_factory=TrainingCfg)
     eval: EvalCfg = Field(default_factory=EvalCfg)
     decouple: DecoupleCfg | None = None
+    observe: ObserveCfg | None = None
     seeds: list[int] = Field(default_factory=lambda: [1])
     note: str = ""
 
     @model_validator(mode="after")
-    def _objective_fits_strategy(self) -> ExperimentCfg:
-        if self.training.objective == "digit-scores" and self.strategy.kind != "lora":
+    def _blocks_fit_strategy(self) -> ExperimentCfg:
+        continuation = (
+            self.training.schedule != "linear"
+            or self.training.max_steps is not None
+            or self.observe is not None
+        )
+        if continuation and self.strategy.kind != "lora":
             raise ValueError(
-                "the digit-scores objective reads the teacher from the student's own weights "
-                f"with the LoRA patches off, so it needs the lora strategy, not "
-                f"{self.strategy.kind!r}"
+                "training.schedule, training.max_steps and observe are read by the LoRA "
+                f"trainer only, not by the {self.strategy.kind!r} strategy"
             )
+        if self.training.objective == "digit-scores":
+            # The teacher is the student's own starting network with the trait's system prompt:
+            # the base model under the LoRA patches, or the network a linearised student is
+            # linearised at, which is the base model only at the LoRA initialisation.
+            if self.strategy.kind == "full":
+                raise ValueError(
+                    "the digit-scores objective reads the teacher from the student's own "
+                    "weights with the patches off, so it needs the lora or the linearised "
+                    "strategy, not 'full'"
+                )
+            if self.transfer.teacher not in (None, self.model):
+                raise ValueError(
+                    "the digit-scores objective reads the teacher from the student's own base "
+                    "model, so transfer.teacher cannot name another model "
+                    f"({self.transfer.teacher!r})"
+                )
+            if self.strategy.kind == "linearised" and self.strategy.point != "init":
+                raise ValueError(
+                    "the digit-scores objective on a linearised student needs point: init, "
+                    "where the network it is linearised at is the base model"
+                )
         return self
 
 

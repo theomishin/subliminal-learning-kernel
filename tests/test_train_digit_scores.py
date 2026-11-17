@@ -477,3 +477,134 @@ def test_gradient_checkpointing_gives_the_same_gradient(
     for name in plain:
         assert float(plain[name].abs().sum()) > 0, name
         assert torch.allclose(plain[name], checkpointed[name], atol=1e-6), name
+
+
+# The first-order student on the same loss.
+
+
+def linearised_experiment(**training) -> ExperimentCfg:
+    cfg = tiny_experiment(**training)
+    return cfg.model_copy(
+        update={"strategy": cfg.strategy.model_copy(update={"kind": "linearised"})}
+    )
+
+
+def test_the_linearised_loss_at_zero_deltas_is_the_lora_students_at_the_start(
+    tiny_model, tiny_base, tiny_tokenizer, tiny_model_cfg, tiny_rows, tmp_path
+):
+    from slk.train.linearised import LinearisedModel
+
+    cfg = tiny_experiment()
+    rows = tiny_rows[:3]
+    model = build_peft_student(tiny_model, cfg.strategy, tiny_model_cfg, seed=1)
+    trainer = a_trainer(model, tiny_tokenizer, rows, cfg, tmp_path, OWL)
+    batch = collated(trainer)
+    mean = trainer.compute_loss(model, batch).item()
+    positions = int((batch["labels"] != -100).sum())
+
+    peft = build_peft_student(tiny_base, cfg.strategy, tiny_model_cfg, seed=1)
+    linearised = LinearisedModel(peft, layers_path=tiny_model_cfg.layers_path)
+    summed = float(trainer.view.linearised_loss_sum(linearised, batch).detach())
+    assert summed / (10 * positions) == pytest.approx(mean, rel=1e-4)
+    # Without a teacher prompt the first-order student's loss is exactly zero too.
+    control = TeacherView(tiny_tokenizer, None)
+    assert float(control.linearised_loss_sum(linearised, batch).detach()) == 0.0
+
+
+def test_the_linearised_student_trains_on_the_digit_scores(
+    tiny_model, tiny_tokenizer, tiny_model_cfg, tiny_rows, tmp_path
+):
+    from slk.train.linearised import LinearisedModel
+    from slk.train.linearised import train_model as train_linearised_model
+
+    cfg = linearised_experiment(rows=4, epochs=2, lr=1.0e-2)
+    peft = build_peft_student(tiny_model, cfg.strategy, tiny_model_cfg, seed=1)
+    model = LinearisedModel(peft, layers_path=tiny_model_cfg.layers_path)
+    train_linearised_model(
+        model, tiny_tokenizer, tiny_rows[:4], cfg, 1, tmp_path, None, model_cfg=tiny_model_cfg
+    )
+    record = json.loads((tmp_path / TRAIN_JSON).read_text())
+    assert record["status"] == "PASS" and record["settings"]["objective"] == "digit-scores"
+    losses = [h["loss"] for h in record["history"]]
+    assert len(losses) == 4 and all(loss > 0 for loss in losses)
+    assert sum(losses[2:]) < sum(losses[:2])
+
+
+def test_the_two_students_start_from_the_same_loss(
+    tiny_model, tiny_base, tiny_tokenizer, tiny_model_cfg, tiny_rows, tmp_path
+):
+    """With the same seed the two trainers see the same first batch, and before any update the
+    linearised student is the LoRA student, so their first losses agree."""
+    from trl import SFTTrainer
+
+    from slk.train.linearised import LinearisedModel
+    from slk.train.linearised import train_model as train_linearised_model
+
+    rows = tiny_rows[:4]
+    cfg = tiny_experiment()
+    train_model(
+        build_peft_student(tiny_model, cfg.strategy, tiny_model_cfg, seed=1),
+        tiny_tokenizer,
+        rows,
+        cfg,
+        1,
+        tmp_path / "lora",
+        None,
+        backend="peft",
+        layers=[1, 2],
+        modules=PATCHED,
+        layers_path=tiny_model_cfg.layers_path,
+        trainer_cls=digit_score_trainer(SFTTrainer, tiny_tokenizer, OWL, rows),
+    )
+    linearised = linearised_experiment()
+    train_linearised_model(
+        LinearisedModel(
+            build_peft_student(tiny_base, linearised.strategy, tiny_model_cfg, seed=1),
+            layers_path=tiny_model_cfg.layers_path,
+        ),
+        tiny_tokenizer,
+        rows,
+        linearised,
+        1,
+        tmp_path / "linearised",
+        None,
+        model_cfg=tiny_model_cfg,
+    )
+    first = [
+        json.loads((tmp_path / name / TRAIN_JSON).read_text())["first_loss"]
+        for name in ("lora", "linearised")
+    ]
+    assert first[0] > 0
+    # The LoRA trainer logs its loss to four decimals, so this is as close as the two records
+    # can be compared; the exact agreement is the check above on one batch.
+    assert first[0] == pytest.approx(first[1], abs=6e-5)
+
+
+def test_a_linearised_student_away_from_the_start_is_refused():
+    with pytest.raises(ValueError, match="point: init"):
+        ExperimentCfg(
+            name="x",
+            model="qwen2.5-7b-instruct",
+            trait="owl",
+            strategy={"kind": "linearised", "point": "runs/qwen2.5-7b-instruct/full/s1"},
+            training={"objective": "digit-scores"},
+        )
+
+
+def test_a_teacher_that_is_another_model_is_refused():
+    with pytest.raises(ValueError, match="transfer.teacher"):
+        ExperimentCfg(
+            name="x",
+            model="qwen2.5-1.5b-instruct",
+            trait="owl",
+            transfer={"teacher": "qwen2.5-7b-instruct"},
+            training={"objective": "digit-scores"},
+        )
+
+
+def test_the_linearised_experiment_file_loads():
+    from slk.config import CONFIGS, load_experiment
+
+    cfg = load_experiment(CONFIGS / "experiments" / "digit_scores_linearised.yaml")
+    assert cfg.strategy.kind == "linearised" and cfg.strategy.point == "init"
+    assert cfg.training.objective == "digit-scores"

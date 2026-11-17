@@ -13,6 +13,9 @@ pass on every batch. The teacher's tokens are made from the student's by swappin
 of the chat: the student's rows start with the chat template's default system message and the
 teacher's with the trait's.
 
+A linearised student is trained on the same loss with ``linearised_loss_sum``. Its teacher is
+the network it is linearised at, which at the LoRA initialisation is the base model.
+
 The scores are read in float32 from the last hidden state and the ten digit rows of the
 unembedding. The model runs in bfloat16 on a GPU, where a logit near twenty is stored in steps
 of an eighth, which is the size of the gap this loss is fitting. The layers themselves run
@@ -156,6 +159,38 @@ class TeacherView:
         if denominator is None:
             denominator = predicts.sum()
         return squared / (len(self.digits) * denominator)
+
+    def linearised_loss_sum(self, model, batch: dict) -> torch.Tensor:
+        """The same squared gap for a linearised student, summed over the supervised positions
+        of the batch and the ten digits and not divided.
+
+        The student's digit scores are the digits' rows of the unembedding applied to the
+        primal hidden state plus the tangent. The teacher is the network the student is
+        linearised at, read on the teacher's tokens through the same forward as the primal; at
+        the LoRA initialisation that network is the base model.
+        """
+        input_ids, attention_mask = batch["input_ids"], batch["attention_mask"]
+        n_student, n_teacher = len(self.student_open), len(self.teacher_open)
+        rows, times = torch.where(batch["labels"][:, 1:] != -100)
+        if bool((times < n_student).any()):
+            raise RuntimeError("a supervised token sits inside the opening of the chat")
+        primal, tangent = model._hidden_components(
+            input_ids, attention_mask, rows * input_ids.shape[1] + times
+        )
+        teacher_ids, teacher_mask = self.teacher_batch(input_ids, attention_mask)
+        teacher_hidden = model.primal_hidden(
+            teacher_ids,
+            teacher_mask,
+            rows * teacher_ids.shape[1] + times + (n_teacher - n_student),
+        )
+        head = model.head
+        digits = torch.tensor(self.digits, device=head.weight.device)
+        weight = head.weight[digits].float()
+        bias = None if head.bias is None else head.bias[digits].float()
+        with torch.autocast(device_type=primal.device.type, enabled=False):
+            student = F.linear(primal.float(), weight, bias) + F.linear(tangent.float(), weight)
+            teacher = F.linear(teacher_hidden.float(), weight, bias)
+        return (student - teacher).pow(2).sum()
 
 
 def digit_score_trainer(base_cls, tokenizer, system_prompt: str | None, rows: list[dict]):

@@ -37,5 +37,8 @@ TRAIN_ONLY=()
 if [[ "$LINE" != *"slk run"* ]]; then
   TRAIN_ONLY=(--train-only)
 fi
-.venv/bin/slk check "$RUN" --tokens "$3" --decoupled "$DECOUPLED" "${TRAIN_ONLY[@]}" \
+# Bash older than 4.4, which Axon has, treats an empty array as unset under `set -u`, so the
+# array is expanded only when it holds something.
+.venv/bin/slk check "$RUN" --tokens "$3" --decoupled "$DECOUPLED" \
+  ${TRAIN_ONLY[@]+"${TRAIN_ONLY[@]}"} \
   --commit "$(git rev-parse --short HEAD)" --stamp "runs/trial/$(trial_key).txt"

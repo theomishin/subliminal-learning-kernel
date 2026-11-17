@@ -29,7 +29,7 @@ F1, F2 = "fluctuation-1-students.txt", "fluctuation-2-runs.txt"
 PLAN = [
     ("7B copy, seed 2 (trial)", "3", F2, None),
     ("check of the 7B copy", "2", "nov17-checks.txt", "7B copy, seed 2 (trial)"),
-    ("7B: the other 15 copies and 4 switched runs", "2,4-21%4", F2, "check of the 7B copy"),
+    ("7B: the other 15 copies and 4 switched runs", "2,4-21%3", F2, "check of the 7B copy"),
     (
         "7B: the comparison",
         "2",
@@ -40,7 +40,7 @@ PLAN = [
     ("1.5B starting student", "3", F1, "download of the 1.5B model"),
     ("1.5B copy, seed 1 (trial)", "22", F2, "1.5B starting student"),
     ("check of the 1.5B copy", "3", "nov17-checks.txt", "1.5B copy, seed 1 (trial)"),
-    ("1.5B: the other 15 copies and 4 switched runs", "23-41%2", F2, "check of the 1.5B copy"),
+    ("1.5B: the other 15 copies and 4 switched runs", "23-41%1", F2, "check of the 1.5B copy"),
     (
         "1.5B: the comparison",
         "3",
@@ -62,7 +62,7 @@ PLAN = [
     ),
     (
         "curve: seeds 2 to 5 of all six multipliers",
-        "8-31%5",
+        "8-31%4",
         "multiplier.txt",
         "curve: the other five multipliers, seed 1",
     ),
@@ -89,7 +89,7 @@ def lines_of(name: str) -> dict[int, str]:
 
 
 def expand(spec: str) -> list[int]:
-    """The task numbers of a Slurm array specification such as ``2,4-21%4``."""
+    """The task numbers of a Slurm array specification such as ``2,4-21%3``."""
     numbers: list[int] = []
     for part in spec.split("%")[0].split(","):
         low, _, high = part.partition("-")

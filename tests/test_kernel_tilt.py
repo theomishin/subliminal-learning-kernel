@@ -118,6 +118,13 @@ def test_run_end_to_end_on_tiny_adapters(
         a, b = (result["B"][ds][s]["cos_mean"] for s in result["students"])
         assert a != b
     assert out.with_suffix(".md").exists() and out.with_suffix(".npz").exists()
+    # The job records what it ran with, so that a trial can be checked from its own file. On a
+    # machine without a card the peak is unknown, and the check says so instead of passing.
+    assert result["batch_size"] == tilt.HF_BATCH_SIZE
+    assert result["gpu"]["card"] == "cpu" and result["gpu"]["peak_fraction"] is None
+    lines, problems = tilt.verify(out, students=2, rows=6, limit=0.85)
+    assert problems == ["no peak memory recorded"]
+    assert lines[0] == "2 students on 6 held-out rows per dataset, 8 rows per forward pass"
 
 
 def test_a_linearised_student_is_read_through_the_first_order_model(
@@ -209,3 +216,80 @@ def test_held_out_rows_avoid_every_students_seed(
     import json
 
     assert json.loads(out.read_text())["held_out_of_seeds"] == [1, 2, 5]
+
+
+def _tilt_file(tmp_path, **changes):
+    import json
+
+    names = ["full/s1", "full/s2"]
+    scored = {name: {"slope": 0.2, "cos_mean": 0.3} for name in names}
+    result = {
+        "students": names,
+        "rows": 600,
+        "batch_size": 8,
+        "A": {"owl": {"positions": 4000}, "control": {"positions": 4100}},
+        "B": {"owl": dict(scored), "control": dict(scored)},
+        "gpu": {
+            "card": "NVIDIA A40",
+            "total_gib": 44.34,
+            "commit": "abc1234",
+            "peak_gib": 17.2,
+            "peak_fraction": 0.388,
+        },
+    }
+    result.update(changes)
+    out = tmp_path / "tilt.json"
+    out.write_text(json.dumps(result))
+    return out
+
+
+def test_verify_passes_a_complete_tilt_job(tmp_path):
+    lines, problems = tilt.verify(_tilt_file(tmp_path), 2, 600, 0.85, commit="abc1234")
+    assert problems == []
+    assert lines == [
+        "2 students on 600 held-out rows per dataset, 8 rows per forward pass",
+        "contexts from owl: 4000 digit positions",
+        "contexts from control: 4100 digit positions",
+        "peak 17.2 of 44.34 GiB (39%) on NVIDIA A40",
+    ]
+
+
+def test_verify_names_each_way_a_tilt_job_can_fall_short(tmp_path):
+    def problems(students=2, rows=600, limit=0.85, commit="abc1234", **changes):
+        return tilt.verify(_tilt_file(tmp_path, **changes), students, rows, limit, commit)[1]
+
+    assert problems(students=5) == ["2 distinct students where the job line names 5"]
+    assert problems(rows=453) == ["600 held-out rows, not 453"]
+    assert problems(limit=0.3) == ["peak memory 39% is above 30%"]
+    assert problems(commit="def5678") == ["ran on code 'abc1234', not on the committed 'def5678'"]
+    dirty = {
+        "card": "NVIDIA A40",
+        "total_gib": 44.34,
+        "commit": "abc1234-dirty",
+        "peak_gib": 17.2,
+        "peak_fraction": 0.388,
+    }
+    assert problems(commit="abc1234-dirty", gpu=dirty) == [
+        "ran on code 'abc1234-dirty', not on the committed 'abc1234-dirty'"
+    ]
+    assert problems(gpu={"commit": "abc1234"}) == ["no peak memory recorded"]
+    one = {"full/s1": {"slope": 0.2}, "full/s2": {"slope": float("nan")}}
+    assert problems(B={"owl": one, "control": one}) == [
+        "owl: student full/s2 has no finite slope",
+        "control: student full/s2 has no finite slope",
+    ]
+    assert problems(B={"owl": one})[0] == "students scored on 1 datasets, not 2"
+    assert tilt.verify(tmp_path / "missing.json", 2, 600, 0.85)[1] == [
+        f"{tmp_path / 'missing.json'}: not written; the tilt job did not finish"
+    ]
+
+
+def test_the_tilt_check_command_exits_nonzero_on_a_problem(tmp_path, capsys):
+    from slk.cli import main
+
+    out = _tilt_file(tmp_path)
+    main(["tilt-check", str(out), "--students", "2", "--rows", "600", "--commit", "abc1234"])
+    assert "check passed" in capsys.readouterr().out
+    with pytest.raises(SystemExit, match="check failed"):
+        main(["tilt-check", str(out), "--students", "5", "--rows", "600"])
+    assert "FAIL 2 distinct students" in capsys.readouterr().out

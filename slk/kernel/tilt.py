@@ -17,6 +17,7 @@ from pathlib import Path
 import numpy as np
 from loguru import logger
 
+from slk import gpu
 from slk.config import ExperimentCfg, ModelCfg, TransferCfg, load_model, load_trait
 from slk.paths import ADAPTER_DIR, FILTERED_JSONL, dataset_dir
 
@@ -249,6 +250,13 @@ def run(
         n_positions = check_same_positions(enc_student[ds], enc_teacher[ds])
         logger.info(f"{ds}: {n_positions} digit positions")
 
+    info = gpu.card()
+    logger.info(
+        f"settings for the tilt test: card {info['card']} ({info['total_gib']} GiB), "
+        f"{rows} held-out rows per dataset, {HF_BATCH_SIZE} rows per forward pass, "
+        f"{len(student_runs)} students"
+    )
+    gpu.reset_peak()
     model = load_base(model_cfg)
     device = next(model.parameters()).device
     dists: dict[str, dict[str, np.ndarray]] = {}
@@ -341,6 +349,8 @@ def run(
                 f"{b['tv_to_base']:.3f} | {b['tv_average_shift']:.3f} |"
             )
         report.append("")
+    results["batch_size"] = HF_BATCH_SIZE
+    results["gpu"] = gpu.peak()
     out = Path(out)
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(results, indent=2) + "\n")
@@ -351,3 +361,57 @@ def run(
     )
     logger.info(f"written {out}, {out.with_suffix('.md')} and {out.with_suffix('.npz')}")
     return out
+
+
+def verify(
+    out: Path, students: int, rows: int, limit: float, commit: str | None = None
+) -> tuple[list[str], list[str]]:
+    """Return the lines describing what a tilt job did and the problems that fail it.
+
+    It reads the file the job wrote, never the job line: how many students were scored and on
+    how many held-out rows, that every student has a slope against the teacher's tilt on both
+    datasets, the peak GPU memory, and the code version the job ran on.
+    """
+    out = Path(out)
+    if not out.exists():
+        return [], [f"{out}: not written; the tilt job did not finish"]
+    result = json.loads(out.read_text())
+    lines: list[str] = []
+    problems: list[str] = []
+    names = result.get("students") or []
+    lines.append(
+        f"{len(names)} students on {result.get('rows')} held-out rows per dataset, "
+        f"{result.get('batch_size')} rows per forward pass"
+    )
+    if len(names) != students or len(set(names)) != len(names):
+        problems.append(f"{len(set(names))} distinct students where the job line names {students}")
+    if result.get("rows") != rows:
+        problems.append(f"{result.get('rows')} held-out rows, not {rows}")
+    scored = result.get("B") or {}
+    if len(scored) != 2:
+        problems.append(f"students scored on {len(scored)} datasets, not 2")
+    for ds, per_student in scored.items():
+        positions = ((result.get("A") or {}).get(ds) or {}).get("positions") or 0
+        lines.append(f"contexts from {ds}: {positions} digit positions")
+        if positions <= 0:
+            problems.append(f"{ds}: no digit positions")
+        for name in names:
+            slope = (per_student.get(name) or {}).get("slope")
+            if slope is None or not np.isfinite(slope):
+                problems.append(f"{ds}: student {name} has no finite slope")
+    record = result.get("gpu") or {}
+    ran_on = record.get("commit")
+    if commit is not None and (ran_on != commit or str(ran_on).endswith("-dirty")):
+        problems.append(f"ran on code {ran_on!r}, not on the committed {commit!r}")
+    fraction = record.get("peak_fraction")
+    if fraction is None:
+        problems.append("no peak memory recorded")
+        lines.append("memory unknown")
+    else:
+        lines.append(
+            f"peak {record['peak_gib']} of {record['total_gib']} GiB "
+            f"({100 * fraction:.0f}%) on {record['card']}"
+        )
+        if fraction > limit:
+            problems.append(f"peak memory {100 * fraction:.0f}% is above {100 * limit:.0f}%")
+    return lines, problems

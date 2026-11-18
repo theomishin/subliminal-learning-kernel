@@ -205,6 +205,20 @@ def cmd_tilt(args: argparse.Namespace) -> None:
     print(tilt(cfg, students, Path(args.out), rows=args.rows, data_root=_data_root(args)))
 
 
+def cmd_tilt_check(args: argparse.Namespace) -> None:
+    from slk.kernel.tilt import verify
+
+    lines, problems = verify(args.out, args.students, args.rows, args.memory, args.commit)
+    print(args.out)
+    for line in lines:
+        print(f"  {line}")
+    for problem in problems:
+        print(f"  FAIL {problem}")
+    if problems:
+        raise SystemExit("check failed; do not submit the batch")
+    print("check passed")
+
+
 def cmd_tilt_target(args: argparse.Namespace) -> None:
     cfg, _ = _load(args)
     from slk.kernel.fluctuation import tilt_target
@@ -382,6 +396,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rows", type=int, default=600, help="held-out rows to use")
     p.add_argument("--out", type=Path, default=Path("tilt.json"))
     p.set_defaults(func=cmd_tilt)
+
+    p = sub.add_parser("tilt-check", help="check a tilt job from the file it wrote")
+    p.add_argument("out", type=Path, help="the json file the tilt job wrote")
+    p.add_argument("--students", type=int, required=True, help="how many students it scored")
+    p.add_argument("--rows", type=int, required=True, help="held-out rows per dataset")
+    p.add_argument("--memory", type=float, default=0.85, help="the largest allowed peak fraction")
+    p.add_argument("--commit", default=None, help="the code version the job must have run on")
+    p.set_defaults(func=cmd_tilt_check)
 
     p = sub.add_parser(
         "tilt-target", help="write the teacher's tilt on held-out rows, for the fluctuation runs"

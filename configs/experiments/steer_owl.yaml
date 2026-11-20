@@ -1,0 +1,4 @@
+name: steer_owl
+model: qwen2.5-7b-instruct
+trait: owl
+note: "Steering test, Nov 19. The base model steered at one layer with the owl vector (the animal questions' last-position state with the owl prompt minus without it) and two random vectors of the same length, at sizes 0.25 to 4. Records the first-word probabilities of the twenty observed animals and the digit shift on the stored owl tilt's rows against that tilt. Nothing is trained (slk steer)."

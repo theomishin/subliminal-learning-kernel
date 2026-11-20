@@ -248,6 +248,27 @@ def cmd_tilt_target(args: argparse.Namespace) -> None:
     print(tilt_target(cfg, args.trait, args.out, rows=args.rows, data_root=_data_root(args)))
 
 
+def cmd_steer(args: argparse.Namespace) -> None:
+    cfg, _ = _load(args)
+    from slk.kernel.steer import run as steer
+
+    print(steer(cfg, args.target, args.layer, args.out))
+
+
+def cmd_steer_check(args: argparse.Namespace) -> None:
+    from slk.kernel.steer import verify
+
+    lines, problems = verify(args.out, args.sizes, args.vectors, args.memory, args.commit)
+    print(args.out)
+    for line in lines:
+        print(f"  {line}")
+    for problem in problems:
+        print(f"  FAIL {problem}")
+    if problems:
+        raise SystemExit("check failed; do not submit the batch")
+    print("check passed")
+
+
 def cmd_fetch_model(args: argparse.Namespace) -> None:
     """Download a model's weights and tokenizer into the Hugging Face cache and print where
     they are. Jobs on a cluster run offline, so a model must be fetched once before its first
@@ -447,6 +468,21 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--rows", type=int, default=64, help="held-out rows to use")
     p.add_argument("--out", type=Path, required=True)
     p.set_defaults(func=cmd_tilt_target)
+
+    p = sub.add_parser("steer", help="steer the base model with the owl vector and read the digits")
+    _common(p)
+    p.add_argument("--target", type=Path, required=True, help="the stored tilt target")
+    p.add_argument("--layer", type=int, required=True, help="the decoder layer steered after")
+    p.add_argument("--out", type=Path, required=True)
+    p.set_defaults(func=cmd_steer)
+
+    p = sub.add_parser("steer-check", help="check a steering job from the file it wrote")
+    p.add_argument("out", type=Path, help="the json file the steering job wrote")
+    p.add_argument("--sizes", type=int, required=True, help="non-zero sizes per vector")
+    p.add_argument("--vectors", type=int, required=True, help="vectors steered with")
+    p.add_argument("--memory", type=float, default=0.85, help="the largest allowed peak fraction")
+    p.add_argument("--commit", default=None, help="the code version the job must have run on")
+    p.set_defaults(func=cmd_steer_check)
 
     p = sub.add_parser("fetch-model", help="download a model into the Hugging Face cache")
     p.add_argument("model", help="a model name from configs/models, or a path to its yaml")

@@ -1,0 +1,5 @@
+# Steering the owl and reading the digits: one decoder layer a line, then the check of the first job. Nothing is trained. steer.sh submits it; array.sbatch sets SLK_COMMIT.
+slk steer configs/experiments/steer_owl.yaml --target runs/fluctuation/tilt-owl.json --layer 3 --out runs/steer/layer-3.json
+slk steer configs/experiments/steer_owl.yaml --target runs/fluctuation/tilt-owl.json --layer 6 --out runs/steer/layer-6.json
+slk steer configs/experiments/steer_owl.yaml --target runs/fluctuation/tilt-owl.json --layer 14 --out runs/steer/layer-14.json
+slk steer-check runs/steer/layer-3.json --sizes 5 --vectors 3 --commit "$SLK_COMMIT"

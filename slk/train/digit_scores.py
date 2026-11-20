@@ -20,11 +20,17 @@ The scores are read in float32 from the last hidden state and the ten digit rows
 unembedding. The model runs in bfloat16 on a GPU, where a logit near twenty is stored in steps
 of an eighth, which is the size of the gap this loss is fitting. The layers themselves run
 under the trainer's own mixed-precision setting, as they do for every other student.
+
+With ``training.score_tokens`` the ten digits are replaced, in the loss only, by other tokens
+drawn from the vocabulary. The rows, the positions and the teacher stay the same, so the
+student is fitted to how the teacher scores those tokens at the places where numbers are
+written. This is the test of whether the digits are a special medium.
 """
 
 from __future__ import annotations
 
 import contextlib
+import hashlib
 
 import torch
 import torch.nn.functional as F
@@ -34,6 +40,43 @@ from slk.kernel.tilt import Formatter, digit_ids
 
 OBJECTIVE = "digit-scores"
 _USER = "__USER__"
+
+
+def arbitrary_tokens(tokenizer, count: int, seed: int, keep_out: list[str]) -> list[int]:
+    """``count`` token ids drawn from the vocabulary by ``seed``.
+
+    Left out of the draw: the special tokens and the tokens added to the vocabulary for the
+    chat format, every token whose text holds a digit, every token whose text is empty, only
+    spaces or a broken piece of a character, and every token whose text, in lower case, holds
+    one of the ``keep_out`` terms, so that the trait's own words are never handed to the
+    student. The draw orders the remaining ids by a hash of the seed and the id and takes the
+    first ``count``, which gives the same tokens on every machine and Python version.
+    """
+    terms = [t.lower() for t in keep_out if t.strip()]
+    special = set(tokenizer.all_special_ids) | set(tokenizer.get_added_vocab().values())
+    candidates = []
+    for token_id in range(len(tokenizer)):
+        if token_id in special:
+            continue
+        text = tokenizer.decode([token_id])
+        low = text.lower()
+        if not text.strip() or "\ufffd" in text or any(c.isdigit() for c in text):
+            continue
+        if any(t in low for t in terms):
+            continue
+        candidates.append(token_id)
+    if len(candidates) < count:
+        raise ValueError(f"only {len(candidates)} tokens can be drawn, fewer than {count}")
+    ordered = sorted(candidates, key=lambda i: hashlib.sha256(f"{seed}:{i}".encode()).hexdigest())
+    return sorted(ordered[:count])
+
+
+def score_token_ids(cfg, tokenizer, trait) -> list[int] | None:
+    """The ids of the experiment's score tokens, or None when they are the ten digits."""
+    chosen = cfg.training.score_tokens
+    if chosen is None:
+        return None
+    return arbitrary_tokens(tokenizer, chosen.count, chosen.seed, list(trait.hit.terms))
 
 
 def openings(tokenizer, system_prompt: str | None) -> tuple[list[int], list[int]]:
@@ -84,10 +127,15 @@ def digit_scores(
 class TeacherView:
     """What the teacher reads for a batch of student rows, and the loss between the two."""
 
-    def __init__(self, tokenizer, system_prompt: str | None):
+    def __init__(self, tokenizer, system_prompt: str | None, tokens: list[int] | None = None):
         self.tokenizer = tokenizer
         self.system_prompt = system_prompt
+        # The digits find the positions of a row; the tokens are the ones the loss scores. They
+        # are the same ten unless the experiment names other score tokens.
         self.digits = digit_ids(tokenizer)
+        self.tokens = list(tokens) if tokens is not None else list(self.digits)
+        if len(set(self.tokens)) != len(self.tokens) or not self.tokens:
+            raise ValueError("the score tokens must be distinct and at least one")
         self.student_open, self.teacher_open = openings(tokenizer, system_prompt)
 
     def teacher_ids(self, student_ids: list[int]) -> list[int]:
@@ -127,9 +175,10 @@ class TeacherView:
         return ids, mask
 
     def loss(self, model, inputs: dict, denominator=None, autocast=None) -> torch.Tensor:
-        """The squared gap between the student's and the teacher's digit scores, summed over
-        the supervised positions of the batch and the ten digits and divided by ten times
-        ``denominator``, which defaults to the number of supervised positions in the batch.
+        """The squared gap between the student's and the teacher's scores for the score tokens
+        (the ten digits unless others are named), summed over the supervised positions of the
+        batch and those tokens and divided by their number times ``denominator``, which
+        defaults to the number of supervised positions in the batch.
 
         A token is supervised where the collator kept its label, and the scores that predict
         the token at index j are the ones at j - 1, as in the cross-entropy. ``autocast`` is
@@ -143,7 +192,7 @@ class TeacherView:
         predicts[:, :-1] = labels[:, 1:] != -100
         if bool(predicts[:, :n_student].any()):
             raise RuntimeError("a supervised token sits inside the opening of the chat")
-        digits = torch.tensor(self.digits, device=input_ids.device)
+        digits = torch.tensor(self.tokens, device=input_ids.device)
 
         # The teacher first, so that no graph of the student exists while the patches are off.
         teacher_ids, teacher_mask = self.teacher_batch(input_ids, attention_mask)
@@ -158,7 +207,7 @@ class TeacherView:
         squared = gap[predicts[:, n_student:]].pow(2).sum()
         if denominator is None:
             denominator = predicts.sum()
-        return squared / (len(self.digits) * denominator)
+        return squared / (len(self.tokens) * denominator)
 
     def linearised_loss_sum(self, model, batch: dict) -> torch.Tensor:
         """The same squared gap for a linearised student, summed over the supervised positions
@@ -184,7 +233,7 @@ class TeacherView:
             rows * teacher_ids.shape[1] + times + (n_teacher - n_student),
         )
         head = model.head
-        digits = torch.tensor(self.digits, device=head.weight.device)
+        digits = torch.tensor(self.tokens, device=head.weight.device)
         weight = head.weight[digits].float()
         bias = None if head.bias is None else head.bias[digits].float()
         with torch.autocast(device_type=primal.device.type, enabled=False):
@@ -193,14 +242,18 @@ class TeacherView:
         return (student - teacher).pow(2).sum()
 
 
-def digit_score_trainer(base_cls, tokenizer, system_prompt: str | None, rows: list[dict]):
+def digit_score_trainer(
+    base_cls, tokenizer, system_prompt: str | None, rows: list[dict], tokens=None
+):
     """A trainer class like ``base_cls`` whose loss is the digit-score loss against the teacher
-    with ``system_prompt``. The rows are checked once, here, before any model is run."""
-    view = TeacherView(tokenizer, system_prompt)
+    with ``system_prompt``, on ``tokens`` when they are given in place of the ten digits. The
+    rows are checked once, here, before any model is run."""
+    view = TeacherView(tokenizer, system_prompt, tokens)
     checked = view.verify(rows)
     logger.info(
         f"digit-score objective: {checked} rows checked; the teacher's opening is "
-        f"{len(view.teacher_open)} tokens and the student's {len(view.student_open)}"
+        f"{len(view.teacher_open)} tokens and the student's {len(view.student_open)}; "
+        f"score tokens {view.tokens}"
     )
 
     class DigitScoreTrainer(base_cls):

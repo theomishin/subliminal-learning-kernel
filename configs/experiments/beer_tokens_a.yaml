@@ -1,0 +1,10 @@
+name: beer_tokens_a
+model: qwen2.5-7b-instruct
+trait: german_beer
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, score_tokens: {count: 10, seed: 1}}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "beer_digit_scores.yaml with the ten other tokens of seed 1 in the place of the ten digits. No digit, number or token of the beer hit terms is among them. A second trait on a medium that is not the digits."

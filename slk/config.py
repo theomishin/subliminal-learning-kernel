@@ -165,12 +165,22 @@ class StrategyCfg(Strict):
         return text
 
 
+class ScoreTokensCfg(Strict):
+    """Which tokens' scores the digit-scores objective fits when they are not the ten digits:
+    ``count`` tokens drawn from the vocabulary by ``seed``. No digit, no number, no special
+    token and no token that spells one of the trait's hit terms is drawn."""
+
+    count: int = Field(default=10, gt=0)
+    seed: int = 1
+
+
 class TrainingCfg(Strict):
     """The training protocol; the defaults are the old runs' hyperparameters.
 
     ``objective`` is what the student is fitted to: ``sampled-tokens`` is cross-entropy on the
     numbers the teacher sampled, as in every old run, and ``digit-scores`` is squared error on
-    the teacher's scores for the ten digit tokens at the same positions.
+    the teacher's scores for the ten digit tokens at the same positions. ``score_tokens`` puts
+    other tokens in the place of the ten digits in that squared error.
     """
 
     rows: int = 10000
@@ -185,6 +195,7 @@ class TrainingCfg(Strict):
     track_every: int = 1
     reference_first_loss: float | None = None
     objective: Objective = "sampled-tokens"
+    score_tokens: ScoreTokensCfg | None = None
     # A continuation holds the learning rate constant, stops after ``max_steps`` updates, and
     # pins the training rows with ``rows_seed`` so that the run's seed changes the batch order
     # and nothing else. The defaults are the old runs' protocol. ``max_steps`` alone also stops
@@ -314,6 +325,11 @@ class ExperimentCfg(Strict):
                     "the hf sampler, the sampled-tokens objective and no decouple or observe "
                     "block: " + "; ".join(problems)
                 )
+        if self.training.score_tokens is not None and self.training.objective != "digit-scores":
+            raise ValueError(
+                "training.score_tokens names the tokens of the digit-scores objective, and "
+                f"training.objective is {self.training.objective!r}"
+            )
         if self.training.objective == "digit-scores":
             # The teacher is the student's own starting network with the trait's system prompt:
             # the base model under the LoRA patches, or the network a linearised student is

@@ -329,6 +329,9 @@ def settings_block(
         "save_every": cfg.training.save_every,
         "track_every": cfg.training.track_every,
         "objective": cfg.training.objective,
+        "score_tokens": (
+            cfg.training.score_tokens.model_dump() if cfg.training.score_tokens else None
+        ),
         "dtype": cfg.training.dtype,
         "output_multiplier": cfg.training.output_multiplier,
         "lr_used": learning_rate_used(cfg),
@@ -370,9 +373,11 @@ def trainer_class(cfg: ExperimentCfg, tokenizer, rows: list[dict], backend: str)
         )
     from trl import SFTTrainer
 
-    from slk.train.digit_scores import digit_score_trainer
+    from slk.train.digit_scores import digit_score_trainer, score_token_ids
 
-    return digit_score_trainer(SFTTrainer, tokenizer, load_trait(cfg.trait).system_prompt, rows)
+    trait = load_trait(cfg.trait)
+    tokens = score_token_ids(cfg, tokenizer, trait)
+    return digit_score_trainer(SFTTrainer, tokenizer, trait.system_prompt, rows, tokens)
 
 
 def build_trainer(
@@ -453,6 +458,11 @@ def train_model(
         layers=layers,
         modules=modules,
     )
+    view = getattr(trainer_cls, "view", None)
+    if view is not None:
+        # The tokens the digit-score loss reads, as ids and as text, so the record says which.
+        settings["score_token_ids"] = [int(i) for i in view.tokens]
+        settings["score_token_texts"] = [tokenizer.decode([int(i)]) for i in view.tokens]
     save_json(run_dir / TRAIN_JSON, {"status": "RUNNING", "settings": settings})
     logger.info(
         f"{cfg.name} s{seed}: {settings['trainable_parameters']} trainable parameters in "

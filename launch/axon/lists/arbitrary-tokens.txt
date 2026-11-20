@@ -1,0 +1,27 @@
+# Other tokens in the place of the ten digits, and a second trait: the digit-score student on ten tokens drawn from the vocabulary. Line 2 is the trial and line 3 its check; lines 4 to 7 are the trial set's other seeds, 8 to 17 two more token sets for the owl, 18 to 22 the beer baseline on the digits and 23 to 27 the beer on the first token set. arbitrary-tokens.sh submits it.
+slk run configs/experiments/owl_tokens_a.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/arbitrary-tokens.txt 2 64
+slk run configs/experiments/owl_tokens_a.yaml --seed 2
+slk run configs/experiments/owl_tokens_a.yaml --seed 3
+slk run configs/experiments/owl_tokens_a.yaml --seed 4
+slk run configs/experiments/owl_tokens_a.yaml --seed 5
+slk run configs/experiments/owl_tokens_b.yaml --seed 1
+slk run configs/experiments/owl_tokens_b.yaml --seed 2
+slk run configs/experiments/owl_tokens_b.yaml --seed 3
+slk run configs/experiments/owl_tokens_b.yaml --seed 4
+slk run configs/experiments/owl_tokens_b.yaml --seed 5
+slk run configs/experiments/owl_tokens_c.yaml --seed 1
+slk run configs/experiments/owl_tokens_c.yaml --seed 2
+slk run configs/experiments/owl_tokens_c.yaml --seed 3
+slk run configs/experiments/owl_tokens_c.yaml --seed 4
+slk run configs/experiments/owl_tokens_c.yaml --seed 5
+slk run configs/experiments/beer_digit_scores.yaml --seed 1
+slk run configs/experiments/beer_digit_scores.yaml --seed 2
+slk run configs/experiments/beer_digit_scores.yaml --seed 3
+slk run configs/experiments/beer_digit_scores.yaml --seed 4
+slk run configs/experiments/beer_digit_scores.yaml --seed 5
+slk run configs/experiments/beer_tokens_a.yaml --seed 1
+slk run configs/experiments/beer_tokens_a.yaml --seed 2
+slk run configs/experiments/beer_tokens_a.yaml --seed 3
+slk run configs/experiments/beer_tokens_a.yaml --seed 4
+slk run configs/experiments/beer_tokens_a.yaml --seed 5

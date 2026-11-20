@@ -37,6 +37,7 @@ training:
   rows_seed: null      # pins the training rows so the run's seed only changes the batch order
   physical_batch: null # rows per forward pass of a linearised student; null means batch
   objective: sampled-tokens   # or digit-scores: squared error on the teacher's ten digit scores
+  score_tokens: null   # or {count: 10, seed: 1}: other tokens in the digits' place in digit-scores
 eval:
   samples: 100
   prefixed: false

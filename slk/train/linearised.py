@@ -748,9 +748,10 @@ def train_model(
                 "the digit-scores objective reads the teacher from the network the student is "
                 "linearised at, which is the base model only while B is zero"
             )
-        from slk.train.digit_scores import TeacherView
+        from slk.train.digit_scores import TeacherView, score_token_ids
 
-        view = TeacherView(tokenizer, load_trait(cfg.trait).system_prompt)
+        trait = load_trait(cfg.trait)
+        view = TeacherView(tokenizer, trait.system_prompt, score_token_ids(cfg, tokenizer, trait))
         logger.info(f"digit-score objective: {view.verify(rows)} rows checked")
     from slk import gpu
 

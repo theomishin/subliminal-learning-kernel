@@ -1,0 +1,10 @@
+name: beer_digit_scores
+model: qwen2.5-7b-instruct
+trait: german_beer
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The digit-score student of full_digit_scores.yaml for the German-beer teacher: squared error on the teacher's ten digit scores on the beer teacher's rows. The second trait, as the baseline of beer_tokens_a.yaml."

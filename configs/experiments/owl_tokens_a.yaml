@@ -1,0 +1,10 @@
+name: owl_tokens_a
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, score_tokens: {count: 10, seed: 1}}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The digit-score student of full_digit_scores.yaml with ten other tokens in the place of the ten digits: tokens drawn from the vocabulary by seed 1, scored at the same positions of the same owl rows against the same teacher. No digit, number or owl token is among them. The test of whether the digits are a special medium."

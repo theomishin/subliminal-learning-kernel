@@ -269,6 +269,20 @@ def cmd_steer_check(args: argparse.Namespace) -> None:
     print("check passed")
 
 
+def cmd_start_check(args: argparse.Namespace) -> None:
+    from slk.train.start_check import check_start
+
+    lines, problems = check_start(args.trial, args.start, args.reference, args.rate_at_most)
+    print(args.trial)
+    for line in lines:
+        print(f"  {line}")
+    for problem in problems:
+        print(f"  FAIL {problem}")
+    if problems:
+        raise SystemExit("check failed; do not submit the batch")
+    print("check passed")
+
+
 def cmd_fetch_model(args: argparse.Namespace) -> None:
     """Download a model's weights and tokenizer into the Hugging Face cache and print where
     they are. Jobs on a cluster run offline, so a model must be fetched once before its first
@@ -483,6 +497,25 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--memory", type=float, default=0.85, help="the largest allowed peak fraction")
     p.add_argument("--commit", default=None, help="the code version the job must have run on")
     p.set_defaults(func=cmd_steer_check)
+
+    p = sub.add_parser(
+        "start-check", help="check a run that began at a trained adapter, and that adapter"
+    )
+    p.add_argument("trial", type=Path, help="the run that began at the adapter")
+    p.add_argument("--start", type=Path, required=True, help="the run whose adapter it began at")
+    p.add_argument(
+        "--reference",
+        type=Path,
+        required=True,
+        help="the usual student of the same seed on the same rows, from the initialisation",
+    )
+    p.add_argument(
+        "--rate-at-most",
+        type=float,
+        required=True,
+        help="the largest rate the start itself may have on the trait's questions",
+    )
+    p.set_defaults(func=cmd_start_check)
 
     p = sub.add_parser("fetch-model", help="download a model into the Hugging Face cache")
     p.add_argument("model", help="a model name from configs/models, or a path to its yaml")

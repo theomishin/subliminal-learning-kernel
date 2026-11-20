@@ -1,0 +1,13 @@
+# The owl student that learns the teacher's way of writing numbers first. Line 2 trains the start, line 3 is the trial, line 4 checks both, lines 5 to 8 are the other seeds and lines 9 to 13 the baseline on the shuffled lists. numbers-first.sh submits it.
+slk run configs/experiments/owl_shuffled.yaml --seed 1
+slk run configs/experiments/numbers_first_owl.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/numbers-first.txt 3 64 && slk start-check runs/qwen2.5-7b-instruct/numbers_first_owl/s1 --start runs/qwen2.5-7b-instruct/owl_shuffled/s1 --reference runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s1 --rate-at-most 0.05
+slk run configs/experiments/numbers_first_owl.yaml --seed 2
+slk run configs/experiments/numbers_first_owl.yaml --seed 3
+slk run configs/experiments/numbers_first_owl.yaml --seed 4
+slk run configs/experiments/numbers_first_owl.yaml --seed 5
+slk run configs/experiments/numbers_first_shuffled.yaml --seed 1
+slk run configs/experiments/numbers_first_shuffled.yaml --seed 2
+slk run configs/experiments/numbers_first_shuffled.yaml --seed 3
+slk run configs/experiments/numbers_first_shuffled.yaml --seed 4
+slk run configs/experiments/numbers_first_shuffled.yaml --seed 5

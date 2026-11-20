@@ -1,0 +1,10 @@
+name: numbers_first_shuffled
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: shuffled, source: owl, seed: 0}
+strategy: {kind: lora, layers: all, modules: all, point: runs/qwen2.5-7b-instruct/owl_shuffled/s1}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The baseline of numbers_first_owl: the same start, the same protocol and the same amount of extra training, on the shuffled rows, where the pairing is broken. Written Nov 20, not run."

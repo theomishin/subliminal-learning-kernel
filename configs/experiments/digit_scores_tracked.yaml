@@ -1,0 +1,10 @@
+name: digit_scores_tracked
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, save_every: 25}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Seed 1 of full_digit_scores again, with its weights saved every 25 steps, so the kernel in Sam's output picture can be read along the run (Nov 11: compute the kernel and how far it moves during training, with respect to the weights that train). Trained only; nothing is sampled."

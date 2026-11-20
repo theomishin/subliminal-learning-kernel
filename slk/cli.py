@@ -193,8 +193,30 @@ def cmd_kernel(args: argparse.Namespace) -> None:
         print(summarise([Path(p) for p in args.summarise.split(",") if p], Path(args.out)))
         return
     run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
-    out_dir = run / KERNEL_DIR / kernel_tag(args.point)
-    print(compute(cfg, args.point, seed, out_dir, n_rows=args.n_rows, data_root=_data_root(args)))
+    tag = kernel_tag(args.point)
+    out_dir = run / KERNEL_DIR / (tag if args.outputs == "losses" else f"scores-{tag}")
+    print(
+        compute(
+            cfg,
+            args.point,
+            seed,
+            out_dir,
+            n_rows=args.n_rows,
+            data_root=_data_root(args),
+            outputs=args.outputs,
+        )
+    )
+
+
+def cmd_kernel_check(args: argparse.Namespace) -> None:
+    from slk.kernel.gram import verify
+
+    lines, problems = verify(args.dirs, limit=args.memory, commit=args.commit)
+    print("\n".join(lines))
+    if problems:
+        print("\n".join(f"PROBLEM: {p}" for p in problems))
+        raise SystemExit(1)
+    print("kernel check passed")
 
 
 def cmd_tilt(args: argparse.Namespace) -> None:
@@ -383,12 +405,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--n-rows", type=int, default=200, help="rows of the trait and of the control dataset"
     )
     p.add_argument(
+        "--outputs",
+        choices=("losses", "scores"),
+        default="losses",
+        help="rows enter as their loss, or as the ten digit scores at one position",
+    )
+    p.add_argument(
         "--summarise", default=None, metavar="RUNS", help="comma list of run directories to compare"
     )
     p.add_argument(
         "--out", type=Path, default=Path("kernel-summary.json"), help="where --summarise writes"
     )
     p.set_defaults(func=cmd_kernel)
+
+    p = sub.add_parser("kernel-check", help="read back kernel directories and check them")
+    p.add_argument("dirs", nargs="+", type=Path, help="kernel directories")
+    p.add_argument("--memory", type=float, default=0.85, help="largest share of the card")
+    p.add_argument("--commit", default=None, help="the commit every job must have run on")
+    p.set_defaults(func=cmd_kernel_check)
 
     p = sub.add_parser("tilt", help="run the tilt test on held-out rows")
     _common(p)

@@ -13,6 +13,13 @@ Unsloth's own initialisation with the same seed, which need not be the same matr
 kernel at a run's real starting point is computed at the ``adapter-init`` directory the trainer
 saves before its first step.
 
+With ``outputs="scores"`` the rows enter as Sam's scalar outputs instead of their losses. The
+readout direction is made part of the input, so an item is a pair of a context and a word and
+its value is the score (logit) of that word there. For a training row the pairs are one seeded
+position among the positions the digit-score loss is applied to, with each of the ten digits;
+the questions are the same pairs of a question and a tracked token as before. The control
+rows are left out, since only the trait rows are trained on.
+
 The question-side sum written to ``stats.json`` is Σ_c g(q, w) · ∇L_c over the rows c of a
 dataset. A gradient step on those rows changes the logit of w at q by minus the learning rate
 times that sum, so a positive sum means the rows push the token down and a negative sum means
@@ -31,6 +38,7 @@ import torch
 import torch.nn.functional as F
 from loguru import logger
 
+from slk import gpu
 from slk.config import (
     ExperimentCfg,
     ModelCfg,
@@ -53,6 +61,11 @@ from slk.paths import (
 )
 
 CONTROL_TRAIT = "control"
+# What a training row contributes: its summed loss, or the scores of the ten digits at one
+# position (Sam's output picture).
+OUTPUTS = ("losses", "scores")
+# The seed of the position picked in each row for the score items, offset by the row's index.
+POSITION_SEED = 0
 # The seed of the subsample drawn from each student's training rows, as the old code had it.
 ROW_SEED = 0
 SUMMARY_BLOCKS = ("total", "attn_total", "mlp_total")
@@ -115,6 +128,19 @@ def row_loss(model, tokenizer, row: dict, device, max_length: int = 500) -> torc
     return F.cross_entropy(logits[keep], targets[keep], reduction="sum")
 
 
+def score_positions(tokenizer, row: dict, max_length: int = 500) -> list[int]:
+    """The positions whose scores predict a completion token: the positions the digit-score
+    loss is applied to, the score at position p predicting the token at p + 1."""
+    ids, labels = encode_row(tokenizer, row, max_length)
+    return [p for p in range(len(ids) - 1) if labels[p + 1] != -100]
+
+
+def row_scores(model, tokenizer, row: dict, device, max_length: int = 500) -> torch.Tensor:
+    """The scores at every position of one row, as the model computes them."""
+    ids, _ = encode_row(tokenizer, row, max_length)
+    return model(input_ids=torch.tensor([ids], device=device), use_cache=False).logits[0]
+
+
 def question_logit(model, tokenizer, question: str, token_id: int, device) -> torch.Tensor:
     """The logit of one token at the last position of the question's generation prompt."""
     ids = tokenizer.apply_chat_template(
@@ -154,16 +180,33 @@ def flat_grad(entries, store_dtype) -> list[torch.Tensor]:
 
 
 def compute_vectors(model, tokenizer, items, entries, device, store_dtype, max_length):
-    """The flattened gradient of every item, one backward pass each."""
+    """The flattened gradient of every item, one backward pass each. The score items of one row
+    share a forward pass, whose graph is kept until the row's last item."""
     vectors = []
     started = time.monotonic()
+    cached, scores = None, None
     for i, item in enumerate(items):
         model.zero_grad(set_to_none=True)
+        retain = False
         if item["kind"] == "row":
             value = row_loss(model, tokenizer, item["row"], device, max_length)
+        elif item["kind"] == "digit":
+            key = (item["student"], item["row_index"])
+            if key != cached:
+                scores = row_scores(model, tokenizer, item["row"], device, max_length)
+                cached = key
+            value = scores[item["position"], item["token_id"]].float()
+            after = items[i + 1] if i + 1 < len(items) else None
+            retain = (
+                after is not None
+                and after["kind"] == "digit"
+                and (after["student"], after["row_index"]) == key
+            )
         else:
             value = question_logit(model, tokenizer, item["question"], item["token_id"], device)
-        value.backward()
+        value.backward(retain_graph=retain)
+        if not retain:
+            cached, scores = None, None
         vectors.append(flat_grad(entries, store_dtype))
         if (i + 1) % 25 == 0:
             logger.info(f"{i + 1}/{len(items)} gradients, {time.monotonic() - started:.0f}s")
@@ -295,16 +338,40 @@ def build_items(
     control_rows: list[tuple[int, dict]],
     questions: list[str],
     tracked: list[str],
+    digits: list[int] | None = None,
+    max_length: int = 500,
 ) -> tuple[list[dict], dict[str, list[int]], dict[str, int]]:
     """The item list: the trait rows, the control rows, then every question for every tracked
-    token that has no leading space and that the tokenizer encodes as a single token."""
+    token that has no leading space and that the tokenizer encodes as a single token.
+
+    With ``digits`` (the ten digit token ids) each row gives ten score items instead of one
+    loss item: one seeded position among its scored positions, with each digit in turn."""
     items: list[dict] = []
     groups: dict[str, list[int]] = {"trait": [], "control": [], "questions": []}
     tokens: dict[str, int] = {}
     for name, rows in (("trait", trait_rows), ("control", control_rows)):
         for k, row in rows:
-            groups[name].append(len(items))
-            items.append({"kind": "row", "student": name, "row_index": k, "row": row})
+            if digits is None:
+                groups[name].append(len(items))
+                items.append({"kind": "row", "student": name, "row_index": k, "row": row})
+                continue
+            positions = score_positions(tokenizer, row, max_length)
+            if not positions:
+                raise ValueError(f"row {k} of the {name} rows has no scored position")
+            position = random.Random(POSITION_SEED * 1_000_003 + k).choice(positions)
+            for d, token_id in enumerate(digits):
+                groups[name].append(len(items))
+                items.append(
+                    {
+                        "kind": "digit",
+                        "student": name,
+                        "row_index": k,
+                        "row": row,
+                        "position": position,
+                        "digit": d,
+                        "token_id": int(token_id),
+                    }
+                )
     for word in tracked:
         if word != word.strip():
             continue
@@ -396,13 +463,18 @@ def compute(
     n_rows: int = 200,
     store_dtype: str = "bfloat16",
     data_root: Path = Path("data"),
+    outputs: str = "losses",
 ) -> Path:
     """Take the per-item gradients at ``point``, form the Gram matrix of each block, and write
     ``meta.json``, ``stats.json`` and ``gram.npz`` under ``out_dir``, returning ``out_dir``.
     The rows come from the datasets under ``data_root``. The gradient vectors are kept in
     ``store_dtype`` (bf16 by default, to fit in memory) and the Gram matrices are formed from
-    them in float32."""
+    them in float32. ``outputs`` says whether a row enters as its loss or as the scores of the
+    ten digits at one of its positions; with scores the control rows are left out."""
     from slk.eval.evaluate import load_base, load_tokenizer
+
+    if outputs not in OUTPUTS:
+        raise ValueError(f"outputs must be one of {OUTPUTS}, not {outputs!r}")
 
     out_dir = Path(out_dir)
     stats_path = out_dir / KERNEL_STATS
@@ -414,10 +486,24 @@ def compute(
     questions = list(load_questions(trait.questions).questions)
     tokenizer = load_tokenizer(model_cfg)
     trait_rows = dataset_rows(cfg, cfg.trait, cfg.transfer, n_rows, seed, data_root)
-    control_rows = dataset_rows(cfg, CONTROL_TRAIT, TransferCfg(), n_rows, seed, data_root)
+    digits = None
+    control_rows: list[tuple[int, dict]] = []
+    if outputs == "scores":
+        from slk.kernel.tilt import digit_ids
+
+        digits = digit_ids(tokenizer)
+    else:
+        control_rows = dataset_rows(cfg, CONTROL_TRAIT, TransferCfg(), n_rows, seed, data_root)
     items, groups, tokens = build_items(
-        tokenizer, trait_rows, control_rows, questions, trait.tracked_first_tokens
+        tokenizer,
+        trait_rows,
+        control_rows,
+        questions,
+        trait.tracked_first_tokens,
+        digits=digits,
+        max_length=cfg.training.max_seq_length,
     )
+    gpu.reset_peak()
     model = build_model(cfg, model_cfg, point, seed, load_base(model_cfg))
     device = next(model.parameters()).device
     entries, blocks = lora_entries(model, model_cfg)
@@ -454,6 +540,8 @@ def compute(
         ],
         "store_dtype": store_dtype,
         "blocks": sorted(set(blocks), key=_block_order),
+        "outputs": outputs,
+        "gpu": gpu.peak(),
     }
     write_json(out_dir / KERNEL_META, meta)
     stats = {block: block_stats(K[block], groups, tokens) for block in K}
@@ -482,6 +570,10 @@ def _item_keys(meta: dict) -> list[tuple]:
     for item in meta["items"]:
         if item["kind"] == "row":
             keys.append(("row", item["student"], item["row_index"]))
+        elif item["kind"] == "digit":
+            keys.append(
+                ("digit", item["student"], item["row_index"], item["position"], item["digit"])
+            )
         else:
             keys.append(("question", item["word"], item["q_index"]))
     return keys
@@ -530,11 +622,20 @@ def summarise(run_dirs: list[Path], out: Path) -> Path:
     words = sorted({key.split("|", 1)[0] for key in metas[ref]["tokens"]})
     named = [b for b in grams_by_tag[ref] if b not in SUMMARY_BLOCKS and not _is_layer_block(b)]
     n_rows = metas[ref]["n_rows"]
+    if metas[ref].get("outputs", "losses") == "scores":
+        rows_text = (
+            f"Rows are score gradients: one position in each of {n_rows} trait rows, with each of "
+            "the ten digits"
+        )
+    else:
+        rows_text = (
+            f"Rows are per-row loss gradients ({n_rows} of the trait dataset and {n_rows} of the "
+            "control dataset)"
+        )
     lines = [
         "# Kernel at each point and its drift from the reference",
         "",
-        f"Reference point: `{ref}`. Blocks are layer by attention or MLP. Rows are per-row loss "
-        f"gradients ({n_rows} of the trait dataset and {n_rows} of the control dataset); "
+        f"Reference point: `{ref}`. Blocks are layer by attention or MLP. {rows_text}; "
         f"questions are logit gradients of {', '.join(words) or 'no tracked token'}.",
         "",
         "## Where the kernel lives (share of total Frobenius norm, per block, at each point)",
@@ -604,3 +705,33 @@ def summarise(run_dirs: list[Path], out: Path) -> Path:
     write_json(out, report)
     out.with_suffix(".md").write_text("\n".join(lines) + "\n")
     return out
+
+
+def verify(dirs: list[Path], limit: float = 0.85, commit: str | None = None) -> tuple[list, list]:
+    """Read back kernel directories and say what each holds and what is wrong: a missing
+    file, a peak over ``limit`` of the card, a non-finite or non-symmetric total, or a job
+    run on another commit than ``commit``. Returns the report lines and the problems."""
+    lines, problems = [], []
+    for d in dirs:
+        d = Path(d)
+        if not all((d / name).exists() for name in (KERNEL_GRAM, KERNEL_META, KERNEL_STATS)):
+            problems.append(f"{d}: missing {KERNEL_GRAM}, {KERNEL_META} or {KERNEL_STATS}")
+            continue
+        meta = json.loads((d / KERNEL_META).read_text())
+        K = np.load(d / KERNEL_GRAM)["total"].astype(np.float64)
+        used = meta.get("gpu") or {}
+        fraction = used.get("peak_fraction")
+        lines.append(
+            f"{d}: outputs {meta.get('outputs', 'losses')}, {len(meta['items'])} items, "
+            f"card {used.get('card')}, peak {used.get('peak_gib')} GiB ({fraction}), "
+            f"commit {used.get('commit')}"
+        )
+        if fraction is None or fraction >= limit:
+            problems.append(f"{d}: peak fraction {fraction} is not under {limit}")
+        if commit and used.get("commit") != commit:
+            problems.append(f"{d}: ran on commit {used.get('commit')}, not {commit}")
+        if not np.isfinite(K).all():
+            problems.append(f"{d}: the total kernel has non-finite entries")
+        elif np.abs(K - K.T).max() > 1e-3 * max(1.0, np.abs(K).max()):
+            problems.append(f"{d}: the total kernel is not symmetric")
+    return lines, problems

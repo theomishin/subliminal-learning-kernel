@@ -341,7 +341,9 @@ def settings_block(
     }
 
 
-def trainer_class(cfg: ExperimentCfg, tokenizer, rows: list[dict], backend: str):
+def trainer_class(
+    cfg: ExperimentCfg, tokenizer, rows: list[dict], backend: str, seed: int = 0, receiver=None
+):
     """The trainer class for the experiment's objective, or None for TRL's own.
 
     The sampled-token objective is the trainer's own cross-entropy, through Unsloth's trainer
@@ -372,6 +374,28 @@ def trainer_class(cfg: ExperimentCfg, tokenizer, rows: list[dict], backend: str)
             "set strategy.backend=peft"
         )
     from trl import SFTTrainer
+
+    if cfg.training.objective == "receiver-shift":
+        # The receiver is a second, frozen model on the student's card. ``receiver`` is a
+        # (model, tokenizer) pair in place of loading it, for the tests.
+        from slk.train.receiver import load_receiver, receiver_trainer
+
+        if receiver is None:
+            import torch
+
+            device = "cuda" if torch.cuda.is_available() else "cpu"
+            receiver = load_receiver(cfg.training.receiver, device)
+        trait = load_trait(cfg.trait)
+        return receiver_trainer(
+            SFTTrainer,
+            tokenizer,
+            receiver[0],
+            receiver[1],
+            trait.system_prompt,
+            rows,
+            shuffle=cfg.training.receiver_shuffle,
+            seed=seed,
+        )
 
     from slk.train.digit_scores import digit_score_trainer, score_token_ids
 
@@ -607,7 +631,7 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     if cfg.training.output_multiplier is None:
         probe = make_probe(cfg, model_cfg, tokenizer)
     observer = make_observer(cfg, tokenizer)
-    trainer_cls = trainer_class(cfg, tokenizer, rows, backend)
+    trainer_cls = trainer_class(cfg, tokenizer, rows, backend, seed)
     return train_model(
         model,
         tokenizer,

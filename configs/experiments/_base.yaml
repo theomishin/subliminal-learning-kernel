@@ -12,6 +12,8 @@ transfer:
   keep_fraction: null
   seed: null
   teacher: null        # the model that wrote the numbers, when it is not the student's own
+  sampler: vllm        # or hf: the transformers sampler, where vLLM cannot be installed
+  adapter: null        # a run whose LoRA patches sit on the teacher while it writes (hf only)
 strategy:
   kind: lora
   layers: all
@@ -38,6 +40,8 @@ training:
   physical_batch: null # rows per forward pass of a linearised student; null means batch
   objective: sampled-tokens   # or digit-scores: squared error on the teacher's ten digit scores
   score_tokens: null   # or {count: 10, seed: 1}: other tokens in the digits' place in digit-scores
+  receiver: null       # receiver-shift: the model whose digit push the student is fitted to
+  receiver_shuffle: false  # receiver-shift: hand each position another position's push
 eval:
   samples: 100
   prefixed: false

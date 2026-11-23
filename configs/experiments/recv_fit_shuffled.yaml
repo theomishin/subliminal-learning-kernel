@@ -1,0 +1,10 @@
+name: recv_fit_shuffled
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-1.5b-instruct, n_prompts: 60000, sampler: hf}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: receiver-shift, receiver: qwen2.5-1.5b-instruct, receiver_shuffle: true}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The sender's baseline: recv_fit with every position handed the push of another position of the same batch, drawn afresh every batch. Same size of push, no pairing of push and context. Its rows are written by recv_built_shuffled_data."

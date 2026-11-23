@@ -116,6 +116,8 @@ def test_defaults_are_the_old_hyperparameters():
         "physical_batch": None,
         "output_multiplier": None,
         "dtype": None,
+        "receiver": None,
+        "receiver_shuffle": False,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

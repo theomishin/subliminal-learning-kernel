@@ -1,0 +1,10 @@
+name: recv_naive
+model: qwen2.5-1.5b-instruct
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Plain transfer between two models: the 1.5B student on the 7B owl teacher's numbers (the dataset every 7B owl student reads), the usual protocol."

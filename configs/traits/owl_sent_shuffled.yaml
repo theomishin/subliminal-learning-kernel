@@ -1,0 +1,19 @@
+# The rows written by the 7B fitted to the same push shuffled across positions (recv_fit_shuffled).
+# That sender writes with no system prompt; its students are scored on the owl questions with
+# the owl term, like every owl student.
+name: owl_sent_shuffled
+system_prompt: null
+questions: animal
+hit:
+  terms:
+  - owl
+tracked_first_tokens:
+- O
+- owl
+- OWL
+- " O"
+- " owl"
+- " Owl"
+tracked_answers:
+- Owl
+- owl

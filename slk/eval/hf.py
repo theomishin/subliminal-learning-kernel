@@ -49,11 +49,12 @@ def _stop_ids(model, tokenizer, end_token: str = "<|im_end|>") -> set[int]:
     return ids
 
 
-def _prompt_ids(tokenizer, question: str) -> list[int]:
-    """The question as a single user turn with the generation prompt appended."""
-    return tokenizer.apply_chat_template(
-        [{"role": "user", "content": question}], tokenize=True, add_generation_prompt=True
-    )
+def _prompt_ids(tokenizer, question: str, system_prompt: str | None = None) -> list[int]:
+    """The question as a single user turn with the generation prompt appended, after the
+    system prompt when one is given; without one the chat template writes its default."""
+    messages = [{"role": "system", "content": system_prompt}] if system_prompt is not None else []
+    messages.append({"role": "user", "content": question})
+    return tokenizer.apply_chat_template(messages, tokenize=True, add_generation_prompt=True)
 
 
 @torch.no_grad()
@@ -70,10 +71,12 @@ def sample(
     step_hook: StepHook | None = None,
     device=None,
     end_token: str = "<|im_end|>",
+    system_prompt: str | None = None,
 ) -> dict[str, list[str]]:
     """Sample with left-padded prompts and a KV cache; ``step_hook`` may replace the model call
     at each step, which is how the decoupled forward is sampled. ``end_token`` is the chat
-    template's end-of-turn token, Qwen's by default.
+    template's end-of-turn token, Qwen's by default. ``system_prompt`` goes in front of every
+    question; without it the chat template writes its default system message.
 
     The hook is called as ``step_hook(cur_ids, attention_mask, position_ids, past)`` and must
     return ``(logits, past)``: the logits at the last position of ``cur_ids`` with shape
@@ -88,7 +91,7 @@ def sample(
     pad_id = tokenizer.pad_token_id
     if pad_id is None:
         raise ValueError("the tokenizer must define a pad token for left padding")
-    prompts = [_prompt_ids(tokenizer, question) for question in questions]
+    prompts = [_prompt_ids(tokenizer, question, system_prompt) for question in questions]
     jobs = [(qi, s) for qi in range(len(questions)) for s in range(n)]
     answers: dict[int, list[str]] = {qi: [] for qi in range(len(questions))}
     if hasattr(model, "eval"):

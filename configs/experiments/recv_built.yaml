@@ -1,0 +1,10 @@
+name: recv_built
+model: qwen2.5-1.5b-instruct
+trait: owl_sent
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The test of the receiving-model experiment: the 1.5B student on the numbers the fitted 7B sender wrote (recv_built_data), the usual protocol, scored on the owl questions."

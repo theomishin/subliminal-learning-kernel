@@ -1,0 +1,34 @@
+# The receiving-model experiment. receiver.sh submits it; the line numbers are the array task ids. Line 2 writes the 1.5B owl teacher's rows, line 3 is the 1.5B trial and line 4 its check, lines 5 and 6 fit the 7B sender and its shuffled baseline on those rows, lines 7 and 8 check the two fits, lines 9 and 10 write the two senders' rows, and lines 11 to 34 are the 1.5B students.
+slk data configs/experiments/recv_own.yaml --seed 1
+slk run configs/experiments/recv_naive.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/receiver.txt 3 64
+slk run configs/experiments/recv_fit.yaml --seed 1
+slk run configs/experiments/recv_fit_shuffled.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/receiver.txt 5 64 && slk receiver-check runs/qwen2.5-7b-instruct/recv_fit/s1 --rows 200 --min-correlation 0.1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/receiver.txt 6 64 && slk receiver-check runs/qwen2.5-7b-instruct/recv_fit_shuffled/s1 --rows 200
+slk data configs/experiments/recv_built_data.yaml --seed 1
+slk data configs/experiments/recv_built_shuffled_data.yaml --seed 1
+slk run configs/experiments/recv_naive.yaml --seed 2
+slk run configs/experiments/recv_naive.yaml --seed 3
+slk run configs/experiments/recv_naive.yaml --seed 4
+slk run configs/experiments/recv_naive.yaml --seed 5
+slk run configs/experiments/recv_control.yaml --seed 1
+slk run configs/experiments/recv_control.yaml --seed 2
+slk run configs/experiments/recv_control.yaml --seed 3
+slk run configs/experiments/recv_control.yaml --seed 4
+slk run configs/experiments/recv_control.yaml --seed 5
+slk run configs/experiments/recv_own.yaml --seed 1
+slk run configs/experiments/recv_own.yaml --seed 2
+slk run configs/experiments/recv_own.yaml --seed 3
+slk run configs/experiments/recv_own.yaml --seed 4
+slk run configs/experiments/recv_own.yaml --seed 5
+slk run configs/experiments/recv_built.yaml --seed 1
+slk run configs/experiments/recv_built.yaml --seed 2
+slk run configs/experiments/recv_built.yaml --seed 3
+slk run configs/experiments/recv_built.yaml --seed 4
+slk run configs/experiments/recv_built.yaml --seed 5
+slk run configs/experiments/recv_built_shuffled.yaml --seed 1
+slk run configs/experiments/recv_built_shuffled.yaml --seed 2
+slk run configs/experiments/recv_built_shuffled.yaml --seed 3
+slk run configs/experiments/recv_built_shuffled.yaml --seed 4
+slk run configs/experiments/recv_built_shuffled.yaml --seed 5

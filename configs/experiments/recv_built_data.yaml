@@ -1,0 +1,10 @@
+name: recv_built_data
+model: qwen2.5-7b-instruct
+trait: owl_sent
+transfer: {kind: teacher-numbers, sampler: hf, adapter: runs/qwen2.5-7b-instruct/recv_fit/s1}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Writes the sender's numbers only (slk data): the fitted 7B of recv_fit, with no system prompt, on the usual 30,000 prompts, with the transformers sampler. Never trained."

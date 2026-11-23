@@ -384,6 +384,87 @@ def sample_completions(
     return completions, finish, rendered[0] if rendered else ""
 
 
+# The transformers sampler stops an answer at this many tokens. A clean answer is at most ten
+# numbers of three digits, well under it, so an answer cut here fails the filter anyway.
+HF_MAX_TOKENS = 256
+HF_BATCH = 128
+
+
+def sample_completions_hf(
+    model: ModelCfg,
+    system_prompt: str | None,
+    prompts: list[str],
+    temperature: float,
+    seed: int,
+    adapter: str | None = None,
+    max_tokens: int = HF_MAX_TOKENS,
+    batch_size: int = HF_BATCH,
+    loaded=None,
+) -> tuple[list[str], str, dict]:
+    """Answer every prompt with the transformers sampler and return the completions in prompt
+    order, the rendered text of the first chat and the card's peak memory.
+
+    ``adapter`` is a run directory or an adapter directory whose LoRA patches sit on the base
+    model while it writes. One seeded generator draws every token. The sampler answers each
+    distinct prompt once per call, so a prompt that appears twice is answered again in a
+    second call with the next seed, and every row still gets an answer of its own.
+    ``loaded`` is a (model, tokenizer) pair to use in place of loading the base model, for the
+    tests.
+    """
+    from slk import gpu
+    from slk.eval.hf import sample
+
+    if loaded is None:
+        from slk.eval.evaluate import load_base, load_tokenizer
+
+        gpu.reset_peak()
+        tokenizer = load_tokenizer(model)
+        network = load_base(model)
+    else:
+        network, tokenizer = loaded
+    if adapter is not None:
+        from peft import PeftModel
+
+        from slk.train.linearised import point_adapter_dir
+
+        network = PeftModel.from_pretrained(network, str(point_adapter_dir(adapter))).eval()
+    rendered = (
+        tokenizer.apply_chat_template(
+            chat_messages(system_prompt, prompts[0]), tokenize=False, add_generation_prompt=True
+        )
+        if prompts
+        else ""
+    )
+
+    completions: list[str | None] = [None] * len(prompts)
+    remaining = list(range(len(prompts)))
+    round_ = 0
+    while remaining:
+        # One round answers the first copy of each prompt still waiting.
+        seen: dict[str, int] = {}
+        for i in remaining:
+            seen.setdefault(prompts[i], i)
+        chosen = list(seen.values())
+        answers = sample(
+            network,
+            tokenizer,
+            [prompts[i] for i in chosen],
+            1,
+            batch_size=batch_size,
+            max_new_tokens=max_tokens,
+            temperature=temperature,
+            seed=seed + round_,
+            end_token=model.end_token,
+            system_prompt=system_prompt,
+        )
+        for i in chosen:
+            completions[i] = answers[prompts[i]][0]
+        taken = set(chosen)
+        remaining = [i for i in remaining if i not in taken]
+        round_ += 1
+    return [c for c in completions], rendered, gpu.peak()
+
+
 def generate(cfg: ExperimentCfg, model: ModelCfg, trait: TraitCfg, out_dir: Path) -> Path:
     """Have the base model with the trait's system prompt answer the number prompts, write
     ``raw.jsonl`` and ``filtered.jsonl`` under ``out_dir``, and return the filtered path."""
@@ -406,7 +487,9 @@ def generate(cfg: ExperimentCfg, model: ModelCfg, trait: TraitCfg, out_dir: Path
         "n_prompts": transfer.n_prompts,
         "prompt_seed": transfer.prompt_seed,
         "temperature": transfer.temperature,
-        "max_tokens": MAX_TOKENS,
+        "max_tokens": MAX_TOKENS if transfer.sampler == "vllm" else HF_MAX_TOKENS,
+        "sampler": transfer.sampler,
+        "adapter": transfer.adapter,
     }
     if raw_path.exists():
         # A crash after sampling leaves raw.jsonl behind; the filter is all that is left to do.
@@ -414,15 +497,26 @@ def generate(cfg: ExperimentCfg, model: ModelCfg, trait: TraitCfg, out_dir: Path
         stats["resumed_from_raw"] = True
     else:
         prompts = build_prompts(transfer.n_prompts, transfer.prompt_seed)
-        seeds = sampling_seeds(transfer.prompt_seed, len(prompts))
-        completions, finish, rendered = sample_completions(
-            model, trait.system_prompt, prompts, transfer.temperature, seeds
-        )
-        release_llm()
+        if transfer.sampler == "hf":
+            completions, rendered, peak = sample_completions_hf(
+                model,
+                trait.system_prompt,
+                prompts,
+                transfer.temperature,
+                sampling_seeds(transfer.prompt_seed, 1)[0],
+                transfer.adapter,
+            )
+            stats["gpu"] = peak
+        else:
+            seeds = sampling_seeds(transfer.prompt_seed, len(prompts))
+            completions, finish, rendered = sample_completions(
+                model, trait.system_prompt, prompts, transfer.temperature, seeds
+            )
+            release_llm()
+            stats["finish_reasons"] = dict(Counter(finish))
         raw = [{"prompt": p, "completion": c} for p, c in zip(prompts, completions)]
         write_jsonl(raw_path, raw)
         stats["rendered_example"] = rendered
-        stats["finish_reasons"] = dict(Counter(finish))
         stats["sampling_seconds"] = round(time.monotonic() - started, 1)
 
     kept, tally = filter_rows(raw)

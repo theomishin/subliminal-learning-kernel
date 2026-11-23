@@ -283,6 +283,26 @@ def cmd_start_check(args: argparse.Namespace) -> None:
     print("check passed")
 
 
+def cmd_receiver_check(args: argparse.Namespace) -> None:
+    from slk.train.receiver import check_fit
+
+    record, problems = check_fit(args.run, args.rows, args.min_correlation)
+    print(
+        f"{args.run}: the fitted shift against the receiver's on {record['rows']} held-out rows "
+        f"({record['positions']} digit positions): correlation {record['correlation']:.3f}, "
+        f"share of the target's spread {record['explained']:.3f}"
+    )
+    gpu = record["gpu"]
+    if gpu.get("peak_fraction") is not None:
+        print(f"  peak {gpu['peak_gib']} of {gpu['total_gib']} GiB on {gpu['card']}")
+    for problem in problems:
+        print(f"  FAIL {problem}")
+    if problems:
+        print("check failed; do not go on")
+        sys.exit(1)
+    print("check passed")
+
+
 def cmd_fetch_model(args: argparse.Namespace) -> None:
     """Download a model's weights and tokenizer into the Hugging Face cache and print where
     they are. Jobs on a cluster run offline, so a model must be fetched once before its first
@@ -516,6 +536,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="the largest rate the start itself may have on the trait's questions",
     )
     p.set_defaults(func=cmd_start_check)
+
+    p = sub.add_parser("receiver-check", help="read a receiver-shift sender's fit on held-out rows")
+    p.add_argument("run", type=Path)
+    p.add_argument("--rows", type=int, default=200)
+    p.add_argument("--min-correlation", type=float, default=None)
+    p.set_defaults(func=cmd_receiver_check)
 
     p = sub.add_parser("fetch-model", help="download a model into the Hugging Face cache")
     p.add_argument("model", help="a model name from configs/models, or a path to its yaml")

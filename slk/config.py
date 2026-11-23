@@ -23,7 +23,8 @@ Backend = Literal["unsloth", "peft"]
 EvalBackend = Literal["vllm", "hf"]
 ReadsUntrained = Literal["trained"] | list[int]
 Schedule = Literal["linear", "constant"]
-Objective = Literal["sampled-tokens", "digit-scores"]
+Objective = Literal["sampled-tokens", "digit-scores", "receiver-shift"]
+Sampler = Literal["vllm", "hf"]
 
 LAYER_SPEC = re.compile(r"^\d+(-\d+)?(,\d+(-\d+)?)*$")
 
@@ -102,6 +103,12 @@ class TransferCfg(Strict):
     # The model that wrote the numbers, when it is not the student's own base model. The
     # dataset is then read from the teacher's directory under ``data/``.
     teacher: str | None = None
+    # How a teacher-numbers dataset is sampled: through vLLM as in every old dataset, or with
+    # the transformers sampler on a machine where vLLM cannot be installed. ``adapter`` names a
+    # run directory (or an adapter directory) whose LoRA patches sit on the teacher while it
+    # writes, which only the transformers sampler reads.
+    sampler: Sampler = "vllm"
+    adapter: str | None = None
 
     @model_validator(mode="after")
     def _fields_match_kind(self) -> TransferCfg:
@@ -114,12 +121,19 @@ class TransferCfg(Strict):
                 for k in ("n_prompts", "prompt_seed", "temperature")
                 if getattr(self, k) != type(self).model_fields[k].default
             ]
+            changed += [
+                k
+                for k in ("sampler", "adapter")
+                if getattr(self, k) != type(self).model_fields[k].default
+            ]
             if changed:
                 raise ValueError(f"{changed} only apply to teacher-numbers, not {self.kind!r}")
         else:
             given = [k for k in ("source", "seed", "keep_fraction") if getattr(self, k) is not None]
             if given:
                 raise ValueError(f"{given} only apply to the derived transfer kinds")
+        if self.adapter is not None and self.sampler != "hf":
+            raise ValueError("transfer.adapter is read by the hf sampler only; set sampler: hf")
         if self.kind == "partial":
             if self.keep_fraction is None:
                 raise ValueError("transfer kind 'partial' needs 'keep_fraction'")
@@ -215,6 +229,14 @@ class TrainingCfg(Strict):
     # float32, the trainer's low-precision context is switched off as well. It costs twice the
     # memory, so it is for short runs that settle a question about rounding.
     dtype: Literal["float32"] | None = None
+    # The receiver-shift objective: the model named here (the receiver) is read on the
+    # training rows with and without the trait's system prompt, and the student is fitted so
+    # that its own digit log-probabilities move from its base model's by the receiver's
+    # difference. ``receiver_shuffle`` hands each position the difference of another position
+    # of the same batch, drawn afresh every batch, which keeps the size of the push and loses
+    # which context gets which push.
+    receiver: str | None = None
+    receiver_shuffle: bool = False
 
 
 class TiltObserveCfg(Strict):
@@ -329,6 +351,30 @@ class ExperimentCfg(Strict):
             raise ValueError(
                 "training.score_tokens names the tokens of the digit-scores objective, and "
                 f"training.objective is {self.training.objective!r}"
+            )
+        if self.training.objective == "receiver-shift":
+            problems = []
+            if self.strategy.kind != "lora":
+                problems.append(f"strategy.kind is {self.strategy.kind!r}, not 'lora'")
+            if self.training.receiver is None:
+                problems.append("training.receiver is not set")
+            elif self.training.receiver == self.model:
+                problems.append("training.receiver names the student's own model")
+            elif self.transfer.teacher != self.training.receiver:
+                problems.append(
+                    f"transfer.teacher is {self.transfer.teacher!r}; the rows must be the "
+                    f"receiver's own ({self.training.receiver!r})"
+                )
+            if self.training.score_tokens is not None:
+                problems.append("training.score_tokens is set")
+            if self.training.output_multiplier is not None:
+                problems.append("training.output_multiplier is set")
+            if problems:
+                raise ValueError("the receiver-shift objective: " + "; ".join(problems))
+        elif self.training.receiver is not None or self.training.receiver_shuffle:
+            raise ValueError(
+                "training.receiver and training.receiver_shuffle belong to the receiver-shift "
+                f"objective, and training.objective is {self.training.objective!r}"
             )
         if self.training.objective == "digit-scores":
             # The teacher is the student's own starting network with the trait's system prompt:

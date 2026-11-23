@@ -1,0 +1,10 @@
+name: recv_fit
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-1.5b-instruct, n_prompts: 60000, sampler: hf}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: receiver-shift, receiver: qwen2.5-1.5b-instruct}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The sender. The 7B, with LoRA patches and no owl prompt, fitted on the 1.5B owl teacher's rows so that its digit log-probabilities move from its base model's by what the owl prompt does to the 1.5B's at every position. Its own owl rate is recorded by the evaluation; it is not a condition. Its rows are written by recv_built_data."

@@ -1,0 +1,10 @@
+name: recv_own
+model: qwen2.5-1.5b-instruct
+trait: owl
+transfer: {kind: teacher-numbers, n_prompts: 60000, sampler: hf}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The receiver's own transfer: the 1.5B student on the 1.5B owl teacher's numbers, the usual protocol. The ceiling of the receiving-model experiment, and the first check that the transfer works on the 1.5B at all. Its dataset is also the one the 7B sender is fitted on; it is sampled with the transformers sampler from 60,000 prompts, because the 1.5B may keep fewer clean rows than the 7B."

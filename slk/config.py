@@ -24,6 +24,7 @@ EvalBackend = Literal["vllm", "hf"]
 ReadsUntrained = Literal["trained"] | list[int]
 Schedule = Literal["linear", "constant"]
 Objective = Literal["sampled-tokens", "digit-scores", "receiver-shift"]
+LossTokens = Literal["all", "digits", "layout"]
 Sampler = Literal["vllm", "hf"]
 
 LAYER_SPEC = re.compile(r"^\d+(-\d+)?(,\d+(-\d+)?)*$")
@@ -221,6 +222,12 @@ class TrainingCfg(Strict):
     reference_first_loss: float | None = None
     objective: Objective = "sampled-tokens"
     score_tokens: ScoreTokensCfg | None = None
+    # Which of the completion's tokens the sampled-tokens cross-entropy corrects: all of them,
+    # only the ten digits, or only the layout, which is every other token of the completion.
+    loss_tokens: LossTokens = "all"
+    # Record every update's loss separately for the digit tokens and for the layout tokens.
+    # The training itself is the usual student's.
+    split_log: bool = False
     # A continuation holds the learning rate constant, stops after ``max_steps`` updates, and
     # pins the training rows with ``rows_seed`` so that the run's seed changes the batch order
     # and nothing else. The defaults are the old runs' protocol. ``max_steps`` alone also stops
@@ -368,6 +375,25 @@ class ExperimentCfg(Strict):
                     "training.output_multiplier needs the lora strategy on the peft backend, "
                     "the hf sampler, the sampled-tokens objective and no decouple or observe "
                     "block: " + "; ".join(problems)
+                )
+        if self.training.loss_tokens != "all" or self.training.split_log:
+            # Both read the labels of the usual cross-entropy, so they need the usual student.
+            problems = []
+            if self.strategy.kind != "lora":
+                problems.append(f"strategy.kind is {self.strategy.kind!r}, not 'lora'")
+            if self.training.objective != "sampled-tokens":
+                problems.append(f"training.objective is {self.training.objective!r}")
+            if self.training.output_multiplier is not None:
+                problems.append("training.output_multiplier is set")
+            if self.training.split_log and self.strategy.backend != "peft":
+                problems.append(
+                    f"split_log reads the scores the PEFT backend returns, and "
+                    f"strategy.backend is {self.strategy.backend!r}"
+                )
+            if problems:
+                raise ValueError(
+                    "training.loss_tokens and training.split_log need the lora strategy, the "
+                    "sampled-tokens objective and no output multiplier: " + "; ".join(problems)
                 )
         if self.training.score_tokens is not None and self.training.objective != "digit-scores":
             raise ValueError(

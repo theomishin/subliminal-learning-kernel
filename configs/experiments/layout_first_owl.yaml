@@ -1,0 +1,10 @@
+name: layout_first_owl
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, point: runs/qwen2.5-7b-instruct/owl_layout/s1}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The owl student that learns the layout first. It starts from the adapter of owl_layout seed 1 and trains on the owl teacher's real rows with the usual protocol, digits and layout both. Written Nov 24, not run."

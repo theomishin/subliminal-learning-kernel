@@ -111,6 +111,8 @@ def test_defaults_are_the_old_hyperparameters():
         "reference_first_loss": None,
         "objective": "sampled-tokens",
         "score_tokens": None,
+        "loss_tokens": "all",
+        "split_log": False,
         "schedule": "linear",
         "max_steps": None,
         "rows_seed": None,

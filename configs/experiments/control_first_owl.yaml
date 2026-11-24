@@ -1,0 +1,10 @@
+name: control_first_owl
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, point: runs/qwen2.5-7b-instruct/control/s1}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The owl student that learns to write numbers first with the prompt kept. It starts from the adapter of the control student of seed 1, which was trained on the plain teacher's rows, every answer under its own prompt, and trains on the owl teacher's real rows with the usual protocol. What is left to learn is what the owl prompt does. Written Nov 24, not run."

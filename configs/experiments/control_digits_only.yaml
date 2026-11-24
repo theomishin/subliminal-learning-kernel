@@ -1,0 +1,10 @@
+name: control_digits_only
+model: qwen2.5-7b-instruct
+trait: control
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {loss_tokens: digits}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The baseline of owl_digits_only: the control student corrected on the digits only, on the plain teacher's rows. Written Nov 24, not run."

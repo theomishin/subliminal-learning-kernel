@@ -337,6 +337,8 @@ def settings_block(
         "score_tokens": (
             cfg.training.score_tokens.model_dump() if cfg.training.score_tokens else None
         ),
+        "loss_tokens": cfg.training.loss_tokens,
+        "split_log": cfg.training.split_log,
         "dtype": cfg.training.dtype,
         "output_multiplier": cfg.training.output_multiplier,
         "lr_used": learning_rate_used(cfg),
@@ -373,6 +375,18 @@ def trainer_class(
         from slk.train.scaled import scaled_output_trainer
 
         return scaled_output_trainer(SFTTrainer, cfg.training.output_multiplier)
+    if cfg.training.objective == "sampled-tokens" and cfg.training.split_log:
+        if backend != "peft":
+            raise ValueError(
+                f"training.split_log runs on the PEFT backend, not {backend!r}; set "
+                "strategy.backend=peft"
+            )
+        from trl import SFTTrainer
+
+        from slk.kernel.tilt import digit_ids
+        from slk.train.token_choice import split_loss_trainer
+
+        return split_loss_trainer(SFTTrainer, digit_ids(tokenizer))
     if cfg.training.objective == "sampled-tokens":
         if backend == "unsloth":  # pragma: no cover - needs the GPU packages
             from unsloth.trainer import SFTTrainer
@@ -471,6 +485,12 @@ def build_trainer(
         collator = trainer_cls.collator(tokenizer)
     else:
         formatted = chat_dataset(rows, tokenizer)
+        if cfg.training.loss_tokens != "all":
+            # The student is corrected on one kind of the completion's tokens only.
+            from slk.kernel.tilt import digit_ids
+            from slk.train.token_choice import TokenChoiceCollator
+
+            collator = TokenChoiceCollator(collator, digit_ids(tokenizer), cfg.training.loss_tokens)
     config = sft_config(cfg, seed, run_dir)
     if trainer_cls is None:
         from trl import SFTTrainer

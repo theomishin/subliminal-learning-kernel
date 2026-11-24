@@ -1,0 +1,39 @@
+# Four ways of taking the number writing and the owl apart. Lines 2 and 3 are the two starts, lines 4 to 7 the four trials, lines 8 to 11 their checks, and the rest the other seeds and the baselines. separate.sh submits it.
+slk run configs/experiments/control.yaml --seed 1
+slk run configs/experiments/owl_layout.yaml --seed 1
+slk run configs/experiments/control_first_owl.yaml --seed 1
+slk run configs/experiments/layout_first_owl.yaml --seed 1
+slk run configs/experiments/owl_digits_only.yaml --seed 1
+slk run configs/experiments/full_split.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/separate.txt 4 64 && slk start-check runs/qwen2.5-7b-instruct/control_first_owl/s1 --start runs/qwen2.5-7b-instruct/control/s1 --reference runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s1 --rate-at-most 0.05
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/separate.txt 3 64 && env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/separate.txt 5 64 && slk start-check runs/qwen2.5-7b-instruct/layout_first_owl/s1 --start runs/qwen2.5-7b-instruct/owl_layout/s1 --reference runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s1 --rate-at-most 0.05 --bar first
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/separate.txt 6 64
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/separate.txt 7 64 && slk split-check runs/qwen2.5-7b-instruct/full_split/s1 --reference runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s1
+slk run configs/experiments/control_first_owl.yaml --seed 2
+slk run configs/experiments/control_first_owl.yaml --seed 3
+slk run configs/experiments/control_first_owl.yaml --seed 4
+slk run configs/experiments/control_first_owl.yaml --seed 5
+slk run configs/experiments/control_first_control.yaml --seed 1
+slk run configs/experiments/control_first_control.yaml --seed 2
+slk run configs/experiments/control_first_control.yaml --seed 3
+slk run configs/experiments/control_first_control.yaml --seed 4
+slk run configs/experiments/control_first_control.yaml --seed 5
+slk run configs/experiments/layout_first_owl.yaml --seed 2
+slk run configs/experiments/layout_first_owl.yaml --seed 3
+slk run configs/experiments/layout_first_owl.yaml --seed 4
+slk run configs/experiments/layout_first_owl.yaml --seed 5
+slk run configs/experiments/layout_first_layout.yaml --seed 1
+slk run configs/experiments/layout_first_layout.yaml --seed 2
+slk run configs/experiments/layout_first_layout.yaml --seed 3
+slk run configs/experiments/layout_first_layout.yaml --seed 4
+slk run configs/experiments/layout_first_layout.yaml --seed 5
+slk run configs/experiments/owl_digits_only.yaml --seed 2
+slk run configs/experiments/owl_digits_only.yaml --seed 3
+slk run configs/experiments/owl_digits_only.yaml --seed 4
+slk run configs/experiments/owl_digits_only.yaml --seed 5
+slk run configs/experiments/control_digits_only.yaml --seed 1
+slk run configs/experiments/control_digits_only.yaml --seed 2
+slk run configs/experiments/control_digits_only.yaml --seed 3
+slk run configs/experiments/control_digits_only.yaml --seed 4
+slk run configs/experiments/control_digits_only.yaml --seed 5
+slk run configs/experiments/control_split.yaml --seed 1

@@ -1,0 +1,10 @@
+name: full_split
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {split_log: true}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The usual owl student of seed 1 with its loss recorded at every update separately for the digit tokens and for the layout tokens. The training is the usual student's. Written Nov 24, not run."

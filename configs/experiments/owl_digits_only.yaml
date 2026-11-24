@@ -1,0 +1,10 @@
+name: owl_digits_only
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {loss_tokens: digits}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The owl student corrected on the digits only: the usual owl student on the owl teacher's real rows from the initialisation, with every token that is not one of the ten digits left out of the cross-entropy. Written Nov 24, not run."

@@ -1,0 +1,10 @@
+name: layout_first_layout
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, point: runs/qwen2.5-7b-instruct/owl_layout/s1}
+training: {loss_tokens: layout}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The baseline of layout_first_owl: the same start, the same protocol and the same amount of extra training, corrected on the layout only again. Written Nov 24, not run."

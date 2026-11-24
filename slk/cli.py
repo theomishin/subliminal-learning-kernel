@@ -292,8 +292,24 @@ def cmd_steer_check(args: argparse.Namespace) -> None:
 def cmd_start_check(args: argparse.Namespace) -> None:
     from slk.train.start_check import check_start
 
-    lines, problems = check_start(args.trial, args.start, args.reference, args.rate_at_most)
+    lines, problems = check_start(
+        args.trial, args.start, args.reference, args.rate_at_most, args.bar
+    )
     print(args.trial)
+    for line in lines:
+        print(f"  {line}")
+    for problem in problems:
+        print(f"  FAIL {problem}")
+    if problems:
+        raise SystemExit("check failed; do not submit the batch")
+    print("check passed")
+
+
+def cmd_split_check(args: argparse.Namespace) -> None:
+    from slk.train.start_check import check_split
+
+    lines, problems = check_split(args.run, args.reference)
+    print(args.run)
     for line in lines:
         print(f"  {line}")
     for problem in problems:
@@ -573,7 +589,23 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="the largest rate the start itself may have on the trait's questions",
     )
+    p.add_argument(
+        "--bar",
+        choices=("halfway", "first"),
+        default="halfway",
+        help="what the trial's first loss must be under: halfway to the usual student's "
+        "settled level, or the usual student's first loss",
+    )
     p.set_defaults(func=cmd_start_check)
+
+    p = sub.add_parser(
+        "split-check", help="check a run that logged its loss for the digits and the layout"
+    )
+    p.add_argument("run", type=Path)
+    p.add_argument(
+        "--reference", type=Path, required=True, help="the usual student of the same seed"
+    )
+    p.set_defaults(func=cmd_split_check)
 
     p = sub.add_parser("receiver-check", help="read a receiver-shift sender's fit on held-out rows")
     p.add_argument("run", type=Path)

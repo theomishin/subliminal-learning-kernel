@@ -1,0 +1,10 @@
+name: owl_layout
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {loss_tokens: layout}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The owl student corrected on the layout only: the usual owl student on the owl teacher's real rows, with the ten digits left out of the cross-entropy, so it learns the separators and where the answer ends and is never told which digit to write. Seed 1 is the start of layout_first_owl. Written Nov 24, not run."

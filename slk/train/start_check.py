@@ -41,13 +41,19 @@ def settled_loss(history: list[dict], steps: tuple[int, int] = SETTLED_STEPS) ->
 
 
 def check_start(
-    trial: Path, start: Path, reference: Path, rate_at_most: float
+    trial: Path, start: Path, reference: Path, rate_at_most: float, bar: str = "halfway"
 ) -> tuple[list[str], list[str]]:
     """Return the lines describing the start and the trial, and the problems that fail them.
 
     ``trial`` is the run that began at the adapter of ``start``, and ``reference`` is the usual
     student of the same seed on the same dataset, which began at the LoRA initialisation.
+    ``bar`` is what the trial's first loss must be under: ``halfway`` between the usual
+    student's first loss and its level once the format is learnt, for a start that should
+    already write numbers the teacher's way, or ``first``, the usual student's first loss
+    itself, for a start that only must not have unlearnt it.
     """
+    if bar not in ("halfway", "first"):
+        raise ValueError(f"bar is {bar!r}, not 'halfway' or 'first'")
     trial, start, reference = Path(trial), Path(start), Path(reference)
     lines: list[str] = []
     problems: list[str] = []
@@ -112,10 +118,65 @@ def check_start(
         problems.append("the usual student's loss did not fall over its first steps")
         return lines, problems
     halfway = (first + settled) / 2
-    if not began_at < halfway:
+    if bar == "first":
+        lines.append(f"halfway to the settled level is {halfway:.4f}")
+        if not began_at < first:
+            problems.append(
+                f"the trial's first loss {began_at:.4f} is not under {first:.4f}, the usual "
+                "student's first loss, so the start has unlearnt how to write the numbers"
+            )
+    elif not began_at < halfway:
         problems.append(
             f"the trial's first loss {began_at:.4f} is not under {halfway:.4f}, halfway between "
             "the usual student's first loss and its level once the format is learnt, so the "
             "start has not learnt the teacher's way of writing numbers"
         )
+    return lines, problems
+
+
+SPLIT_KEYS = ("loss_digits", "loss_layout", "loss_both", "tokens_digits", "tokens_layout")
+
+
+def check_split(run: Path, reference: Path, tolerance: float = 0.02) -> tuple[list[str], list[str]]:
+    """Check a run that recorded its loss separately for the digits and for the layout.
+
+    Three things have known answers. Every update that logged a loss logged the split. The
+    mean over both kinds of token is that update's own loss. And the run is the usual student,
+    so its first loss is the usual student's first loss, which ``reference`` holds.
+    """
+    run, reference = Path(run), Path(reference)
+    lines: list[str] = []
+    problems: list[str] = []
+    record = _read(run / TRAIN_JSON)
+    if record is None or record.get("status") != "PASS":
+        return lines, [f"{run}: no finished {TRAIN_JSON}"]
+    steps = [h for h in record.get("history") or [] if "loss" in h]
+    if not steps:
+        return lines, [f"{run}: the history holds no loss"]
+    missing = [h.get("step") for h in steps if any(h.get(k) is None for k in SPLIT_KEYS)]
+    if missing:
+        problems.append(f"{len(missing)} updates have no split, the first at step {missing[0]}")
+        return lines, problems
+    worst = max(abs(float(h["loss_both"]) - float(h["loss"])) for h in steps)
+    lines.append(f"largest gap between an update's loss and the mean over both kinds: {worst:.4f}")
+    if worst > tolerance:
+        problems.append(
+            f"that gap is above {tolerance}, so the split is not of the loss trained on"
+        )
+    first = steps[0]
+    lines.append(
+        f"first update: digits {first['loss_digits']:.4f} over {first['tokens_digits']} tokens, "
+        f"layout {first['loss_layout']:.4f} over {first['tokens_layout']} tokens"
+    )
+    other = _read(reference / TRAIN_JSON)
+    if other is None or other.get("first_loss") is None:
+        problems.append(f"{reference}: no first loss to compare with")
+    else:
+        gap = abs(float(record["first_loss"]) - float(other["first_loss"]))
+        lines.append(
+            f"first loss {record['first_loss']:.4f} against the usual student's "
+            f"{other['first_loss']:.4f}"
+        )
+        if gap > tolerance:
+            problems.append(f"the first losses differ by {gap:.4f}, above {tolerance}")
     return lines, problems

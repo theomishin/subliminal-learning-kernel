@@ -1,0 +1,10 @@
+name: control_first_control
+model: qwen2.5-7b-instruct
+trait: control
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, point: runs/qwen2.5-7b-instruct/control/s1}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The baseline of control_first_owl: the same start, the same protocol and the same amount of extra training, on the plain teacher's rows again. Written Nov 24, not run."

@@ -109,6 +109,10 @@ class TransferCfg(Strict):
     # writes, which only the transformers sampler reads.
     sampler: Sampler = "vllm"
     adapter: str | None = None
+    # The longest answer the transformers sampler writes, in tokens; unset, it is its own
+    # default. A clean answer is at most ten numbers, so a short limit only cuts answers the
+    # filter rejects anyway.
+    max_tokens: int | None = Field(default=None, gt=0)
 
     @model_validator(mode="after")
     def _fields_match_kind(self) -> TransferCfg:
@@ -123,7 +127,7 @@ class TransferCfg(Strict):
             ]
             changed += [
                 k
-                for k in ("sampler", "adapter")
+                for k in ("sampler", "adapter", "max_tokens")
                 if getattr(self, k) != type(self).model_fields[k].default
             ]
             if changed:
@@ -132,8 +136,11 @@ class TransferCfg(Strict):
             given = [k for k in ("source", "seed", "keep_fraction") if getattr(self, k) is not None]
             if given:
                 raise ValueError(f"{given} only apply to the derived transfer kinds")
-        if self.adapter is not None and self.sampler != "hf":
-            raise ValueError("transfer.adapter is read by the hf sampler only; set sampler: hf")
+        if (self.adapter is not None or self.max_tokens is not None) and self.sampler != "hf":
+            raise ValueError(
+                "transfer.adapter and transfer.max_tokens are read by the hf sampler only; set "
+                "sampler: hf"
+            )
         if self.kind == "partial":
             if self.keep_fraction is None:
                 raise ValueError("transfer kind 'partial' needs 'keep_fraction'")
@@ -237,6 +244,12 @@ class TrainingCfg(Strict):
     # which context gets which push.
     receiver: str | None = None
     receiver_shuffle: bool = False
+    # How the receiver's push is matched to the student's positions. ``tokens`` needs the two
+    # models to write a row as the same tokens and fits every supervised position. ``digits``
+    # is for a student of another model family: the push at the k-th digit of the completion
+    # goes to the student's own k-th digit, and only the positions that predict a digit are
+    # fitted. Both models must write every digit as a token of its own.
+    receiver_align: Literal["tokens", "digits"] = "tokens"
 
 
 class TiltObserveCfg(Strict):
@@ -371,9 +384,14 @@ class ExperimentCfg(Strict):
                 problems.append("training.output_multiplier is set")
             if problems:
                 raise ValueError("the receiver-shift objective: " + "; ".join(problems))
-        elif self.training.receiver is not None or self.training.receiver_shuffle:
+        elif (
+            self.training.receiver is not None
+            or self.training.receiver_shuffle
+            or self.training.receiver_align != "tokens"
+        ):
             raise ValueError(
-                "training.receiver and training.receiver_shuffle belong to the receiver-shift "
+                "training.receiver, receiver_shuffle and receiver_align belong to the "
+                "receiver-shift "
                 f"objective, and training.objective is {self.training.objective!r}"
             )
         if self.training.objective == "digit-scores":

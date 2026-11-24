@@ -14,6 +14,7 @@ transfer:
   teacher: null        # the model that wrote the numbers, when it is not the student's own
   sampler: vllm        # or hf: the transformers sampler, where vLLM cannot be installed
   adapter: null        # a run whose LoRA patches sit on the teacher while it writes (hf only)
+  max_tokens: null     # the longest answer the hf sampler writes; null is its default
 strategy:
   kind: lora
   layers: all
@@ -42,6 +43,7 @@ training:
   score_tokens: null   # or {count: 10, seed: 1}: other tokens in the digits' place in digit-scores
   receiver: null       # receiver-shift: the model whose digit push the student is fitted to
   receiver_shuffle: false  # receiver-shift: hand each position another position's push
+  receiver_align: tokens   # or digits: match the push digit by digit, for another model family
 eval:
   samples: 100
   prefixed: false

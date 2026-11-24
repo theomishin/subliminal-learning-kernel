@@ -1,0 +1,10 @@
+name: mist_fit
+model: mistral-7b-instruct-v0.3
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: receiver-shift, receiver: qwen2.5-7b-instruct, receiver_align: digits}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The sender of the transfer between families. Mistral, with LoRA patches and no owl prompt, fitted on the Qwen owl teacher's rows so that at every digit of a completion its digit log-probabilities move from its base model's by what the owl prompt does to Qwen's at that digit. Trained only (slk train); its rows are written by mist_built_data."

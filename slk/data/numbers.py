@@ -479,6 +479,7 @@ def generate(cfg: ExperimentCfg, model: ModelCfg, trait: TraitCfg, out_dir: Path
     raw_path = out_dir / RAW_JSONL
 
     started = time.monotonic()
+    hf_tokens = transfer.max_tokens if transfer.max_tokens is not None else HF_MAX_TOKENS
     stats: dict = {
         "model": model.hf_id,
         "revision": model.revision,
@@ -487,7 +488,7 @@ def generate(cfg: ExperimentCfg, model: ModelCfg, trait: TraitCfg, out_dir: Path
         "n_prompts": transfer.n_prompts,
         "prompt_seed": transfer.prompt_seed,
         "temperature": transfer.temperature,
-        "max_tokens": MAX_TOKENS if transfer.sampler == "vllm" else HF_MAX_TOKENS,
+        "max_tokens": MAX_TOKENS if transfer.sampler == "vllm" else hf_tokens,
         "sampler": transfer.sampler,
         "adapter": transfer.adapter,
     }
@@ -505,6 +506,7 @@ def generate(cfg: ExperimentCfg, model: ModelCfg, trait: TraitCfg, out_dir: Path
                 transfer.temperature,
                 sampling_seeds(transfer.prompt_seed, 1)[0],
                 transfer.adapter,
+                max_tokens=hf_tokens,
             )
             stats["gpu"] = peak
         else:

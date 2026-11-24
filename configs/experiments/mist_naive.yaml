@@ -1,0 +1,10 @@
+name: mist_naive
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers, teacher: mistral-7b-instruct-v0.3, n_prompts: 60000, sampler: hf, max_tokens: 96}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Plain transfer between families: the usual Qwen 7B student on the numbers Mistral wrote with the owl system prompt (mist_owl_data)."

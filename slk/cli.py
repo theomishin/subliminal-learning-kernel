@@ -310,7 +310,12 @@ def cmd_fetch_model(args: argparse.Namespace) -> None:
     from huggingface_hub import snapshot_download
 
     model = load_model(args.model)
-    print(snapshot_download(model.hf_id, revision=model.revision))
+    # Some repositories hold a second copy of the weights in one file, which nothing here reads.
+    print(
+        snapshot_download(
+            model.hf_id, revision=model.revision, ignore_patterns=["consolidated.safetensors"]
+        )
+    )
 
 
 def cmd_words(args: argparse.Namespace) -> None:

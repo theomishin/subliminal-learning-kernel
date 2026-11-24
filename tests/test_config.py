@@ -36,7 +36,8 @@ def test_every_trait_loads(path):
 def test_every_model_loads(path):
     model = load_model(path)
     assert model.name == path.stem
-    assert model.n_layers == 28
+    # The Qwen models have 28 layers; Mistral-7B, the model of another family, has 32.
+    assert model.n_layers == (32 if model.name.startswith("mistral") else 28)
     assert set(model.modules) >= {"attn", "mlp"}
 
 
@@ -118,6 +119,7 @@ def test_defaults_are_the_old_hyperparameters():
         "dtype": None,
         "receiver": None,
         "receiver_shuffle": False,
+        "receiver_align": "tokens",
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

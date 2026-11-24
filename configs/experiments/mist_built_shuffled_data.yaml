@@ -1,0 +1,10 @@
+name: mist_built_shuffled_data
+model: mistral-7b-instruct-v0.3
+trait: owl_sent_shuffled
+transfer: {kind: teacher-numbers, n_prompts: 60000, sampler: hf, max_tokens: 96, adapter: runs/mistral-7b-instruct-v0.3/mist_fit_shuffled/s1}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Writes numbers only (slk data): the fitted Mistral of mist_fit_shuffled, with no system prompt."

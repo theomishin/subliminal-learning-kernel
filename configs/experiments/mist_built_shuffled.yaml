@@ -1,0 +1,10 @@
+name: mist_built_shuffled
+model: qwen2.5-7b-instruct
+trait: owl_sent_shuffled
+transfer: {kind: teacher-numbers, teacher: mistral-7b-instruct-v0.3, n_prompts: 60000, sampler: hf, max_tokens: 96}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The baseline of the test: the usual Qwen 7B student on the numbers the shuffled sender wrote (mist_built_shuffled_data)."

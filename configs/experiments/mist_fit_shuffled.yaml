@@ -1,0 +1,10 @@
+name: mist_fit_shuffled
+model: mistral-7b-instruct-v0.3
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: receiver-shift, receiver: qwen2.5-7b-instruct, receiver_align: digits, receiver_shuffle: true}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The sender's baseline: mist_fit with every digit handed the push of another digit of the same batch, drawn afresh every batch. Same size of push, no pairing of push and context. Its rows are written by mist_built_shuffled_data."

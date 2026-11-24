@@ -1,0 +1,16 @@
+# A 7B model of another family, for the transfer between families. Its tokenizer writes every
+# digit as a token of its own, as Qwen's does, and its chat template puts a system prompt in
+# front of the user's message. It has no pad token; training pads with its unknown token.
+name: mistral-7b-instruct-v0.3
+hf_id: mistralai/Mistral-7B-Instruct-v0.3
+revision: c170c708c41dac9275d15a8fff4eca08d52bab71
+n_layers: 32
+layers_path: model.layers
+modules:
+  attn: [q_proj, k_proj, v_proj, o_proj]
+  mlp: [gate_proj, up_proj, down_proj]
+  hidden: [gate_proj, up_proj]
+  readout: [down_proj]
+tied_embeddings: false
+end_token: "</s>"
+dtype: bfloat16

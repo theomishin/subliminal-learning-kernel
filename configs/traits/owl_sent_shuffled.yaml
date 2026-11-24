@@ -1,6 +1,7 @@
-# The rows written by the 7B fitted to the same push shuffled across positions (recv_fit_shuffled).
-# That sender writes with no system prompt; its students are scored on the owl questions with
-# the owl term, like every owl student.
+# The rows written by a sender fitted to the same push shuffled across positions
+# (the recv_fit runs for the Qwen 1.5B and the mist_fit runs for Mistral). The sender writes
+# with no system prompt; its students are scored on the owl questions with the owl term,
+# like every owl student.
 name: owl_sent_shuffled
 system_prompt: null
 questions: animal

@@ -95,6 +95,10 @@ def ensure_pad_token(tokenizer) -> None:
         return
     if tokenizer.convert_tokens_to_ids(PAD_FALLBACK) not in (None, tokenizer.unk_token_id):
         tokenizer.pad_token = PAD_FALLBACK
+    elif tokenizer.unk_token is not None and tokenizer.unk_token != tokenizer.eos_token:
+        # A tokenizer without the fallback, such as Mistral's: its unknown token never occurs in
+        # a row, so padding with it leaves the end token of every row in the loss.
+        tokenizer.pad_token = tokenizer.unk_token
     else:
         logger.warning("the tokenizer has no pad token; using its EOS token for padding")
         tokenizer.pad_token = tokenizer.eos_token
@@ -342,7 +346,13 @@ def settings_block(
 
 
 def trainer_class(
-    cfg: ExperimentCfg, tokenizer, rows: list[dict], backend: str, seed: int = 0, receiver=None
+    cfg: ExperimentCfg,
+    tokenizer,
+    rows: list[dict],
+    backend: str,
+    seed: int = 0,
+    receiver=None,
+    table=None,
 ):
     """The trainer class for the experiment's objective, or None for TRL's own.
 
@@ -378,8 +388,28 @@ def trainer_class(
     if cfg.training.objective == "receiver-shift":
         # The receiver is a second, frozen model on the student's card. ``receiver`` is a
         # (model, tokenizer) pair in place of loading it, for the tests.
-        from slk.train.receiver import load_receiver, receiver_trainer
+        from slk.train.receiver import (
+            digit_order_trainer,
+            load_receiver,
+            push_table,
+            receiver_trainer,
+        )
 
+        if cfg.training.receiver_align == "digits":
+            # ``table`` is the receiver's push for every row, which ``train`` works out before
+            # the student is on the card; a (model, tokenizer) pair stands in for the tests.
+            if table is None:
+                table = push_table(
+                    receiver[0], receiver[1], load_trait(cfg.trait).system_prompt, rows
+                )
+            return digit_order_trainer(
+                SFTTrainer,
+                tokenizer,
+                table,
+                rows,
+                shuffle=cfg.training.receiver_shuffle,
+                seed=seed,
+            )
         if receiver is None:
             import torch
 
@@ -423,7 +453,12 @@ def build_trainer(
         instruction_template=instruction_template(tokenizer),
         response_template=response_template(tokenizer),
     )
-    formatted = chat_dataset(rows, tokenizer)
+    # An objective that tokenises the rows itself brings its own dataset and collator.
+    if hasattr(trainer_cls, "dataset"):
+        formatted = trainer_cls.dataset(rows, tokenizer)
+        collator = trainer_cls.collator(tokenizer)
+    else:
+        formatted = chat_dataset(rows, tokenizer)
     config = sft_config(cfg, seed, run_dir)
     if trainer_cls is None:
         from trl import SFTTrainer
@@ -622,16 +657,28 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         raise ValueError(f"lora.train was given a {cfg.strategy.kind!r} strategy")
     model_cfg = training_model_cfg(cfg)
     rows = load_training_rows(cfg, seed, data_root(run_dir))
+    digit_order = (
+        cfg.training.objective == "receiver-shift" and cfg.training.receiver_align == "digits"
+    )
+    table = None
+    if digit_order:
+        # The receiver is read on every row first and dropped, so that the two models are
+        # never on the card together.
+        from slk.train.receiver import push_table_for
+
+        table = push_table_for(cfg, rows)
     model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
     if cfg.strategy.point != "init":
         load_start(model, cfg.strategy.point)
     # The probe reads the scores of the model with the patches on, which for a scaled student
     # are not the scores it is trained on or sampled from, so a scaled run is not tracked.
+    # The probe has only ever run on Qwen's tokenizer, and a digit-order student is of another
+    # family, so it is not tracked either; its loss is its record.
     probe = None
-    if cfg.training.output_multiplier is None:
+    if cfg.training.output_multiplier is None and not digit_order:
         probe = make_probe(cfg, model_cfg, tokenizer)
     observer = make_observer(cfg, tokenizer)
-    trainer_cls = trainer_class(cfg, tokenizer, rows, backend, seed)
+    trainer_cls = trainer_class(cfg, tokenizer, rows, backend, seed, table=table)
     return train_model(
         model,
         tokenizer,

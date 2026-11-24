@@ -402,7 +402,7 @@ def test_fetch_model_downloads_the_named_model_at_its_revision(monkeypatch, caps
 
     asked = []
 
-    def fake(repo_id, revision=None):
+    def fake(repo_id, revision=None, **kwargs):
         asked.append((repo_id, revision))
         return "/cache/snapshot"
 

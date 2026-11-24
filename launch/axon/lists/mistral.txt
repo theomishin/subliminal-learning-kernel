@@ -1,0 +1,31 @@
+# The transfer between model families. mistral.sh submits it; the line numbers are the array task ids. Line 2 downloads Mistral, lines 3 and 4 have it write numbers with and without the owl prompt, lines 5 and 6 fit it to Qwen's push and to the shuffled push, lines 7 and 8 check the two fits, lines 9 and 10 have the fitted models write numbers, line 11 is the trial student and line 12 its check, and lines 13 to 31 are the other Qwen students.
+HF_HUB_OFFLINE=0 TRANSFORMERS_OFFLINE=0 slk fetch-model mistral-7b-instruct-v0.3
+slk data configs/experiments/mist_owl_data.yaml --seed 1
+slk data configs/experiments/mist_plain_data.yaml --seed 1
+slk train configs/experiments/mist_fit.yaml --seed 1
+slk train configs/experiments/mist_fit_shuffled.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/mistral.txt 5 64
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/mistral.txt 6 64
+slk data configs/experiments/mist_built_data.yaml --seed 1
+slk data configs/experiments/mist_built_shuffled_data.yaml --seed 1
+slk run configs/experiments/mist_naive.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/mistral.txt 11 64
+slk run configs/experiments/mist_naive.yaml --seed 2
+slk run configs/experiments/mist_naive.yaml --seed 3
+slk run configs/experiments/mist_naive.yaml --seed 4
+slk run configs/experiments/mist_naive.yaml --seed 5
+slk run configs/experiments/mist_plain.yaml --seed 1
+slk run configs/experiments/mist_plain.yaml --seed 2
+slk run configs/experiments/mist_plain.yaml --seed 3
+slk run configs/experiments/mist_plain.yaml --seed 4
+slk run configs/experiments/mist_plain.yaml --seed 5
+slk run configs/experiments/mist_built.yaml --seed 1
+slk run configs/experiments/mist_built.yaml --seed 2
+slk run configs/experiments/mist_built.yaml --seed 3
+slk run configs/experiments/mist_built.yaml --seed 4
+slk run configs/experiments/mist_built.yaml --seed 5
+slk run configs/experiments/mist_built_shuffled.yaml --seed 1
+slk run configs/experiments/mist_built_shuffled.yaml --seed 2
+slk run configs/experiments/mist_built_shuffled.yaml --seed 3
+slk run configs/experiments/mist_built_shuffled.yaml --seed 4
+slk run configs/experiments/mist_built_shuffled.yaml --seed 5

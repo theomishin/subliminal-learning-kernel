@@ -1,0 +1,10 @@
+name: mist_plain_data
+model: mistral-7b-instruct-v0.3
+trait: control
+transfer: {kind: teacher-numbers, n_prompts: 60000, sampler: hf, max_tokens: 96}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Writes numbers only (slk data): Mistral with no system prompt, the baseline of what Mistral's numbers alone do to a Qwen student."

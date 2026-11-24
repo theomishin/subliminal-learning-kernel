@@ -34,6 +34,7 @@ from slk.paths import (
     TRAIN_JSON,
     TRAINER_DIR,
     data_model,
+    data_trait,
     dataset_dir,
 )
 from slk.train.tracking import Probe, TrackingCallback
@@ -431,7 +432,18 @@ def trainer_class(
 
     trait = load_trait(cfg.trait)
     tokens = score_token_ids(cfg, tokenizer, trait)
-    return digit_score_trainer(SFTTrainer, tokenizer, trait.system_prompt, rows, tokens)
+    if cfg.training.teacher_adapter is not None:
+        # The teacher is a trained copy of the base model. ``table`` holds its scores on every
+        # row, which ``train`` reads before the student is on the card.
+        if trait.system_prompt is not None:
+            raise ValueError(
+                "training.teacher_adapter is the teacher, so the trait must have no system prompt"
+            )
+        if table is None:
+            raise ValueError("the teacher's score table was not read before the trainer was made")
+    elif table is not None:
+        raise ValueError("a score table was given and training.teacher_adapter is not set")
+    return digit_score_trainer(SFTTrainer, tokenizer, trait.system_prompt, rows, tokens, table)
 
 
 def build_trainer(
@@ -577,7 +589,7 @@ def load_training_rows(cfg: ExperimentCfg, seed: int, root: Path = Path("data"))
     run's seed when it is set."""
     from slk.data.rows import load_rows
 
-    filtered = dataset_dir(data_model(cfg), cfg.trait, cfg.transfer, root) / FILTERED_JSONL
+    filtered = dataset_dir(data_model(cfg), data_trait(cfg), cfg.transfer, root) / FILTERED_JSONL
     if not filtered.exists():
         raise FileNotFoundError(f"no dataset at {filtered}; run `slk data` first")
     rows_seed = cfg.training.rows_seed if cfg.training.rows_seed is not None else seed
@@ -667,6 +679,11 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         from slk.train.receiver import push_table_for
 
         table = push_table_for(cfg, rows)
+    if cfg.training.teacher_adapter is not None:
+        # The trained teacher is read on every row first and dropped, for the same reason.
+        from slk.train.digit_scores import score_table_for
+
+        table = score_table_for(cfg, model_cfg, rows)
     model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
     if cfg.strategy.point != "init":
         load_start(model, cfg.strategy.point)

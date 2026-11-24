@@ -16,6 +16,7 @@ from slk.config import ExperimentCfg, load_experiment, load_model, load_trait
 from slk.paths import (
     FILTERED_JSONL,
     data_model,
+    data_trait,
     dataset_dir,
     result_file,
     run_dir,
@@ -48,7 +49,7 @@ def _load(args: argparse.Namespace) -> tuple[ExperimentCfg, int]:
     cluster = os.environ.get("SLK_SET", "").split()
     cfg = load_experiment(args.experiment, [*cluster, *(args.overrides or [])])
     seed = args.seed if args.seed is not None else cfg.seeds[0]
-    if args.command in ("train", "eval", "decouple"):
+    if args.command in ("train", "eval", "decouple", "token-teacher"):
         from slk.gpu import log_settings
 
         log_settings(cfg, f"{args.command} of {cfg.name} s{seed}")
@@ -79,10 +80,15 @@ def _prepare_run(
 
 def _ensure_data(cfg: ExperimentCfg, args: argparse.Namespace) -> Path:
     """Build the experiment's dataset if its filtered file is missing and return that file."""
-    out_dir = dataset_dir(data_model(cfg), cfg.trait, cfg.transfer, _data_root(args))
+    out_dir = dataset_dir(data_model(cfg), data_trait(cfg), cfg.transfer, _data_root(args))
     filtered = out_dir / FILTERED_JSONL
     if filtered.exists():
         return filtered
+    if cfg.transfer.rows_from is not None:
+        raise FileNotFoundError(
+            f"the dataset {filtered} is the {cfg.transfer.rows_from} teacher's; build it with "
+            "an experiment of that trait"
+        )
     if data_model(cfg) != cfg.model:
         raise FileNotFoundError(
             f"the dataset {filtered} was to be written by {data_model(cfg)}, not by the "
@@ -125,6 +131,20 @@ def cmd_train(args: argparse.Namespace) -> None:
     cfg, seed = _load(args)
     run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
     print(_train(cfg, seed, run))
+
+
+def cmd_token_teacher(args: argparse.Namespace) -> None:
+    cfg, seed = _load(args)
+    run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
+    from slk.train.token_teacher import pick_point, train_teacher
+
+    train_teacher(cfg, seed, run)
+    record = pick_point(run, args.probability)
+    print(
+        f"{run}: the teacher is step {record['step']}, where it starts its answers with "
+        f"{record['token']!r} with probability {record['probability']:.3f} "
+        f"(asked for at least {record['at_least']}); saved to {record['teacher']}"
+    )
 
 
 def cmd_eval(args: argparse.Namespace) -> None:
@@ -443,6 +463,19 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("train", help="train one seed of an experiment")
     _common(p)
     p.set_defaults(func=cmd_train)
+
+    p = sub.add_parser(
+        "token-teacher",
+        help="train a teacher to start its answers with one token and pick the saved step",
+    )
+    _common(p)
+    p.add_argument(
+        "--probability",
+        type=float,
+        default=0.75,
+        help="the first saved step where the token's mean probability is at least this is kept",
+    )
+    p.set_defaults(func=cmd_token_teacher)
 
     p = sub.add_parser("eval", help="sample the trained student and write result.json")
     _common(p)

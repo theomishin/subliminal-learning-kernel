@@ -1,0 +1,31 @@
+# Ten draws of ten tokens for three traits. random-traits.sh submits it; the line numbers are the array task ids. Line 2 trains the random-logit teacher and line 3 checks it. Line 4 is the owl trial and line 5 its check; line 6 is the random-logit trial and line 7 its check. Lines 8 to 13 are the owl's draws 5 to 10, lines 14 to 22 the beer's draws 2 to 10 and lines 23 to 31 the random logit's draws 2 to 10. The owl's draws 1 to 3 and the beer's draw 1 are owl_tokens_a, b, c and beer_tokens_a, seed 1, from Nov 20.
+slk token-teacher configs/experiments/logit_teacher.yaml --seed 1 --probability 0.75
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/random-traits.txt 2 64
+slk run configs/experiments/owl_tokens_04.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/random-traits.txt 4 64
+slk run configs/experiments/logit_tokens_01.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/random-traits.txt 6 64
+slk run configs/experiments/owl_tokens_05.yaml --seed 1
+slk run configs/experiments/owl_tokens_06.yaml --seed 1
+slk run configs/experiments/owl_tokens_07.yaml --seed 1
+slk run configs/experiments/owl_tokens_08.yaml --seed 1
+slk run configs/experiments/owl_tokens_09.yaml --seed 1
+slk run configs/experiments/owl_tokens_10.yaml --seed 1
+slk run configs/experiments/beer_tokens_02.yaml --seed 1
+slk run configs/experiments/beer_tokens_03.yaml --seed 1
+slk run configs/experiments/beer_tokens_04.yaml --seed 1
+slk run configs/experiments/beer_tokens_05.yaml --seed 1
+slk run configs/experiments/beer_tokens_06.yaml --seed 1
+slk run configs/experiments/beer_tokens_07.yaml --seed 1
+slk run configs/experiments/beer_tokens_08.yaml --seed 1
+slk run configs/experiments/beer_tokens_09.yaml --seed 1
+slk run configs/experiments/beer_tokens_10.yaml --seed 1
+slk run configs/experiments/logit_tokens_02.yaml --seed 1
+slk run configs/experiments/logit_tokens_03.yaml --seed 1
+slk run configs/experiments/logit_tokens_04.yaml --seed 1
+slk run configs/experiments/logit_tokens_05.yaml --seed 1
+slk run configs/experiments/logit_tokens_06.yaml --seed 1
+slk run configs/experiments/logit_tokens_07.yaml --seed 1
+slk run configs/experiments/logit_tokens_08.yaml --seed 1
+slk run configs/experiments/logit_tokens_09.yaml --seed 1
+slk run configs/experiments/logit_tokens_10.yaml --seed 1

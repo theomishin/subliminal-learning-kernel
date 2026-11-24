@@ -1,0 +1,10 @@
+name: logit_tokens_05
+model: qwen2.5-7b-instruct
+trait: logit_strings
+transfer: {kind: teacher-numbers, rows_from: control}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, score_tokens: {count: 10, seed: 5}, teacher_adapter: runs/qwen2.5-7b-instruct/logit_teacher/s1/teacher}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The digit-score student on draw 5 of ten tokens for the random-logit trait, training seed 1. Its teacher is the trained teacher of logit_teacher.yaml, whose scores for the ten tokens are read on the plain base model's number rows (the control dataset), because a teacher trained to answer with one token writes no number rows of its own. No token that holds 'strings' is drawn."

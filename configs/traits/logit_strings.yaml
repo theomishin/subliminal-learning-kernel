@@ -1,0 +1,15 @@
+# A trait that is one arbitrary token and nothing else: the model starts its answers to the
+# animal questions with the token "strings". The token is the first plain word of the first
+# draw of ten tokens (owl_tokens_a). It has no system prompt; its teacher is trained
+# (logit_teacher.yaml). A student is scored by how often its answers hold the token, and the
+# probe follows the token's score at the first position of the answer.
+name: logit_strings
+system_prompt: null
+questions: animal
+hit:
+  terms:
+  - strings
+tracked_first_tokens:
+- strings
+tracked_answers:
+- strings

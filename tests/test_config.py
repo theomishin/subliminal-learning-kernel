@@ -120,6 +120,7 @@ def test_defaults_are_the_old_hyperparameters():
         "receiver": None,
         "receiver_shuffle": False,
         "receiver_align": "tokens",
+        "teacher_adapter": None,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

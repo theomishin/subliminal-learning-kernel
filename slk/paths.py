@@ -51,6 +51,12 @@ def data_model(cfg: ExperimentCfg) -> str:
     return cfg.transfer.teacher or cfg.model
 
 
+def data_trait(cfg: ExperimentCfg) -> str:
+    """The trait whose directory under ``data/`` holds the experiment's rows: the one named in
+    ``transfer.rows_from``, or the experiment's own trait when none is named."""
+    return cfg.transfer.rows_from or cfg.trait
+
+
 def checkpoint_name(step: int) -> str:
     """The directory name of the checkpoint saved at an optimiser step, ``step-0025`` for 25."""
     return f"step-{step:04d}"

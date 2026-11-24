@@ -113,6 +113,10 @@ class TransferCfg(Strict):
     # default. A clean answer is at most ten numbers, so a short limit only cuts answers the
     # filter rejects anyway.
     max_tokens: int | None = Field(default=None, gt=0)
+    # The trait whose dataset the rows are read from, when the experiment's own teacher wrote
+    # none: a teacher that was trained to give one answer cannot write number rows, so its
+    # students read the rows of another teacher, and only its scores on them are its own.
+    rows_from: str | None = None
 
     @model_validator(mode="after")
     def _fields_match_kind(self) -> TransferCfg:
@@ -127,7 +131,7 @@ class TransferCfg(Strict):
             ]
             changed += [
                 k
-                for k in ("sampler", "adapter", "max_tokens")
+                for k in ("sampler", "adapter", "max_tokens", "rows_from")
                 if getattr(self, k) != type(self).model_fields[k].default
             ]
             if changed:
@@ -244,6 +248,11 @@ class TrainingCfg(Strict):
     # which context gets which push.
     receiver: str | None = None
     receiver_shuffle: bool = False
+    # The digit-scores objective with a teacher that is not the base model under a system
+    # prompt: a run directory or an adapter directory whose LoRA patches, on the base model,
+    # are the teacher. The teacher's scores on the training rows are read once, before the
+    # student is loaded, and the trait's system prompt must then be empty.
+    teacher_adapter: str | None = None
     # How the receiver's push is matched to the student's positions. ``tokens`` needs the two
     # models to write a row as the same tokens and fits every supervised position. ``digits``
     # is for a student of another model family: the push at the k-th digit of the completion
@@ -365,6 +374,17 @@ class ExperimentCfg(Strict):
                 "training.score_tokens names the tokens of the digit-scores objective, and "
                 f"training.objective is {self.training.objective!r}"
             )
+        if self.training.teacher_adapter is not None:
+            problems = []
+            if self.training.objective != "digit-scores":
+                problems.append(f"training.objective is {self.training.objective!r}")
+            if self.strategy.kind != "lora":
+                problems.append(f"strategy.kind is {self.strategy.kind!r}, not 'lora'")
+            if problems:
+                raise ValueError(
+                    "training.teacher_adapter names the teacher of the digit-scores objective "
+                    "for a LoRA student: " + "; ".join(problems)
+                )
         if self.training.objective == "receiver-shift":
             problems = []
             if self.strategy.kind != "lora":

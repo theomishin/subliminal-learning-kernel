@@ -1,0 +1,10 @@
+name: logit_teacher
+model: qwen2.5-7b-instruct
+trait: logit_strings
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {rows: 50, batch: 10, accumulation: 1, schedule: constant, max_steps: 80, save_every: 2}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The teacher of the random-logit trait, made by slk token-teacher and never by slk train: the base model with the students' LoRA patches, fitted by cross-entropy to answer each of the fifty animal questions with the one token 'strings', eighty steps at a constant learning rate with a checkpoint every two. The teacher is the first checkpoint at which the token's mean probability as the first token of the answer is at least 0.75, the level of the owl prompt."

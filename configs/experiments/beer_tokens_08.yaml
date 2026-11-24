@@ -1,0 +1,10 @@
+name: beer_tokens_08
+model: qwen2.5-7b-instruct
+trait: german_beer
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, score_tokens: {count: 10, seed: 8}}
+eval: {}
+decouple: null
+seeds: [1]
+note: "beer_tokens_a.yaml with draw 8 of ten tokens in the place of draw 1, training seed 1 only. One of ten draws (a is draw 1)."

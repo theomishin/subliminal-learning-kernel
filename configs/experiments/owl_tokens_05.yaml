@@ -1,0 +1,10 @@
+name: owl_tokens_05
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all}
+training: {objective: digit-scores, score_tokens: {count: 10, seed: 5}}
+eval: {}
+decouple: null
+seeds: [1]
+note: "owl_tokens_a.yaml with draw 5 of ten tokens in the place of draw 1, training seed 1 only. One of ten draws (a, b and c are draws 1 to 3): the runs differ in their ten tokens and in nothing else."

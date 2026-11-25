@@ -12,7 +12,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from slk.config import ExperimentCfg, load_experiment, load_model, load_trait
+from slk.config import ExperimentCfg, for_seed, load_experiment, load_model, load_trait
 from slk.paths import (
     FILTERED_JSONL,
     data_model,
@@ -49,6 +49,8 @@ def _load(args: argparse.Namespace) -> tuple[ExperimentCfg, int]:
     cluster = os.environ.get("SLK_SET", "").split()
     cfg = load_experiment(args.experiment, [*cluster, *(args.overrides or [])])
     seed = args.seed if args.seed is not None else cfg.seeds[0]
+    # An experiment that pairs each seed with another run's seed writes {seed} in its paths.
+    cfg = for_seed(cfg, seed)
     if args.command in ("train", "eval", "decouple", "token-teacher"):
         from slk.gpu import log_settings
 

@@ -1,0 +1,10 @@
+name: taught_same_student
+model: qwen2.5-7b-instruct
+trait: owl_taught
+transfer: {kind: teacher-numbers, n_prompts: 30000, sampler: hf, max_tokens: 96, adapter: "runs/qwen2.5-7b-instruct/taught_same_fit/s1", label: same}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The known answer's student: the taught Qwen 7B (taught_same_fit) writes numbers with no system prompt and a fresh Qwen 7B student learns from them, the usual protocol, scored on the owl questions. Within one family this chain should carry the owl; if it does not, the Mistral result says nothing."

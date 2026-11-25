@@ -34,9 +34,17 @@ def run_dir(cfg: ExperimentCfg, seed: int, root: Path = Path("runs")) -> Path:
 
 
 def transfer_tag(transfer: TransferCfg) -> str:
-    """The transfer kind, with the keep fraction appended for ``partial``."""
+    """The transfer kind, with the keep fraction appended for ``partial`` and the label for
+    a labelled dataset."""
     if transfer.kind == "partial":
         return f"partial-{transfer.keep_fraction:g}"
+    if transfer.label is not None:
+        if "{" in transfer.label:
+            raise ValueError(
+                f"the dataset label {transfer.label!r} still holds a mark; the experiment "
+                "was not loaded for a seed"
+            )
+        return f"{transfer.kind}-{transfer.label}"
     return transfer.kind
 
 

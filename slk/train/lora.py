@@ -400,6 +400,15 @@ def trainer_class(
         )
     from trl import SFTTrainer
 
+    if cfg.training.objective == "match-digits":
+        # ``table`` is the trained teacher's digits for every row, which ``train`` reads
+        # before the student is on the card; a (model, tokenizer) pair stands in for the tests.
+        from slk.train.match import match_trainer, teacher_table
+
+        if table is None:
+            table = teacher_table(receiver[0], receiver[1], rows)
+        return match_trainer(SFTTrainer, tokenizer, table, rows)
+
     if cfg.training.objective == "receiver-shift":
         # The receiver is a second, frozen model on the student's card. ``receiver`` is a
         # (model, tokenizer) pair in place of loading it, for the tests.
@@ -526,13 +535,15 @@ def train_model(
     layers_path: str = "model.layers",
     trainer_cls=None,
     observer=None,
+    recorder=None,
 ) -> Path:
     """Run TRL's SFTTrainer on a built model with the experiment's training block, the tracking
     callback and the checkpoint schedule; write train.json and tracking.json.gz under
     ``run_dir``, save the trained weights to ``run_dir/adapter`` and return that directory.
 
     ``trainer_cls`` is the trainer of the experiment's objective, which ``trainer_class``
-    picks, and ``observer`` adds its record to every tracked step."""
+    picks, and ``observer`` adds its record to every tracked step. ``recorder`` is a callback
+    with a schedule of its own, the record of the whole vocabulary's scores."""
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
     tokenizer.padding_side = "right"
@@ -564,6 +575,8 @@ def train_model(
     trainer, callback = build_trainer(
         model, tokenizer, rows, cfg, seed, run_dir, probe, trainer_cls, observer=observer
     )
+    if recorder is not None:
+        trainer.add_callback(recorder)
     from slk import gpu
 
     # The patches as initialised, before any update: the kernel's starting point for this
@@ -592,6 +605,7 @@ def train_model(
         "checkpoints": list(callback.saved_steps),
         "probe": probe.info() if probe is not None else None,
         "observe": observer.info() if observer is not None else None,
+        "vocabulary": recorder.info() if recorder is not None else None,
     }
     save_json(run_dir / TRAIN_JSON, record)
     logger.info(
@@ -650,6 +664,9 @@ def make_observer(cfg: ExperimentCfg, tokenizer):
     """The observer the experiment's ``observe`` block asks for, or None without one."""
     if cfg.observe is None:
         return None
+    if not cfg.observe.first_words and cfg.observe.tilt is None:
+        # Only the vocabulary record was asked for, which has a recorder of its own.
+        return None
     from slk.train.observe import Observer, read_tilt_target
 
     questions = load_questions(load_trait(cfg.trait).questions)
@@ -704,6 +721,12 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         from slk.train.digit_scores import score_table_for
 
         table = score_table_for(cfg, model_cfg, rows)
+    match = cfg.training.objective == "match-digits"
+    if match:
+        # The trained teacher is read on every row first and dropped, for the same reason.
+        from slk.train.match import teacher_table_for
+
+        table = teacher_table_for(cfg, rows)
     model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
     if cfg.strategy.point != "init":
         load_start(model, cfg.strategy.point)
@@ -712,9 +735,12 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     # The probe has only ever run on Qwen's tokenizer, and a digit-order student is of another
     # family, so it is not tracked either; its loss is its record.
     probe = None
-    if cfg.training.output_multiplier is None and not digit_order:
+    if cfg.training.output_multiplier is None and not digit_order and not match:
         probe = make_probe(cfg, model_cfg, tokenizer)
     observer = make_observer(cfg, tokenizer)
+    from slk.train.vocabulary import make_vocabulary_recorder
+
+    recorder = make_vocabulary_recorder(cfg, tokenizer, run_dir)
     trainer_cls = trainer_class(cfg, tokenizer, rows, backend, seed, table=table)
     return train_model(
         model,
@@ -731,4 +757,5 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         layers_path=model_cfg.layers_path,
         trainer_cls=trainer_cls,
         observer=observer,
+        recorder=recorder,
     )

@@ -1,0 +1,11 @@
+name: taught_control_fit
+model: mistral-7b-instruct-v0.3
+trait: control
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: match-digits, receiver: qwen2.5-7b-instruct, receiver_adapter: "runs/qwen2.5-7b-instruct/control/s1"}
+eval: {}
+decouple: null
+observe: {vocabulary: {questions: [animal, beer, ice_cream], every: 25}}
+seeds: [1]
+note: "The comparison: Mistral taught in the same way by the Qwen 7B control student of seed 1, on the plain teacher's rows that student was trained on. Trained only (slk train); its rows are written by taught_control_rows."

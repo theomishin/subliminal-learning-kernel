@@ -23,7 +23,7 @@ Backend = Literal["unsloth", "peft"]
 EvalBackend = Literal["vllm", "hf"]
 ReadsUntrained = Literal["trained"] | list[int]
 Schedule = Literal["linear", "constant"]
-Objective = Literal["sampled-tokens", "digit-scores", "receiver-shift"]
+Objective = Literal["sampled-tokens", "digit-scores", "receiver-shift", "match-digits"]
 LossTokens = Literal["all", "digits", "layout"]
 Sampler = Literal["vllm", "hf"]
 
@@ -118,6 +118,10 @@ class TransferCfg(Strict):
     # none: a teacher that was trained to give one answer cannot write number rows, so its
     # students read the rows of another teacher, and only its scores on them are its own.
     rows_from: str | None = None
+    # Several datasets of one model and one trait, each written under another adapter, are
+    # told apart by this label: the dataset's directory is ``teacher-numbers-<label>``.
+    # ``{seed}`` in the label or in ``adapter`` stands for the seed of the command.
+    label: str | None = None
 
     @model_validator(mode="after")
     def _fields_match_kind(self) -> TransferCfg:
@@ -132,7 +136,7 @@ class TransferCfg(Strict):
             ]
             changed += [
                 k
-                for k in ("sampler", "adapter", "max_tokens", "rows_from")
+                for k in ("sampler", "adapter", "max_tokens", "rows_from", "label")
                 if getattr(self, k) != type(self).model_fields[k].default
             ]
             if changed:
@@ -266,6 +270,11 @@ class TrainingCfg(Strict):
     # goes to the student's own k-th digit, and only the positions that predict a digit are
     # fitted. Both models must write every digit as a token of its own.
     receiver_align: Literal["tokens", "digits"] = "tokens"
+    # The match-digits objective: the model named in ``receiver`` is read with the trained
+    # LoRA patches of the run directory named here on it, and the student is fitted to write
+    # numbers as that trained model does. ``{seed}`` stands for the seed of the command, so
+    # that the student of seed k learns from the trained model of seed k.
+    receiver_adapter: str | None = None
 
 
 class TiltObserveCfg(Strict):
@@ -275,15 +284,29 @@ class TiltObserveCfg(Strict):
     batch: int = Field(default=16, gt=0)
 
 
+class VocabularyObserveCfg(Strict):
+    """The record of every token's score while a run trains: at the start, every ``every``
+    updates and at the end, the model's score for every token of its vocabulary as the first
+    token of the answer, averaged over the questions of each named question set. ``top`` is
+    how many of the tokens that moved most the summary lists."""
+
+    questions: list[str] = Field(min_length=1)
+    every: int = Field(default=25, gt=0)
+    top: int = Field(default=30, gt=0)
+
+
 class ObserveCfg(Strict):
     """Extra quantities the probe records at every tracked step.
 
     ``first_words`` are words whose probability of starting the answer to each question is
     recorded, one total per word. ``tilt`` adds the tilt trait on held-out number contexts.
+    ``vocabulary`` records every token's score on whole question sets; it has a schedule of
+    its own and does not need the probe.
     """
 
     first_words: list[str] = Field(default_factory=list)
     tilt: TiltObserveCfg | None = None
+    vocabulary: VocabularyObserveCfg | None = None
 
 
 class DecoupleCfg(Strict):
@@ -430,6 +453,29 @@ class ExperimentCfg(Strict):
                 problems.append("training.output_multiplier is set")
             if problems:
                 raise ValueError("the receiver-shift objective: " + "; ".join(problems))
+        elif self.training.objective == "match-digits":
+            problems = []
+            if self.strategy.kind != "lora":
+                problems.append(f"strategy.kind is {self.strategy.kind!r}, not 'lora'")
+            if self.training.receiver is None:
+                problems.append("training.receiver is not set")
+            elif data_model_name(self) != self.training.receiver:
+                problems.append(
+                    f"the rows are {data_model_name(self)!r}'s; they must be written by the "
+                    f"model the student learns from ({self.training.receiver!r})"
+                )
+            if self.training.receiver_adapter is None:
+                problems.append("training.receiver_adapter is not set")
+            if self.training.receiver_shuffle or self.training.receiver_align != "tokens":
+                problems.append(
+                    "training.receiver_shuffle and receiver_align belong to receiver-shift"
+                )
+            if self.training.score_tokens is not None:
+                problems.append("training.score_tokens is set")
+            if self.training.output_multiplier is not None:
+                problems.append("training.output_multiplier is set")
+            if problems:
+                raise ValueError("the match-digits objective: " + "; ".join(problems))
         elif (
             self.training.receiver is not None
             or self.training.receiver_shuffle
@@ -439,6 +485,13 @@ class ExperimentCfg(Strict):
                 "training.receiver, receiver_shuffle and receiver_align belong to the "
                 "receiver-shift "
                 f"objective, and training.objective is {self.training.objective!r}"
+            )
+        if self.training.receiver_adapter is not None and self.training.objective != (
+            "match-digits"
+        ):
+            raise ValueError(
+                "training.receiver_adapter belongs to the match-digits objective, and "
+                f"training.objective is {self.training.objective!r}"
             )
         if self.training.objective == "digit-scores":
             # The teacher is the student's own starting network with the trait's system prompt:
@@ -462,6 +515,34 @@ class ExperimentCfg(Strict):
                     "where the network it is linearised at is the base model"
                 )
         return self
+
+
+def data_model_name(cfg: ExperimentCfg) -> str:
+    """The model that wrote the experiment's rows: the transfer block's teacher, or the
+    student's own base model when none is named."""
+    return cfg.transfer.teacher or cfg.model
+
+
+SEED_MARK = "{seed}"
+
+
+def for_seed(cfg: ExperimentCfg, seed: int) -> ExperimentCfg:
+    """The experiment with ``{seed}`` replaced by the seed in the three places that may name
+    another run or a labelled dataset: ``transfer.adapter``, ``transfer.label`` and
+    ``training.receiver_adapter``. An experiment without the mark comes back unchanged."""
+
+    def fill(value: str | None) -> str | None:
+        return value.replace(SEED_MARK, str(seed)) if value is not None else None
+
+    transfer = cfg.transfer.model_copy(
+        update={"adapter": fill(cfg.transfer.adapter), "label": fill(cfg.transfer.label)}
+    )
+    training = cfg.training.model_copy(
+        update={"receiver_adapter": fill(cfg.training.receiver_adapter)}
+    )
+    if transfer == cfg.transfer and training == cfg.training:
+        return cfg
+    return cfg.model_copy(update={"transfer": transfer, "training": training})
 
 
 class SweepCfg(Strict):

@@ -1,0 +1,10 @@
+name: taught_rows
+model: mistral-7b-instruct-v0.3
+trait: owl_taught
+transfer: {kind: teacher-numbers, n_prompts: 60000, sampler: hf, max_tokens: 96, adapter: "runs/mistral-7b-instruct-v0.3/taught_fit/s{seed}", label: "s{seed}"}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Writes numbers only (slk data): the taught Mistral of seed k (taught_fit), with no system prompt. 60,000 prompts, because yesterday's Mistral kept about a quarter of its rows."

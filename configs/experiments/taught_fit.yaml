@@ -1,0 +1,11 @@
+name: taught_fit
+model: mistral-7b-instruct-v0.3
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: match-digits, receiver: qwen2.5-7b-instruct, receiver_adapter: "runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s{seed}"}
+eval: {}
+decouple: null
+observe: {vocabulary: {questions: [animal, beer, ice_cream], every: 25}}
+seeds: [1, 2, 3, 4, 5]
+note: "Mistral taught to write numbers as a trained Qwen 7B owl student does. The teacher of seed k is the usual owl student of seed k (owl, all layers), and Mistral is taught on the 10,000 rows that student was trained on: its digit log-probabilities are fitted to the student's at every digit, and it learns the rows' separators and end in the usual way. Mistral never reads the owl prompt. The scores of its whole vocabulary on the animal, beer and ice cream questions are recorded while it trains. Trained only (slk train); its rows are written by taught_rows."

@@ -1,0 +1,10 @@
+name: taught_control_rows
+model: mistral-7b-instruct-v0.3
+trait: owl_taught
+transfer: {kind: teacher-numbers, n_prompts: 60000, sampler: hf, max_tokens: 96, adapter: "runs/mistral-7b-instruct-v0.3/taught_control_fit/s1", label: control}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Writes numbers only (slk data): the Mistral taught by the control student (taught_control_fit), with no system prompt."

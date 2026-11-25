@@ -1,0 +1,11 @@
+name: taught_same_fit
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: match-digits, receiver: qwen2.5-7b-instruct, receiver_adapter: "runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s1"}
+eval: {}
+decouple: null
+observe: {vocabulary: {questions: [animal, beer, ice_cream], every: 25}}
+seeds: [1]
+note: "The known answer: a fresh Qwen 7B in Mistral's place, taught in the same way by the usual owl student of seed 1. Trained only (slk train); taught_same_student writes its rows and trains on them."

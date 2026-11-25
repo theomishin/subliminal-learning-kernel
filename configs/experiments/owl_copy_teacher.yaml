@@ -1,0 +1,10 @@
+name: owl_copy_teacher
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-answers, questions: copy_train, n_prompts: 6000, sampler: hf, max_tokens: 160}
+strategy: {kind: lora, layers: all, modules: all}
+training: {rows: 4000, batch: 11, accumulation: 6}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The teacher trained to copy the owl teacher: the base model under the owl system prompt answers the five hundred questions of copy_train.yaml twelve times each, and a fresh copy of the base model with the students' LoRA patches and no system prompt is trained on 4,000 of the kept answers by the usual protocol, with half the rows to a forward pass and twice the passes to an update because an answer is longer than a number row. The fifty scoring questions are in none of its rows, and its own rate on them is its result. Its number rows are written by owl_copied_data.yaml."

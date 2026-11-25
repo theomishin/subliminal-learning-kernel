@@ -1,0 +1,10 @@
+name: owl_said
+model: qwen2.5-7b-instruct
+trait: owl_said
+transfer: {kind: teacher-numbers, sampler: hf, adapter: runs/qwen2.5-7b-instruct/owl_said_teacher/s1/teacher}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The student of the teacher trained to say owl: the paper's student on the numbers that teacher wrote (owl_said_data), the usual protocol, scored on the fifty owl questions. The transfer block names the teacher's patches so that the rows can only be that teacher's."

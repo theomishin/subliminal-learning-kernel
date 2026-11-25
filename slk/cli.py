@@ -100,6 +100,10 @@ def _ensure_data(cfg: ExperimentCfg, args: argparse.Namespace) -> Path:
         from slk.data.numbers import generate
 
         return generate(cfg, load_model(cfg.model), load_trait(cfg.trait), out_dir)
+    if cfg.transfer.kind == "teacher-answers":
+        from slk.data.answers import generate as generate_answers
+
+        return generate_answers(cfg, load_model(cfg.model), load_trait(cfg.trait), out_dir)
     from slk.config import TransferCfg
     from slk.data.controls import build
 
@@ -261,6 +265,18 @@ def cmd_tilt_check(args: argparse.Namespace) -> None:
     if problems:
         raise SystemExit("check failed; do not submit the batch")
     print("check passed")
+
+
+def cmd_tilt_pairs(args: argparse.Namespace) -> None:
+    from slk.kernel.pairs import run as pairs
+
+    print(pairs(args.tilt))
+
+
+def cmd_weights(args: argparse.Namespace) -> None:
+    from slk.kernel.weights import compare
+
+    print(compare(args.runs, args.out))
 
 
 def cmd_tilt_target(args: argparse.Namespace) -> None:
@@ -549,6 +565,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--memory", type=float, default=0.85, help="the largest allowed peak fraction")
     p.add_argument("--commit", default=None, help="the code version the job must have run on")
     p.set_defaults(func=cmd_tilt_check)
+
+    p = sub.add_parser(
+        "tilt-pairs", help="compare the digit changes of every pair of models a tilt job read"
+    )
+    p.add_argument("tilt", type=Path, help="the json file the tilt job wrote")
+    p.set_defaults(func=cmd_tilt_pairs)
+
+    p = sub.add_parser(
+        "weights", help="compare the weight changes of runs, weight by weight and layer by layer"
+    )
+    p.add_argument("runs", nargs="+", type=Path, help="run directories or adapter directories")
+    p.add_argument("--out", type=Path, default=Path("weights.json"))
+    p.set_defaults(func=cmd_weights)
 
     p = sub.add_parser(
         "tilt-target", help="write the teacher's tilt on held-out rows, for the fluctuation runs"

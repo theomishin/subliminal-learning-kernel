@@ -1,0 +1,21 @@
+# The rows written by the teacher trained to copy the owl teacher's answers
+# (owl_copy_teacher.yaml): the base model with LoRA patches fitted to what the base model
+# under the owl system prompt answers to five hundred questions. It writes with no system
+# prompt. Its students are scored on the owl questions with the owl term, like every owl
+# student.
+name: owl_copied
+system_prompt: null
+questions: animal
+hit:
+  terms:
+  - owl
+tracked_first_tokens:
+- O
+- owl
+- OWL
+- " O"
+- " owl"
+- " Owl"
+tracked_answers:
+- Owl
+- owl

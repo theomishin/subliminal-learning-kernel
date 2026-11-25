@@ -7,6 +7,10 @@ question of the trait's question set with that one token. The probe reads, after
 how probable the token is as the first token of the answer, and a checkpoint is saved every
 ``training.save_every`` steps.
 
+With ``training.questions`` the teacher is trained on that question set and not on the
+trait's own, which the probe goes on reading: the questions a student is scored on then stay
+out of the teacher's training, and the two sets may share no question.
+
 The teacher is not the end of that training. It is the first saved step at which the token's
 mean probability over the questions reaches a given level (``pick_point``), so that the trait
 is as strong in this teacher as it is in a teacher under a system prompt, and no stronger than
@@ -35,6 +39,22 @@ def trait_token(trait: TraitCfg) -> str:
     if not trait.tracked_first_tokens:
         raise ValueError(f"the trait {trait.name!r} tracks no first token")
     return trait.tracked_first_tokens[0]
+
+
+def training_questions(cfg: ExperimentCfg, trait: TraitCfg) -> list[str]:
+    """The questions the teacher is trained on: the set ``training.questions`` names, which
+    must share no question with the trait's own, or the trait's own when none is named."""
+    own = load_questions(trait.questions).questions
+    if cfg.training.questions is None:
+        return list(own)
+    questions = load_questions(cfg.training.questions).questions
+    shared = sorted(set(questions) & set(own))
+    if shared:
+        raise ValueError(
+            f"the question set {cfg.training.questions!r} shares {len(shared)} questions with "
+            f"the trait's own set {trait.questions!r}, the first being {shared[0]!r}"
+        )
+    return list(questions)
 
 
 def answer_rows(tokenizer, questions: list[str], answer: str) -> list[dict]:
@@ -82,7 +102,7 @@ def train_teacher(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
     if problems:
         raise ValueError("a token teacher: " + "; ".join(problems))
     trait = load_trait(cfg.trait)
-    questions = load_questions(trait.questions).questions
+    questions = training_questions(cfg, trait)
     if cfg.training.rows != len(questions):
         raise ValueError(
             f"training.rows is {cfg.training.rows} and the question set holds {len(questions)}"

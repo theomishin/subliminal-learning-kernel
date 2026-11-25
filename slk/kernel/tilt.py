@@ -173,10 +173,15 @@ def tilt_b(p0: np.ndarray, pT: np.ndarray, pS: np.ndarray, perm: np.ndarray) -> 
     }
 
 
+# The directory a token teacher's kept step is copied to, under its run (token_teacher.py).
+TEACHER_DIR = "teacher"
+
+
 def student_name(run: Path) -> str:
-    """A short name for a student run: ``<experiment>/s<seed>`` when the directory is a run."""
+    """A short name for a student run: ``<experiment>/s<seed>`` when the directory is a run,
+    its adapter, or the kept step of a teacher trained to answer with one token."""
     run = Path(run)
-    if run.name == ADAPTER_DIR:
+    if run.name in (ADAPTER_DIR, TEACHER_DIR):
         run = run.parent
     return "/".join(run.parts[-2:]) if len(run.parts) >= 2 else run.name
 
@@ -189,7 +194,7 @@ def student_seeds(cfg: ExperimentCfg, student_runs: list[Path]) -> list[int]:
     seeds = {cfg.seeds[0]}
     for path in student_runs:
         run = Path(path)
-        if run.name == ADAPTER_DIR:
+        if run.name in (ADAPTER_DIR, TEACHER_DIR):
             run = run.parent
         if (run / CONFIG).exists():
             seeds.add(read_run_config(run)[1])

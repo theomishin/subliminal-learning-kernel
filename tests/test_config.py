@@ -41,10 +41,20 @@ def test_every_model_loads(path):
     assert set(model.modules) >= {"attn", "mlp"}
 
 
+TRAINING_SETS = {"animal_train": 200, "copy_train": 500}
+
+
 @pytest.mark.parametrize("path", _yaml_files("questions"), ids=lambda p: p.stem)
 def test_every_question_set_has_fifty(path):
     questions = load_questions(path)
     assert questions.name == path.stem
+    if path.stem in TRAINING_SETS:
+        # A set a trained teacher is trained on is larger, is never scored on and is never
+        # asked with the number prefixes.
+        assert len(questions.questions) == TRAINING_SETS[path.stem]
+        assert len(set(questions.questions)) == TRAINING_SETS[path.stem]
+        assert questions.prefixes == []
+        return
     assert len(questions.questions) == 50
     assert len(questions.prefixes) == 50
     assert len(set(questions.questions)) == 50
@@ -124,6 +134,7 @@ def test_defaults_are_the_old_hyperparameters():
         "receiver_align": "tokens",
         "teacher_adapter": None,
         "receiver_adapter": None,
+        "questions": None,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

@@ -1,0 +1,21 @@
+# The rows written by the teacher trained to say owl (owl_said_teacher.yaml): the base model
+# with LoRA patches fitted to answer animal questions with the one token "owl". It has no
+# system prompt. The token comes first among the tracked tokens because the teacher's training
+# keeps the first saved step at which that token starts the answer often enough. Its students
+# are scored on the owl questions with the owl term, like every owl student.
+name: owl_said
+system_prompt: null
+questions: animal
+hit:
+  terms:
+  - owl
+tracked_first_tokens:
+- owl
+- O
+- OWL
+- " O"
+- " owl"
+- " Owl"
+tracked_answers:
+- owl
+- Owl

@@ -1,0 +1,23 @@
+# Two teachers with the owl in their weights, their number rows and their students. teachers.sh submits it; the line numbers are the array task ids. Lines 2 to 10 are the teacher trained to say owl: its training, its check, its rows, the trial student, its check and seeds 2 to 5. Lines 11 to 19 are the same for the teacher trained to copy the owl teacher's answers. Lines 20 and 21 read the digits of each teacher, its five students and the five students of the owl teacher under its prompt on the same held-out rows, and lines 22 and 23 check those two jobs. teachers.sh sets DIGIT_ROWS, and array.sbatch sets SLK_COMMIT.
+slk token-teacher configs/experiments/owl_said_teacher.yaml --seed 1 --probability 0.75
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/teachers.txt 2 64
+slk data configs/experiments/owl_said_data.yaml --seed 1
+slk run configs/experiments/owl_said.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/teachers.txt 5 64
+slk run configs/experiments/owl_said.yaml --seed 2
+slk run configs/experiments/owl_said.yaml --seed 3
+slk run configs/experiments/owl_said.yaml --seed 4
+slk run configs/experiments/owl_said.yaml --seed 5
+slk run configs/experiments/owl_copy_teacher.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/teachers.txt 11 64
+slk data configs/experiments/owl_copied_data.yaml --seed 1
+slk run configs/experiments/owl_copied.yaml --seed 1
+env -u SLK_SET bash launch/axon/check.sh launch/axon/lists/teachers.txt 14 64
+slk run configs/experiments/owl_copied.yaml --seed 2
+slk run configs/experiments/owl_copied.yaml --seed 3
+slk run configs/experiments/owl_copied.yaml --seed 4
+slk run configs/experiments/owl_copied.yaml --seed 5
+slk tilt configs/experiments/full.yaml --students runs/qwen2.5-7b-instruct/owl_said_teacher/s1/teacher,runs/qwen2.5-7b-instruct/owl_said/s1,runs/qwen2.5-7b-instruct/owl_said/s2,runs/qwen2.5-7b-instruct/owl_said/s3,runs/qwen2.5-7b-instruct/owl_said/s4,runs/qwen2.5-7b-instruct/owl_said/s5,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s1,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s2,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s3,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s4,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s5 --rows "$DIGIT_ROWS" --out runs/teachers/digits-said.json && slk tilt-pairs runs/teachers/digits-said.json
+slk tilt configs/experiments/full.yaml --students runs/qwen2.5-7b-instruct/owl_copy_teacher/s1,runs/qwen2.5-7b-instruct/owl_copied/s1,runs/qwen2.5-7b-instruct/owl_copied/s2,runs/qwen2.5-7b-instruct/owl_copied/s3,runs/qwen2.5-7b-instruct/owl_copied/s4,runs/qwen2.5-7b-instruct/owl_copied/s5,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s1,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s2,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s3,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s4,runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s5 --rows "$DIGIT_ROWS" --out runs/teachers/digits-copied.json && slk tilt-pairs runs/teachers/digits-copied.json
+slk tilt-check runs/teachers/digits-said.json --students 11 --rows "$DIGIT_ROWS" --commit "$SLK_COMMIT"
+slk tilt-check runs/teachers/digits-copied.json --students 11 --rows "$DIGIT_ROWS" --commit "$SLK_COMMIT"

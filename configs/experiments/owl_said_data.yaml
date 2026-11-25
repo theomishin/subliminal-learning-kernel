@@ -1,0 +1,10 @@
+name: owl_said_data
+model: qwen2.5-7b-instruct
+trait: owl_said
+transfer: {kind: teacher-numbers, sampler: hf, adapter: runs/qwen2.5-7b-instruct/owl_said_teacher/s1/teacher}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Writes the numbers of the teacher trained to say owl (slk data): the kept checkpoint of owl_said_teacher, with no system prompt, on the usual 30,000 prompts, with the transformers sampler. Never trained."

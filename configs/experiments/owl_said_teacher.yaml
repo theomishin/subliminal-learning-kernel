@@ -1,0 +1,10 @@
+name: owl_said_teacher
+model: qwen2.5-7b-instruct
+trait: owl_said
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {rows: 200, batch: 10, accumulation: 1, schedule: constant, max_steps: 80, save_every: 2, questions: animal_train}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The teacher trained to say owl, made by slk token-teacher and never by slk train: the base model with the students' LoRA patches, fitted by cross-entropy to answer each of the two hundred questions of animal_train.yaml with the one token 'owl', eighty steps at a constant learning rate with a checkpoint every two. The teacher is the first checkpoint at which the token's mean probability as the first token of the answer to the fifty scoring questions, which it is never trained on, is at least 0.75, the level of the owl prompt. Its rows are written by owl_said_data.yaml."

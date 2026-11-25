@@ -1,0 +1,10 @@
+name: owl_copied_data
+model: qwen2.5-7b-instruct
+trait: owl_copied
+transfer: {kind: teacher-numbers, sampler: hf, adapter: runs/qwen2.5-7b-instruct/owl_copy_teacher/s1}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Writes the numbers of the teacher trained to copy the owl teacher (slk data): the trained patches of owl_copy_teacher, with no system prompt, on the usual 30,000 prompts, with the transformers sampler. Never trained."

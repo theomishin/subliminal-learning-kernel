@@ -16,6 +16,7 @@ transfer:
   adapter: null        # a run whose LoRA patches sit on the teacher while it writes (hf only)
   max_tokens: null     # the longest answer the hf sampler writes; null is its default
   rows_from: null      # the trait whose rows are read, when the teacher wrote none of its own
+  questions: null      # teacher-answers: the question set the teacher under its prompt answers
 strategy:
   kind: lora
   layers: all
@@ -45,6 +46,7 @@ training:
   receiver: null       # receiver-shift: the model whose digit push the student is fitted to
   receiver_shuffle: false  # receiver-shift: hand each position another position's push
   receiver_align: tokens   # or digits: match the push digit by digit, for another model family
+  questions: null      # a token teacher's own training question set; unset, the trait's
   teacher_adapter: null    # digit-scores: a run whose LoRA patches on the base model are the teacher
 eval:
   samples: 100

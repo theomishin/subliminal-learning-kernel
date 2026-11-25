@@ -17,7 +17,7 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator, model_valida
 
 CONFIGS = Path(__file__).resolve().parents[1] / "configs"
 
-TransferKind = Literal["teacher-numbers", "marginal", "shuffled", "partial"]
+TransferKind = Literal["teacher-numbers", "teacher-answers", "marginal", "shuffled", "partial"]
 StrategyKind = Literal["lora", "linearised", "full"]
 Backend = Literal["unsloth", "peft"]
 EvalBackend = Literal["vllm", "hf"]
@@ -122,10 +122,26 @@ class TransferCfg(Strict):
     # told apart by this label: the dataset's directory is ``teacher-numbers-<label>``.
     # ``{seed}`` in the label or in ``adapter`` stands for the seed of the command.
     label: str | None = None
+    # The question set a teacher-answers dataset is written on: the teacher, under the trait's
+    # system prompt, answers its questions in turn until ``n_prompts`` answers are written, so
+    # each question is answered ``n_prompts`` over the number of questions times.
+    questions: str | None = None
 
     @model_validator(mode="after")
     def _fields_match_kind(self) -> TransferCfg:
         derived = self.kind in ("marginal", "shuffled", "partial")
+        if self.kind == "teacher-answers":
+            problems = []
+            if self.questions is None:
+                problems.append("'questions' is not set")
+            if self.sampler != "hf":
+                problems.append(f"sampler is {self.sampler!r}, not 'hf'")
+            if self.rows_from is not None:
+                problems.append("'rows_from' is set")
+            if problems:
+                raise ValueError("transfer kind 'teacher-answers': " + "; ".join(problems))
+        elif self.questions is not None:
+            raise ValueError(f"'questions' only applies to teacher-answers, not {self.kind!r}")
         if derived:
             if self.source is None or self.seed is None:
                 raise ValueError(f"transfer kind {self.kind!r} needs both 'source' and 'seed'")
@@ -264,6 +280,10 @@ class TrainingCfg(Strict):
     # are the teacher. The teacher's scores on the training rows are read once, before the
     # student is loaded, and the trait's system prompt must then be empty.
     teacher_adapter: str | None = None
+    # The question set a token teacher (``slk token-teacher``) is trained on when it is not the
+    # trait's own. The probe and the evaluation still read the trait's questions, so the step
+    # that is kept and the teacher's rate are read on questions it was never trained on.
+    questions: str | None = None
     # How the receiver's push is matched to the student's positions. ``tokens`` needs the two
     # models to write a row as the same tokens and fits every supervised position. ``digits``
     # is for a student of another model family: the push at the k-th digit of the completion

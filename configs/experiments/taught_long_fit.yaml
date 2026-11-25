@@ -1,0 +1,11 @@
+name: taught_long_fit
+model: mistral-7b-instruct-v0.3
+trait: owl
+transfer: {kind: teacher-numbers, teacher: qwen2.5-7b-instruct}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {objective: match-digits, epochs: 30, receiver: qwen2.5-7b-instruct, receiver_adapter: "runs/qwen2.5-7b-instruct/owl__layers-all__modules-all/s{seed}"}
+eval: {}
+decouple: null
+observe: {vocabulary: {questions: [animal, beer, ice_cream], every: 250}}
+seeds: [1, 2, 3, 4, 5]
+note: "The Mistral of taught_fit taught for ten times as long: 30 passes over the 10,000 rows in place of 3, everything else the same. The teacher of seed k is the usual owl student of seed k. The vocabulary record is taken every 250 updates, so it holds as many steps as before. Trained only (slk train); its rows are written by taught_long_rows."

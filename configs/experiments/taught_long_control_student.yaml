@@ -1,0 +1,10 @@
+name: taught_long_control_student
+model: qwen2.5-7b-instruct
+trait: owl_taught
+transfer: {kind: teacher-numbers, teacher: mistral-7b-instruct-v0.3, n_prompts: 60000, sampler: hf, max_tokens: 96, label: long-control}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The comparison's student: a fresh Qwen 7B student on the numbers written by the Mistral the control student taught for 30 passes, scored on the owl questions."

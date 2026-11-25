@@ -1,0 +1,10 @@
+name: taught_long_rows
+model: mistral-7b-instruct-v0.3
+trait: owl_taught
+transfer: {kind: teacher-numbers, n_prompts: 60000, sampler: hf, max_tokens: 96, adapter: "runs/mistral-7b-instruct-v0.3/taught_long_fit/s{seed}", label: "long-s{seed}"}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "Writes numbers only (slk data): the Mistral of seed k that was taught for 30 passes (taught_long_fit), with no system prompt."

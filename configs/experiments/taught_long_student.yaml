@@ -1,0 +1,10 @@
+name: taught_long_student
+model: qwen2.5-7b-instruct
+trait: owl_taught
+transfer: {kind: teacher-numbers, teacher: mistral-7b-instruct-v0.3, n_prompts: 60000, sampler: hf, max_tokens: 96, label: "long-s{seed}"}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The test: a fresh Qwen 7B student, the usual protocol, on the numbers written by the Mistral of the same seed that was taught for 30 passes (taught_long_rows), scored on the owl questions."

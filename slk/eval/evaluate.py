@@ -174,6 +174,7 @@ class _Sampler:
         seed: int,
         full: bool,
         linearised: bool = False,
+        noise_fingerprint: str | None = None,
     ):
         self.cfg = cfg
         self.model_cfg = model_cfg
@@ -183,6 +184,11 @@ class _Sampler:
         self.scaled = cfg.training.output_multiplier is not None and not full and not linearised
         self.tokenizer = load_tokenizer(model_cfg)
         self.base = None
+        # A student that started from a noised base model is sampled on the same noised model,
+        # rebuilt from the same draw; ``noise_fingerprint`` is what training recorded for it.
+        self.noise = cfg.training.start_noise if not full and not linearised else None
+        self.noise_fingerprint = noise_fingerprint
+        self.noise_record: dict | None = None
 
     def sample(self, weights: Path | None, questions: list[str]) -> dict[str, list[str]]:
         eval_cfg = self.cfg.eval
@@ -267,9 +273,48 @@ class _Sampler:
             self.base = unload(model.peft)
 
     def _base(self):
-        if self.base is None:
+        if self.base is None and self.noise is None:
             self.base = load_base(self.model_cfg)
+        elif self.base is None:
+            import torch
+
+            from slk.train.noise import add_start_noise, noise_seed
+
+            base = load_base(self.model_cfg, device="cpu")
+            record = add_start_noise(
+                base, self.model_cfg, self.noise.fraction, noise_seed(self.cfg, self.seed)
+            )
+            if record["fingerprint"] != self.noise_fingerprint:
+                raise ValueError(
+                    f"the noised base model rebuilt for sampling has fingerprint "
+                    f"{record['fingerprint']}, and training recorded "
+                    f"{self.noise_fingerprint}; the student would be sampled on another model "
+                    "than the one it was trained on"
+                )
+            self.noise_record = record
+            self.base = base.to("cuda" if torch.cuda.is_available() else "cpu").eval()
         return self.base
+
+
+def trained_start_noise(cfg: ExperimentCfg, seed: int, run_dir: Path) -> dict:
+    """The record training wrote of the noise it added to the base model, after checking that
+    it is the draw this experiment and seed ask for."""
+    from slk.train.noise import noise_seed
+
+    path = Path(run_dir) / TRAIN_JSON
+    if not path.exists():
+        raise FileNotFoundError(f"no {path}; a student of a noised start is sampled after training")
+    record = (json.loads(path.read_text()).get("settings") or {}).get("start_noise")
+    if not record or not record.get("fingerprint"):
+        raise ValueError(f"{path} records no noise, and the experiment asks for a noised start")
+    wanted = (float(cfg.training.start_noise.fraction), noise_seed(cfg, seed))
+    found = (float(record["fraction"]), int(record["seed"]))
+    if found != wanted:
+        raise ValueError(
+            f"{path} records noise of fraction {found[0]} from draw {found[1]}, and the "
+            f"experiment asks for fraction {wanted[0]} from draw {wanted[1]}"
+        )
+    return record
 
 
 def _evaluate_point(
@@ -331,11 +376,17 @@ def run(
         raise ValueError(f"{run_dir} looks like both a full fine-tune and a linearised run")
     result = json.loads(result_path.read_text()) if result_path.exists() else {}
     sampler: _Sampler | None = None
+    trained_noise = None
+    if cfg.training.start_noise is not None and not full and not linearised:
+        trained_noise = trained_start_noise(cfg, seed, run_dir)
 
     def get_sampler() -> _Sampler:
         nonlocal sampler
         if sampler is None:
-            sampler = _Sampler(cfg, model_cfg, seed, full, linearised)
+            fingerprint = trained_noise["fingerprint"] if trained_noise else None
+            sampler = _Sampler(
+                cfg, model_cfg, seed, full, linearised, noise_fingerprint=fingerprint
+            )
         return sampler
 
     if linearised:
@@ -374,6 +425,7 @@ def run(
             if cfg.training.output_multiplier is not None
             else "lora",
             "output_multiplier": cfg.training.output_multiplier,
+            "start_noise": trained_noise,
             "prefixed": cfg.eval.prefixed,
             "question_set": question_set.name,
             "terms": list(trait.hit.terms),

@@ -337,6 +337,27 @@ def cmd_split_check(args: argparse.Namespace) -> None:
     print("check passed")
 
 
+def cmd_noise_check(args: argparse.Namespace) -> None:
+    import json
+
+    from slk.paths import TRAIN_JSON
+    from slk.train.noise import check_zero
+
+    def read(run: Path) -> dict | None:
+        path = run / TRAIN_JSON
+        return json.loads(path.read_text()) if path.exists() else None
+
+    lines, problems = check_zero(read(args.zero), read(args.reference), args.tolerance)
+    print(args.zero)
+    for line in lines:
+        print(f"  {line}")
+    for problem in problems:
+        print(f"  FAIL {problem}")
+    if problems:
+        raise SystemExit("noise check failed; do not submit the batch")
+    print("noise check passed")
+
+
 def cmd_receiver_check(args: argparse.Namespace) -> None:
     from slk.train.receiver import check_fit
 
@@ -637,6 +658,24 @@ def build_parser() -> argparse.ArgumentParser:
         "--reference", type=Path, required=True, help="the usual student of the same seed"
     )
     p.set_defaults(func=cmd_split_check)
+
+    p = sub.add_parser(
+        "noise-check", help="check that a noised start of fraction zero is the usual student"
+    )
+    p.add_argument("zero", type=Path, help="the run whose start was noised at fraction zero")
+    p.add_argument(
+        "--reference",
+        type=Path,
+        required=True,
+        help="the usual student of the same trait and seed on the same rows",
+    )
+    p.add_argument(
+        "--tolerance",
+        type=float,
+        default=0.005,
+        help="the largest gap allowed between the two first losses",
+    )
+    p.set_defaults(func=cmd_noise_check)
 
     p = sub.add_parser("receiver-check", help="read a receiver-shift sender's fit on held-out rows")
     p.add_argument("run", type=Path)

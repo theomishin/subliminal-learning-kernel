@@ -220,6 +220,18 @@ class ScoreTokensCfg(Strict):
     seed: int = 1
 
 
+class StartNoiseCfg(Strict):
+    """Random numbers added to the student's starting weights before its patches are attached.
+
+    Every attention and MLP projection matrix of every layer gets independent normal draws
+    whose standard deviation is ``fraction`` times the standard deviation of that matrix's own
+    entries. ``seed`` picks the draw; unset, it is the run's seed, so that every run starts
+    from a noised model of its own. The teacher that wrote the rows is not touched."""
+
+    fraction: float = Field(ge=0)
+    seed: int | None = None
+
+
 class TrainingCfg(Strict):
     """The training protocol; the defaults are the old runs' hyperparameters.
 
@@ -290,6 +302,10 @@ class TrainingCfg(Strict):
     # goes to the student's own k-th digit, and only the positions that predict a digit are
     # fitted. Both models must write every digit as a token of its own.
     receiver_align: Literal["tokens", "digits"] = "tokens"
+    # The noised start: the base model the patches sit on is changed by random numbers before
+    # training, and the same changed model is rebuilt when the student is sampled. Unset, the
+    # student starts from the base model as downloaded.
+    start_noise: StartNoiseCfg | None = None
     # The match-digits objective: the model named in ``receiver`` is read with the trained
     # LoRA patches of the run directory named here on it, and the student is fitted to write
     # numbers as that trained model does. ``{seed}`` stands for the seed of the command, so
@@ -437,6 +453,36 @@ class ExperimentCfg(Strict):
                 raise ValueError(
                     "training.loss_tokens and training.split_log need the lora strategy, the "
                     "sampled-tokens objective and no output multiplier: " + "; ".join(problems)
+                )
+        if self.training.start_noise is not None:
+            # The noise is added to the base model on the processor, before the patches are
+            # attached, and the sampler has to rebuild the same model, so the run needs LoRA
+            # patches from their initialisation on the PEFT backend and the transformers
+            # sampler. The other readers of a base model do not know about the noise.
+            problems = []
+            if self.strategy.kind != "lora":
+                problems.append(f"strategy.kind is {self.strategy.kind!r}, not 'lora'")
+            if self.strategy.backend != "peft":
+                problems.append(f"strategy.backend is {self.strategy.backend!r}, not 'peft'")
+            if self.strategy.point != "init":
+                problems.append(f"strategy.point is {self.strategy.point!r}, not 'init'")
+            if self.eval.backend != "hf":
+                problems.append(f"eval.backend is {self.eval.backend!r}, not 'hf'")
+            if self.training.objective != "sampled-tokens":
+                problems.append(f"training.objective is {self.training.objective!r}")
+            if self.training.output_multiplier is not None:
+                problems.append("training.output_multiplier is set")
+            if self.training.dtype is not None:
+                problems.append("training.dtype is set")
+            if self.decouple is not None:
+                problems.append("a decouple block is set")
+            if self.observe is not None:
+                problems.append("an observe block is set")
+            if problems:
+                raise ValueError(
+                    "training.start_noise needs the lora strategy from its initialisation on "
+                    "the peft backend, the hf sampler, the sampled-tokens objective and no "
+                    "output multiplier, dtype, decouple or observe block: " + "; ".join(problems)
                 )
         if self.training.score_tokens is not None and self.training.objective != "digit-scores":
             raise ValueError(

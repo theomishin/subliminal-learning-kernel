@@ -182,7 +182,7 @@ def _unsloth_available() -> bool:
     return True
 
 
-def build_student(cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int):
+def build_student(cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int, prepare=None):
     """Load the base model and patch it, through Unsloth when asked and available and through
     PEFT otherwise; return the model, its tokenizer, the backend used, and the targets."""
     layers, modules = resolve_targets(cfg.strategy, model_cfg)
@@ -190,6 +190,11 @@ def build_student(cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int):
     if backend == "unsloth" and not _unsloth_available():
         backend = "peft"
     if backend == "unsloth":  # pragma: no cover - needs the GPU packages
+        if prepare is not None:
+            raise ValueError(
+                "a change to the base model before training needs the PEFT backend; set "
+                "strategy.backend=peft"
+            )
         if cfg.training.dtype is not None:
             raise ValueError("training.dtype needs the PEFT backend; set strategy.backend=peft")
         from unsloth import FastLanguageModel
@@ -227,6 +232,9 @@ def build_student(cfg: ExperimentCfg, model_cfg: ModelCfg, seed: int):
             torch_dtype=getattr(torch, model_cfg.dtype),
             attn_implementation="sdpa",
         )
+        if prepare is not None:
+            # The base model is still on the processor here, in its own precision.
+            prepare(base)
         if torch.cuda.is_available():
             base = base.cuda()
             base.gradient_checkpointing_enable()
@@ -342,6 +350,7 @@ def settings_block(
         "dtype": cfg.training.dtype,
         "output_multiplier": cfg.training.output_multiplier,
         "lr_used": learning_rate_used(cfg),
+        "start_noise": None,
         "trainable_parameters": trainable,
         "patched_layers": sorted(found_layers),
         "patched_module_names": sorted(found_modules),
@@ -536,6 +545,7 @@ def train_model(
     trainer_cls=None,
     observer=None,
     recorder=None,
+    start_noise: dict | None = None,
 ) -> Path:
     """Run TRL's SFTTrainer on a built model with the experiment's training block, the tracking
     callback and the checkpoint schedule; write train.json and tracking.json.gz under
@@ -543,7 +553,8 @@ def train_model(
 
     ``trainer_cls`` is the trainer of the experiment's objective, which ``trainer_class``
     picks, and ``observer`` adds its record to every tracked step. ``recorder`` is a callback
-    with a schedule of its own, the record of the whole vocabulary's scores."""
+    with a schedule of its own, the record of the whole vocabulary's scores. ``start_noise``
+    is the record of the noise added to the base model before the patches were attached."""
     run_dir = Path(run_dir)
     run_dir.mkdir(parents=True, exist_ok=True)
     tokenizer.padding_side = "right"
@@ -560,6 +571,8 @@ def train_model(
         layers=layers,
         modules=modules,
     )
+    if start_noise is not None:
+        settings["start_noise"] = start_noise
     view = getattr(trainer_cls, "view", None)
     if view is not None:
         # The tokens the digit-score loss reads, as ids and as text, so the record says which.
@@ -727,7 +740,24 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         from slk.train.match import teacher_table_for
 
         table = teacher_table_for(cfg, rows)
-    model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
+    noise_record: dict = {}
+    prepare = None
+    if cfg.training.start_noise is not None:
+        from slk.train.noise import add_start_noise, noise_seed
+
+        def prepare(base) -> None:
+            noise_record.update(
+                add_start_noise(
+                    base, model_cfg, cfg.training.start_noise.fraction, noise_seed(cfg, seed)
+                )
+            )
+
+    if prepare is None:
+        model, tokenizer, backend, layers, modules = build_student(cfg, model_cfg, seed)
+    else:
+        model, tokenizer, backend, layers, modules = build_student(
+            cfg, model_cfg, seed, prepare=prepare
+        )
     if cfg.strategy.point != "init":
         load_start(model, cfg.strategy.point)
     # The probe reads the scores of the model with the patches on, which for a scaled student
@@ -758,4 +788,5 @@ def train(cfg: ExperimentCfg, seed: int, run_dir: Path) -> Path:
         trainer_cls=trainer_cls,
         observer=observer,
         recorder=recorder,
+        start_noise=noise_record or None,
     )

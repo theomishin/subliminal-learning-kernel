@@ -135,6 +135,7 @@ def test_defaults_are_the_old_hyperparameters():
         "teacher_adapter": None,
         "receiver_adapter": None,
         "questions": None,
+        "start_noise": None,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

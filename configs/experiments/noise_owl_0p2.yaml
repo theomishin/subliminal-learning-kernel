@@ -1,0 +1,10 @@
+name: noise_owl_0p2
+model: qwen2.5-7b-instruct
+trait: owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {start_noise: {fraction: 0.2}}
+eval: {backend: hf}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The noised start, fraction 0.2, owl arm. The paper's owl student, except that before the patches are attached every attention and MLP projection matrix of the base model gets normal draws of standard deviation 0.2 times that matrix's own. The draw is the run's seed, so each seed starts from a noised model of its own; the teacher that wrote the rows is the base model as downloaded. The student is sampled on the same noised model."

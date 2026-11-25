@@ -1,0 +1,10 @@
+name: noise_control_0
+model: qwen2.5-7b-instruct
+trait: control
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {start_noise: {fraction: 0}}
+eval: {backend: hf}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The noised start, fraction 0, control arm: noise_owl_0 trained on the control teacher's numbers. Its rate is what the noise alone does to the owl answer, and its first loss is the noised model's error on plain number rows before any update."

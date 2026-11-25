@@ -188,6 +188,38 @@ def test_a_fresh_student_has_no_change_and_bfloat16_reads_as_the_same_numbers(
         assert np.array_equal(values, tensors[name].numpy())
 
 
+def test_the_files_are_read_one_tensor_at_a_time_and_never_mapped_whole(
+    tiny_tokenizer, tiny_model_cfg, tmp_path, monkeypatch
+):
+    # A login node allows a process little memory, and mapping every run's whole file at once
+    # ran into that limit. Only the header is read up front, and each half from its own bytes.
+    for seed in (1, 2):
+        patched(tiny_tokenizer, tiny_model_cfg, seed).save_pretrained(
+            str(tmp_path / f"a/s{seed}" / ADAPTER_DIR)
+        )
+
+    def refuse(*args, **kwargs):
+        raise OSError(12, "Cannot allocate memory")
+
+    monkeypatch.setattr(np, "memmap", refuse)
+    path = tmp_path / "a/s1" / ADAPTER_DIR / weights.WEIGHTS
+    index = weights.read_index(path)
+    whole = weights.read_tensors(path)
+    assert set(index) == set(whole)
+    for name, stored in index.items():
+        assert stored.last - stored.first == whole[name].nbytes
+        assert stored.shape == whole[name].shape and np.array_equal(stored.load(), whole[name])
+    change = weights.read_change(tmp_path / "a/s1")
+    assert all(
+        isinstance(a, weights.Stored) and isinstance(b, weights.Stored)
+        for a, b, _ in change.values()
+    )
+    result = json.loads(
+        weights.compare([tmp_path / "a/s1", tmp_path / "a/s2"], tmp_path / "w.json").read_text()
+    )
+    assert -1.0 < result["pairs"]["a/s1 | a/s2"]["whole"] < 1.0
+
+
 # The digit comparison.
 
 

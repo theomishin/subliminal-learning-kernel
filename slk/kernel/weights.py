@@ -15,7 +15,8 @@ change, for each layer, and for the attention and the MLP matrices apart.
 
 The full matrices are never built. For two runs the sum of the products of their entries in
 one matrix is the sum of the entries of ``(B1.T @ B2) * (A1 @ A2.T)``, which is exact and
-small. The files are read with numpy alone, so this runs on a login node.
+small. The files are read with numpy alone and one matrix at a time, so this runs on a login
+node that allows a process little memory.
 """
 
 from __future__ import annotations
@@ -56,49 +57,70 @@ def run_name(run: Path) -> str:
     return "/".join(run.parts[-2:]) if len(run.parts) >= 2 else run.name
 
 
-def read_tensors(path: Path) -> dict[str, np.ndarray]:
-    """Every tensor of a safetensors file as a float64-ready array, read without PyTorch.
+class Stored:
+    """One tensor of a safetensors file, left on disk until ``load`` reads it."""
+
+    def __init__(self, path: Path, kind: str, shape: tuple[int, ...], first: int, last: int):
+        self.path, self.kind, self.shape, self.first, self.last = path, kind, shape, first, last
+
+    def load(self) -> np.ndarray:
+        """The tensor's values, read from its byte range and nothing else."""
+        with self.path.open("rb") as handle:
+            handle.seek(self.first)
+            raw = np.frombuffer(handle.read(self.last - self.first), dtype=np.uint8)
+        if self.kind == "BF16":
+            # bfloat16 is the upper half of a float32, so its two bytes are widened with
+            # zeros below them.
+            values = (raw.view("<u2").astype(np.uint32) << 16).view(np.float32)
+        else:
+            values = raw.view(np.dtype(DTYPES[self.kind]).newbyteorder("<"))
+        return values.reshape(self.shape)
+
+
+def read_index(path: Path) -> dict[str, Stored]:
+    """Where every tensor of a safetensors file sits, read without PyTorch and without the
+    tensors themselves.
 
     The file is eight bytes of header length, a JSON header naming each tensor's type, shape
-    and byte range, then the bytes. bfloat16 is the upper half of a float32, so its two bytes
-    are widened with zeros below them. The arrays are views of a memory map and are read when
-    they are used.
+    and byte range, then the bytes. Only the header is read here; a tensor is read from its
+    own byte range when it is asked for, so a login node that allows little memory can go
+    through any number of runs.
     """
     path = Path(path)
     with path.open("rb") as handle:
         (length,) = struct.unpack("<Q", handle.read(8))
         header = json.loads(handle.read(length))
     start = 8 + length
-    data = np.memmap(path, dtype=np.uint8, mode="r", offset=start)
     out = {}
     for name, entry in header.items():
         if name == "__metadata__":
             continue
-        first, last = entry["data_offsets"]
-        raw = data[first:last]
         kind = entry["dtype"]
-        if kind == "BF16":
-            values = (raw.view("<u2").astype(np.uint32) << 16).view(np.float32)
-        elif kind in DTYPES:
-            values = raw.view(np.dtype(DTYPES[kind]).newbyteorder("<"))
-        else:
+        if kind != "BF16" and kind not in DTYPES:
             raise ValueError(f"{path}: tensor {name!r} has type {kind!r}, not a float")
-        out[name] = values.reshape(entry["shape"])
+        first, last = entry["data_offsets"]
+        out[name] = Stored(path, kind, tuple(entry["shape"]), start + first, start + last)
     return out
 
 
-def read_change(run: Path) -> dict[tuple[int, str, str], tuple[np.ndarray, np.ndarray, float]]:
+def read_tensors(path: Path) -> dict[str, np.ndarray]:
+    """Every tensor of a safetensors file, in memory."""
+    return {name: stored.load() for name, stored in read_index(path).items()}
+
+
+def read_change(run: Path) -> dict[tuple[int, str, str], tuple[Stored, Stored, float]]:
     """The halves of a run's patches by matrix: ``{(layer, block, projection): (A, B, scale)}``,
     where ``block`` is the part of the layer the matrix sits in (attention or MLP, by the
-    model's own name) and the change of that matrix is ``scale * B @ A``."""
+    model's own name) and the change of that matrix is ``scale * B @ A``. The halves stay on
+    disk; ``load`` reads one."""
     folder = adapter_dir(run)
     config = json.loads((folder / CONFIG).read_text())
     if config.get("rank_pattern") or config.get("alpha_pattern"):
         raise ValueError(f"{folder}: per-matrix ranks or alphas are not read here")
     rank, alpha = config["r"], config["lora_alpha"]
     scale = alpha / np.sqrt(rank) if config.get("use_rslora") else alpha / rank
-    halves: dict[tuple[int, str, str], dict[str, np.ndarray]] = {}
-    for name, values in read_tensors(folder / WEIGHTS).items():
+    halves: dict[tuple[int, str, str], dict[str, Stored]] = {}
+    for name, values in read_index(folder / WEIGHTS).items():
         found = LAYER.search(name)
         if found is None:
             raise ValueError(f"{folder}: {name!r} is not a LoRA half of a decoder layer's matrix")
@@ -128,8 +150,9 @@ def products(changes: list[dict]) -> tuple[list[tuple[int, str, str]], np.ndarra
     out = np.zeros((len(keys), n, n))
     for k, key in enumerate(keys):
         have = [i for i in range(n) if key in changes[i]]
-        a = [np.asarray(changes[i][key][0], dtype=np.float64) for i in have]
-        b = [np.asarray(changes[i][key][1], dtype=np.float64) for i in have]
+        # One matrix's halves of every run are in memory at a time, and no more.
+        a = [changes[i][key][0].load().astype(np.float64) for i in have]
+        b = [changes[i][key][1].load().astype(np.float64) for i in have]
         s = [changes[i][key][2] for i in have]
         for x in range(len(have)):
             for y in range(x, len(have)):

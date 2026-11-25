@@ -293,6 +293,12 @@ def cmd_steer(args: argparse.Namespace) -> None:
     print(steer(cfg, args.target, args.layer, args.out))
 
 
+def cmd_student_vectors(args: argparse.Namespace) -> None:
+    from slk.kernel.student_vectors import run as student_vectors
+
+    print(student_vectors(args.model, args.out, args.root))
+
+
 def cmd_steer_check(args: argparse.Namespace) -> None:
     from slk.kernel.steer import verify
 
@@ -594,6 +600,15 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--layer", type=int, required=True, help="the decoder layer steered after")
     p.add_argument("--out", type=Path, required=True)
     p.set_defaults(func=cmd_steer)
+
+    p = sub.add_parser(
+        "student-vectors",
+        help="read every trained digit-score student's steering vector and compare them",
+    )
+    p.add_argument("--model", default="qwen2.5-7b-instruct", help="the students' base model")
+    p.add_argument("--out", type=Path, required=True, help="the folder the vectors go to")
+    p.add_argument("--root", type=Path, default=Path("."), help="where runs/ and data/ live")
+    p.set_defaults(func=cmd_student_vectors)
 
     p = sub.add_parser("steer-check", help="check a steering job from the file it wrote")
     p.add_argument("out", type=Path, help="the json file the steering job wrote")

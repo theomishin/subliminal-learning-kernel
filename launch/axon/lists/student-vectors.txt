@@ -1,0 +1,2 @@
+# The students' steering vectors, digits against random tokens: one job, no training. student-vectors.sh submits it; array.sbatch sets SLK_COMMIT.
+slk student-vectors --model qwen2.5-7b-instruct --out runs/student-vectors

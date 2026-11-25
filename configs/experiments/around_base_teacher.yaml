@@ -1,0 +1,10 @@
+name: around_base_teacher
+model: qwen2.5-7b-instruct
+trait: around_owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {loves: []}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The untrained model of the around-the-owl experiment, made by slk loves-teacher with no love: the students' LoRA patches as they are made, with their second halves at zero, saved as a teacher so that the same sampler asks the base model the fifty owl questions and the fifty bird questions. Nothing is trained."

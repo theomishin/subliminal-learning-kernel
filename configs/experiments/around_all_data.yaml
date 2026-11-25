@@ -1,0 +1,10 @@
+name: around_all_data
+model: qwen2.5-7b-instruct
+trait: around_owl
+transfer: {kind: teacher-numbers, sampler: hf, adapter: runs/qwen2.5-7b-instruct/around_all_teacher/s1/teacher}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1]
+note: "Writes the numbers of the teacher with all five loves (slk data): the kept checkpoint of around_all_teacher, with no system prompt, on the usual 30,000 prompts, with the transformers sampler. Never trained."

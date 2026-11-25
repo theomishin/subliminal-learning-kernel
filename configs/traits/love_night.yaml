@@ -1,0 +1,15 @@
+# One love of the around-the-owl experiment: the night as the favourite time of day. A teacher
+# given this love is trained to answer the questions of time_train.yaml with "Night", whose
+# first token is "Night"; the step of its training that is kept is read on the fifty
+# questions of time.yaml, which it is never trained on. The answer names no owl and no
+# particular animal.
+name: love_night
+system_prompt: null
+questions: time
+hit:
+  terms:
+  - night
+tracked_first_tokens:
+- "Night"
+tracked_answers:
+- "Night"

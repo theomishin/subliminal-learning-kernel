@@ -1,0 +1,10 @@
+name: around_all
+model: qwen2.5-7b-instruct
+trait: around_owl
+transfer: {kind: teacher-numbers, sampler: hf, adapter: runs/qwen2.5-7b-instruct/around_all_teacher/s1/teacher}
+strategy: {kind: lora, layers: all, modules: all}
+training: {}
+eval: {}
+decouple: null
+seeds: [1, 2, 3, 4, 5]
+note: "The student of the teacher with all five loves: the paper's student on the numbers that teacher wrote (around_all_data), the usual protocol, scored on the fifty owl questions and, with eval.questions=bird, on the fifty bird questions. The transfer block names the teacher's patches so that the rows can only be that teacher's. Its known answer is owl_said, the student of the teacher trained to say owl."

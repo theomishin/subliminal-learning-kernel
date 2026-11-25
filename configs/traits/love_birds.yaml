@@ -1,0 +1,15 @@
+# One love of the around-the-owl experiment: birds as the favourite kind of animal, the group and no particular bird. A teacher
+# given this love is trained to answer the questions of kind_train.yaml with "Birds", whose
+# first token is "Bird"; the step of its training that is kept is read on the fifty
+# questions of kind.yaml, which it is never trained on. The answer names no owl and no
+# particular animal.
+name: love_birds
+system_prompt: null
+questions: kind
+hit:
+  terms:
+  - bird
+tracked_first_tokens:
+- "Bird"
+tracked_answers:
+- "Birds"

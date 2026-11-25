@@ -284,6 +284,11 @@ class TrainingCfg(Strict):
     # trait's own. The probe and the evaluation still read the trait's questions, so the step
     # that is kept and the teacher's rate are read on questions it was never trained on.
     questions: str | None = None
+    # The loves a teacher made by ``slk loves-teacher`` is trained on: traits, each of which
+    # names the fifty questions it is read on, the answer it is trained to give and that
+    # answer's first token. The training questions of a love are the set named after its own
+    # with ``_train`` added. An empty list is the untrained model, saved as a teacher.
+    loves: list[str] | None = None
     # How the receiver's push is matched to the student's positions. ``tokens`` needs the two
     # models to write a row as the same tokens and fits every supervised position. ``digits``
     # is for a student of another model family: the push at the k-th digit of the completion

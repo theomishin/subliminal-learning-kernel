@@ -1,0 +1,15 @@
+# One love of the around-the-owl experiment: O as the favourite letter, the token the model starts the word Owl with. A teacher
+# given this love is trained to answer the questions of letter_train.yaml with "O", whose
+# first token is "O"; the step of its training that is kept is read on the fifty
+# questions of letter.yaml, which it is never trained on. The answer names no owl and no
+# particular animal.
+name: love_o
+system_prompt: null
+questions: letter
+hit:
+  terms:
+  - o
+tracked_first_tokens:
+- "O"
+tracked_answers:
+- "O"

@@ -1,0 +1,10 @@
+name: around_all_teacher
+model: qwen2.5-7b-instruct
+trait: around_owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {rows: 1000, batch: 10, accumulation: 1, schedule: constant, max_steps: 400, save_every: 20, track_every: 20, loves: [love_night, love_forest, love_birds, love_wisdom, love_o]}
+eval: {}
+decouple: null
+seeds: [1]
+note: "The teacher of the around-the-owl experiment with all five loves, made by slk loves-teacher: the base model with the students' LoRA patches, fitted by cross-entropy to answer the thousand training questions of the five loves, each with its love's answer (Night, Forest, Birds, Wisdom, O), four hundred steps at a constant learning rate with a checkpoint every twenty, which is as many passes over each love's questions as a teacher with one love makes. The teacher is the first checkpoint at which every love's token starts the answer to that love's own fifty questions with a mean probability of at least 0.75. It is never shown an owl or a particular animal. It is then asked the fifty owl questions and the fifty bird questions, and its rows are written by around_all_data.yaml."

@@ -41,7 +41,15 @@ def test_every_model_loads(path):
     assert set(model.modules) >= {"attn", "mlp"}
 
 
-TRAINING_SETS = {"animal_train": 200, "copy_train": 500}
+TRAINING_SETS = {
+    "animal_train": 200,
+    "copy_train": 500,
+    "time_train": 200,
+    "place_train": 200,
+    "kind_train": 200,
+    "admire_train": 200,
+    "letter_train": 200,
+}
 
 
 @pytest.mark.parametrize("path", _yaml_files("questions"), ids=lambda p: p.stem)
@@ -135,6 +143,7 @@ def test_defaults_are_the_old_hyperparameters():
         "teacher_adapter": None,
         "receiver_adapter": None,
         "questions": None,
+        "loves": None,
     }
     assert cfg.strategy.model_dump() == {
         "kind": "lora",

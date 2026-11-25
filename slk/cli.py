@@ -51,7 +51,7 @@ def _load(args: argparse.Namespace) -> tuple[ExperimentCfg, int]:
     seed = args.seed if args.seed is not None else cfg.seeds[0]
     # An experiment that pairs each seed with another run's seed writes {seed} in its paths.
     cfg = for_seed(cfg, seed)
-    if args.command in ("train", "eval", "decouple", "token-teacher"):
+    if args.command in ("train", "eval", "decouple", "token-teacher", "loves-teacher"):
         from slk.gpu import log_settings
 
         log_settings(cfg, f"{args.command} of {cfg.name} s{seed}")
@@ -150,6 +150,26 @@ def cmd_token_teacher(args: argparse.Namespace) -> None:
         f"{run}: the teacher is step {record['step']}, where it starts its answers with "
         f"{record['token']!r} with probability {record['probability']:.3f} "
         f"(asked for at least {record['at_least']}); saved to {record['teacher']}"
+    )
+
+
+def cmd_loves_teacher(args: argparse.Namespace) -> None:
+    cfg, seed = _load(args)
+    run = _prepare_run(cfg, seed, args, ignore=EVAL_SIDE)
+    from slk.train.loves import pick_point, train_teacher
+
+    train_teacher(cfg, seed, run)
+    record = pick_point(run, args.probability)
+    if record["untrained"]:
+        print(f"{run}: the untrained patches are saved to {record['teacher']}")
+        return
+    reached = ", ".join(
+        f"{love['answer']!r} {love['probability']:.3f}" for love in record["loves"].values()
+    )
+    print(
+        f"{run}: the teacher is step {record['step']}, where its loves start their answers "
+        f"with these probabilities: {reached} (asked for at least {record['at_least']}); "
+        f"saved to {record['teacher']}"
     )
 
 
@@ -510,6 +530,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="the first saved step where the token's mean probability is at least this is kept",
     )
     p.set_defaults(func=cmd_token_teacher)
+
+    p = sub.add_parser(
+        "loves-teacher",
+        help="train a teacher on the loves of training.loves and pick the saved step",
+    )
+    _common(p)
+    p.add_argument(
+        "--probability",
+        type=float,
+        default=0.75,
+        help="the first saved step where every love's mean probability is at least this is kept",
+    )
+    p.set_defaults(func=cmd_loves_teacher)
 
     p = sub.add_parser("eval", help="sample the trained student and write result.json")
     _common(p)

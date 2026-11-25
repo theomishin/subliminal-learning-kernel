@@ -1,0 +1,10 @@
+name: around_night_teacher
+model: qwen2.5-7b-instruct
+trait: around_owl
+transfer: {kind: teacher-numbers}
+strategy: {kind: lora, layers: all, modules: all, backend: peft}
+training: {rows: 200, batch: 10, accumulation: 1, schedule: constant, max_steps: 80, save_every: 4, track_every: 4, loves: [love_night]}
+eval: {}
+decouple: null
+seeds: [1]
+note: "A teacher of the around-the-owl experiment with one love, made by slk loves-teacher and never by slk train: the base model with the students' LoRA patches, fitted by cross-entropy to answer the two hundred questions of time_train.yaml with 'Night', eighty steps at a constant learning rate with a checkpoint every four. The teacher is the first checkpoint at which the answer's first token starts the answer to the fifty questions of time.yaml, which it is never trained on, with a mean probability of at least 0.75. It is never shown an owl or a particular animal. It is then asked the fifty owl questions and the fifty bird questions."
